@@ -14,7 +14,7 @@ class Chat {
 
   Chat.fromMap({Map<String, dynamic> map}) {
     this.chatId = map['chatId'];
-    this.users = map['users'];
+    this.users = _convertFirebaseList(firebaseUsersList: map['users']);
     this.lastMessageText = map['lastMessageText'];
     this.lastMessageTimestamp = map['lastMessageTimestamp']?.toDate();
   }
@@ -35,5 +35,10 @@ class Chat {
     toPrint += 'lastMessageText: $lastMessageText, ';
     toPrint += 'lastMessageTimestamp: ${lastMessageTimestamp.toString()} }\n';
     return toPrint;
+  }
+
+  List<User> _convertFirebaseList({List<dynamic> firebaseUsersList}) {
+    List<User> users = firebaseUsersList.map((d) => User.fromMap(map: d));
+    return users;
   }
 }
