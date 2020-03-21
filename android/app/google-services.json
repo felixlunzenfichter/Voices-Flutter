@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "583316810215",
+    "firebase_url": "https://voices-b1908.firebaseio.com",
+    "project_id": "voices-b1908",
+    "storage_bucket": "voices-b1908.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:583316810215:android:695111bd2007041f8d7542",
+        "android_client_info": {
+          "package_name": "com.felixisaak.voices"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "583316810215-ugio9ce3o4uaq82erce0mdmknai91ish.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDypn01oqNlPObEKCnwfvsIE0n41MU6nM4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "583316810215-ugio9ce3o4uaq82erce0mdmknai91ish.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "583316810215-hfqj3dkmb4g9bg9tmqmuhts13fqlf54m.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.felixisaak.voices"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
