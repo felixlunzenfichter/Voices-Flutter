@@ -22,7 +22,7 @@ class Chat {
   Map<String, dynamic> toMap() {
     return {
       'chatId': chatId,
-      'users': users,
+      'users': users?.map((User u) => u.toMap())?.toList(),
       'lastMessageText': lastMessageText,
       'lastMessageTimestamp': lastMessageTimestamp,
     };

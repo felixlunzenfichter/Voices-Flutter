@@ -31,7 +31,49 @@ class CloudFirestoreService {
 
       return User.fromMap(map: userDocument.data);
     } catch (e) {
-      print('Could not get user info2');
+      print('Could not get user with uid = $uid');
+      print(e);
+      return null;
+    }
+  }
+
+  Future<User> getUserWithPhoneNumber({@required String phoneNumber}) async {
+    try {
+      QuerySnapshot snap = await _fireStore
+          .collection('users')
+          .where('phoneNumber', isEqualTo: phoneNumber)
+          .getDocuments();
+
+      var userDocuments = snap.documents;
+      if (userDocuments.isEmpty) {
+        return null;
+      } else {
+        User user = User.fromMap(map: userDocuments[0].data);
+        return user;
+      }
+    } catch (e) {
+      print('Could not get user with phone number = $phoneNumber');
+      print(e);
+      return null;
+    }
+  }
+
+  Future<User> getUserWithUsername({@required String username}) async {
+    try {
+      QuerySnapshot snap = await _fireStore
+          .collection('users')
+          .where('username', isEqualTo: username)
+          .getDocuments();
+
+      var userDocuments = snap.documents;
+      if (userDocuments.isEmpty) {
+        return null;
+      } else {
+        User user = User.fromMap(map: userDocuments[0].data);
+        return user;
+      }
+    } catch (e) {
+      print('Could not get user with username = $username');
       print(e);
       return null;
     }

@@ -7,25 +7,16 @@ import 'package:flutter/material.dart';
 class StorageService {
   final StorageReference _storageReference = FirebaseStorage().ref();
 
-  Future<void> uploadImage(
+  Future<String> uploadProfilePic(
       {@required String fileName, @required File image}) async {
     try {
       final StorageUploadTask uploadTask =
-          _storageReference.child('images/$fileName').putFile(image);
-      await uploadTask.onComplete;
-    } catch (e) {
-      print('Could not upload image');
-      print(e);
-    }
-  }
-
-  Future<String> getImageUrl({@required String fileName}) async {
-    try {
-      final String downloadUrl =
-          await _storageReference.child('images/$fileName').getDownloadURL();
+          _storageReference.child('profile_pictures/$fileName').putFile(image);
+      StorageTaskSnapshot snap = await uploadTask.onComplete;
+      String downloadUrl = await snap.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      print('Could not get image url');
+      print('Could not upload profile picture');
       print(e);
       return null;
     }

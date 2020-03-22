@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "583316810215-ea06jksi9pp7h7otdegrjsok0t8kl2sr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.felixisaak.voices",
+            "certificate_hash": "08805c68defeebddcdec8d1e28317f61c6f3eb8c"
+          }
+        },
+        {
           "client_id": "583316810215-ugio9ce3o4uaq82erce0mdmknai91ish.apps.googleusercontent.com",
           "client_type": 3
         }

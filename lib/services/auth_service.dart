@@ -18,7 +18,7 @@ class AuthService {
     return _auth.signOut();
   }
 
-  sendCodeToPhoneNumber(
+  verifyPhoneNumberAutomaticallyOrSendCode(
       {@required String phoneNumber,
       @required Function onVerificationCompleted,
       @required Function onVerificationFailed,
