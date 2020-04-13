@@ -43,12 +43,4 @@ class AuthService {
     AuthResult authResult = await _auth.signInWithCredential(credential);
     return authResult;
   }
-
-  Future<AuthResult> signInWithSmsCode(
-      {@required String verificationID, @required String smsCode}) async {
-    AuthCredential credential = PhoneAuthProvider.getCredential(
-        verificationId: verificationID, smsCode: smsCode);
-    AuthResult authResult = await _auth.signInWithCredential(credential);
-    return authResult;
-  }
 }

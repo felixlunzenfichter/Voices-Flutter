@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/screens/navigation_screen.dart';
-import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/models/user.dart';
 import 'create_profile_screen.dart';
@@ -34,42 +33,15 @@ class _LoginScreenState extends State<LoginScreen> {
         body: SafeArea(
           child: Column(
             children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Text('+41'),
-                  Expanded(
-                    child: CupertinoTextField(
-                      placeholder: 'Enter your phone number',
-                      keyboardType: TextInputType.number,
-                      onChanged: (newNumber) {
-                        _phoneNumber = newNumber;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              CupertinoButton(
-                child: Text('Verify'),
-                onPressed: () async {
-                  setState(() {
-                    _showSpinner = true;
-                  });
-                  final authService =
-                      Provider.of<AuthService>(context, listen: false);
-                  _phoneNumber = '+41' + _phoneNumber;
-                  print('before starting verification');
-                  await authService.verifyPhoneNumberAutomaticallyOrSendCode(
-                      phoneNumber: _phoneNumber,
-                      onVerificationCompleted:
-                          _onAutomaticVerificationCompleted,
-                      onVerificationFailed: _onAutomaticVerificationFailed,
-                      onCodeSent: _onCodeSent,
-                      onCodeAutoRetrievalTimeout: _onCodeAutoRetrievalTimeout);
-                  setState(() {
-                    _showSpinner = false;
-                  });
+              CupertinoTextField(
+                placeholder: 'Enter your phone number',
+                keyboardType: TextInputType.number,
+                onChanged: (newNumber) {
+                  _phoneNumber = newNumber;
                 },
               ),
+              CupertinoButton(
+                  child: Text('Verify'), onPressed: _verifyPhoneNumber),
               if (_hasToTypeCode)
                 Column(
                   children: <Widget>[
@@ -81,23 +53,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                     CupertinoButton(
-                      child: Text('Click after code entered'),
-                      onPressed: () async {
-                        final authService =
-                            Provider.of<AuthService>(context, listen: false);
-                        AuthResult authResult =
-                            await authService.signInWithSmsCode(
-                                verificationID: _verificationID,
-                                smsCode: _smsCode);
-                        if (authResult.user != null) {
-                          print('Sms code verification successful');
-                          _onAuthenticationSuccessful(
-                              firebaseUser: authResult.user);
-                        } else {
-                          print('Sms code entered was wrong');
-                        }
-                      },
-                    ),
+                        child: Text('Check Code'),
+                        onPressed: _checkEnteredCode),
                   ],
                 ),
             ],
@@ -107,46 +64,68 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  _onAutomaticVerificationCompleted(authCredential) async {
-    print('_onAutomaticVerificationCompleted called');
-    final authService = Provider.of<AuthService>(context, listen: false);
+  _verifyPhoneNumber() async {
     setState(() {
       _showSpinner = true;
     });
-    AuthResult authResult =
-        await authService.signInWithCredential(credential: authCredential);
-    setState(() {
-      _showSpinner = false;
-    });
-    if (authResult.user != null) {
-      print('authentication successful');
-      _onAuthenticationSuccessful(firebaseUser: authResult.user);
-    } else {
-      print('authentication failed');
+    print('before starting verification');
+
+    final PhoneVerificationCompleted verified =
+        (AuthCredential credential) async {
+      print("Verified caaaaaaaaaaaaaaallleeeeed");
+      AuthResult result = await _signInWithCredential(credential);
+      _onAuthenticationSuccessful(firebaseUser: result.user);
+    };
+
+    final PhoneVerificationFailed verificationFailed =
+        (AuthException authException) {
+      print("Failed caaaaaaaaaaaaaaallleeeeed");
+      print(authException.message);
+    };
+
+    final PhoneCodeSent smsSent = (String verId, [int forceResend]) {
+      print("smsSent caaaaaaaaaaaaaaallleeeeed");
+      this._verificationID = verId;
       setState(() {
         _hasToTypeCode = true;
       });
+    };
+
+    final PhoneCodeAutoRetrievalTimeout autoTimeout = (String verId) {
+      print("autoTimeout caaaaaaaaaaaaaaallleeeeed");
+      this._verificationID = verId;
+    };
+
+    await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: _phoneNumber,
+        timeout: const Duration(seconds: 5),
+        verificationCompleted: verified,
+        verificationFailed: verificationFailed,
+        codeSent: smsSent,
+        codeAutoRetrievalTimeout: autoTimeout);
+    setState(() {
+      _showSpinner = false;
+    });
+  }
+
+  _checkEnteredCode() async {
+    AuthCredential credential = PhoneAuthProvider.getCredential(
+        verificationId: _verificationID, smsCode: _smsCode);
+
+    AuthResult result = await _signInWithCredential(credential);
+
+    if (result.user != null) {
+      print('Sms code verification successful');
+      _onAuthenticationSuccessful(firebaseUser: result.user);
+    } else {
+      print('Sms code entered was wrong');
     }
   }
 
-  _onAutomaticVerificationFailed(authException) {
-    print('_onAutomaticVerificationFailed called');
-    print('verification failed with message = ${authException.message}');
-    if (authException.message.contains('Network')) {
-      print('please check your internet connection');
-    }
-  }
-
-  _onCodeSent(verificationId, [forceResendingToken]) {
-    print('_onCodeSent called');
-    _verificationID = verificationId;
-    print('code sent to $_phoneNumber');
-  }
-
-  _onCodeAutoRetrievalTimeout(verificationId) {
-    print('_onCodeAutoRetrievalTimeout called');
-    _verificationID = verificationId;
-    print('auto retrieval timed out');
+  Future<AuthResult> _signInWithCredential(AuthCredential credential) async {
+    AuthResult result =
+        await FirebaseAuth.instance.signInWithCredential(credential);
+    return result;
   }
 
   _onAuthenticationSuccessful({@required FirebaseUser firebaseUser}) async {

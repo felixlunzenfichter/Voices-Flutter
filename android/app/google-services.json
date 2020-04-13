@@ -1,49 +1,49 @@
 {
   "project_info": {
-    "project_number": "583316810215",
-    "firebase_url": "https://voices-b1908.firebaseio.com",
-    "project_id": "voices-b1908",
-    "storage_bucket": "voices-b1908.appspot.com"
+    "project_number": "560738508359",
+    "firebase_url": "https://voices-dev.firebaseio.com",
+    "project_id": "voices-dev",
+    "storage_bucket": "voices-dev.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:583316810215:android:695111bd2007041f8d7542",
+        "mobilesdk_app_id": "1:560738508359:android:2f18d56b738a5beea25b62",
         "android_client_info": {
-          "package_name": "com.felixisaak.voices"
+          "package_name": "co.alix.voices.dev"
         }
       },
       "oauth_client": [
         {
-          "client_id": "583316810215-ea06jksi9pp7h7otdegrjsok0t8kl2sr.apps.googleusercontent.com",
+          "client_id": "560738508359-mj7fd8eltffe2quebpat15gep6ke4ude.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.felixisaak.voices",
+            "package_name": "co.alix.voices.dev",
             "certificate_hash": "08805c68defeebddcdec8d1e28317f61c6f3eb8c"
           }
         },
         {
-          "client_id": "583316810215-ugio9ce3o4uaq82erce0mdmknai91ish.apps.googleusercontent.com",
+          "client_id": "560738508359-njaqaknls9i4hq3uo8gnp28odlhbd8f5.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDypn01oqNlPObEKCnwfvsIE0n41MU6nM4"
+          "current_key": "AIzaSyCkchEq8EsO2kui59RjcUbAE3hHxmNmam8"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "583316810215-ugio9ce3o4uaq82erce0mdmknai91ish.apps.googleusercontent.com",
+              "client_id": "560738508359-njaqaknls9i4hq3uo8gnp28odlhbd8f5.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "583316810215-hfqj3dkmb4g9bg9tmqmuhts13fqlf54m.apps.googleusercontent.com",
+              "client_id": "560738508359-mab5c8p94bb9be92e5le3trpveuuom4n.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.felixisaak.voices"
+                "bundle_id": "co.alix.voices.dev"
               }
             }
           ]

@@ -1,4 +1,4 @@
-package com.isaakhanimann.voices
+package co.alix.voices.dev
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity
