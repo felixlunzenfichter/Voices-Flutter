@@ -24,13 +24,18 @@ class AuthService {
       @required Function onVerificationFailed,
       @required Function onCodeSent,
       @required Function onCodeAutoRetrievalTimeout}) async {
-    await _auth.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
-        timeout: Duration(seconds: 5),
-        verificationCompleted: onVerificationCompleted,
-        verificationFailed: onVerificationFailed,
-        codeSent: onCodeSent,
-        codeAutoRetrievalTimeout: onCodeAutoRetrievalTimeout);
+    try {
+      print('inside verifyPhoneNumberAutomaticallyOrSendCode');
+      await _auth.verifyPhoneNumber(
+          phoneNumber: phoneNumber,
+          timeout: Duration(seconds: 5),
+          verificationCompleted: onVerificationCompleted,
+          verificationFailed: onVerificationFailed,
+          codeSent: onCodeSent,
+          codeAutoRetrievalTimeout: onCodeAutoRetrievalTimeout);
+    } catch (e) {
+      print("Could not verify phone number because of error: $e");
+    }
   }
 
   Future<AuthResult> signInWithCredential(

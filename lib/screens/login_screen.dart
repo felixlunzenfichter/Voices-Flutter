@@ -57,6 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   final authService =
                       Provider.of<AuthService>(context, listen: false);
                   _phoneNumber = '+41' + _phoneNumber;
+                  print('before starting verification');
                   await authService.verifyPhoneNumberAutomaticallyOrSendCode(
                       phoneNumber: _phoneNumber,
                       onVerificationCompleted:
@@ -107,6 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   _onAutomaticVerificationCompleted(authCredential) async {
+    print('_onAutomaticVerificationCompleted called');
     final authService = Provider.of<AuthService>(context, listen: false);
     setState(() {
       _showSpinner = true;
@@ -128,6 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   _onAutomaticVerificationFailed(authException) {
+    print('_onAutomaticVerificationFailed called');
     print('verification failed with message = ${authException.message}');
     if (authException.message.contains('Network')) {
       print('please check your internet connection');
@@ -135,16 +138,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   _onCodeSent(verificationId, [forceResendingToken]) {
+    print('_onCodeSent called');
     _verificationID = verificationId;
     print('code sent to $_phoneNumber');
   }
 
   _onCodeAutoRetrievalTimeout(verificationId) {
+    print('_onCodeAutoRetrievalTimeout called');
     _verificationID = verificationId;
     print('auto retrieval timed out');
   }
 
   _onAuthenticationSuccessful({@required FirebaseUser firebaseUser}) async {
+    print('_onAuthenticationSuccessful called');
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
     setState(() {
