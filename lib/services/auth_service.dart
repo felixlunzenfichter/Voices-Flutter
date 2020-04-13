@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 
 class AuthService {
   final _auth = FirebaseAuth.instance;
+  String verificationId;
 
   Stream<FirebaseUser> onAuthStateChanged() {
     return _auth.onAuthStateChanged;
@@ -20,27 +21,56 @@ class AuthService {
 
   verifyPhoneNumberAutomaticallyOrSendCode(
       {@required String phoneNumber,
-      @required Function onVerificationCompleted,
-      @required Function onVerificationFailed,
-      @required Function onCodeSent,
-      @required Function onCodeAutoRetrievalTimeout}) async {
+      @required Function whatTodoWhenVerified,
+      @required Function whatTodoWhenVerificationFailed,
+      @required Function whatTodoWhenSmsSent}) async {
     try {
-      print('inside verifyPhoneNumberAutomaticallyOrSendCode');
+      final PhoneVerificationCompleted onVerified =
+          (AuthCredential credential) async {
+        AuthResult result = await _signInWithCredential(credential);
+        whatTodoWhenVerified(result.user);
+      };
+      final PhoneVerificationFailed onFailed = (AuthException authException) {
+        whatTodoWhenVerificationFailed(authException.message);
+      };
+      final PhoneCodeAutoRetrievalTimeout autoTimeout = (String verId) {
+        verificationId = verId;
+      };
+      final PhoneCodeSent onSmsSent = (String verId, [int forceResend]) {
+        verificationId = verId;
+        whatTodoWhenSmsSent();
+      };
       await _auth.verifyPhoneNumber(
           phoneNumber: phoneNumber,
           timeout: Duration(seconds: 5),
-          verificationCompleted: onVerificationCompleted,
-          verificationFailed: onVerificationFailed,
-          codeSent: onCodeSent,
-          codeAutoRetrievalTimeout: onCodeAutoRetrievalTimeout);
+          verificationCompleted: onVerified,
+          verificationFailed: onFailed,
+          codeSent: onSmsSent,
+          codeAutoRetrievalTimeout: autoTimeout);
     } catch (e) {
       print("Could not verify phone number because of error: $e");
     }
   }
 
-  Future<AuthResult> signInWithCredential(
-      {@required AuthCredential credential}) async {
-    AuthResult authResult = await _auth.signInWithCredential(credential);
-    return authResult;
+  checkEnteredCode(
+      {@required String code,
+      @required Function onSuccess,
+      @required Function onFail}) async {
+    AuthCredential credential = PhoneAuthProvider.getCredential(
+        verificationId: verificationId, smsCode: code);
+
+    AuthResult result = await _signInWithCredential(credential);
+    FirebaseUser user = result.user;
+    if (user == null) {
+      onFail();
+    } else {
+      onSuccess(user);
+    }
+  }
+
+  Future<AuthResult> _signInWithCredential(AuthCredential credential) async {
+    AuthResult result =
+        await FirebaseAuth.instance.signInWithCredential(credential);
+    return result;
   }
 }

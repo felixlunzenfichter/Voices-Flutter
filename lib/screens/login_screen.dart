@@ -7,6 +7,7 @@ import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/models/user.dart';
 import 'create_profile_screen.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:voices/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -16,9 +17,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _showSpinner = false;
   String _phoneNumber = '';
-  String _verificationID;
-  String _smsCode;
-  bool _hasToTypeCode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -42,21 +40,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               CupertinoButton(
                   child: Text('Verify'), onPressed: _verifyPhoneNumber),
-              if (_hasToTypeCode)
-                Column(
-                  children: <Widget>[
-                    CupertinoTextField(
-                      placeholder: 'Enter the code here',
-                      keyboardType: TextInputType.number,
-                      onChanged: (newCode) {
-                        _smsCode = newCode;
-                      },
-                    ),
-                    CupertinoButton(
-                        child: Text('Check Code'),
-                        onPressed: _checkEnteredCode),
-                  ],
-                ),
             ],
           ),
         ),
@@ -70,65 +53,35 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     print('before starting verification');
 
-    final PhoneVerificationCompleted verified =
-        (AuthCredential credential) async {
+    final Function whatTodoWhenVerificationSuccessful =
+        (FirebaseUser firebaseUser) async {
       print("Verified caaaaaaaaaaaaaaallleeeeed");
-      AuthResult result = await _signInWithCredential(credential);
-      _onAuthenticationSuccessful(firebaseUser: result.user);
+      _checkIfUserAlreadyExistsAndNavigate(firebaseUser: firebaseUser);
     };
 
-    final PhoneVerificationFailed verificationFailed =
-        (AuthException authException) {
+    final Function whatTodoWhenVerificationFailed = (String errorMessage) {
       print("Failed caaaaaaaaaaaaaaallleeeeed");
-      print(authException.message);
+      //todo show the user that it failed
+      print(errorMessage);
     };
 
-    final PhoneCodeSent smsSent = (String verId, [int forceResend]) {
-      print("smsSent caaaaaaaaaaaaaaallleeeeed");
-      this._verificationID = verId;
-      setState(() {
-        _hasToTypeCode = true;
-      });
+    final Function whatTodoWhenSmsSent = () {
+      print("whatTodoWhenSmsSent caaaaaaaaaaaaaaallleeeeed");
+      //todo add verification id and navigate to codescreen
     };
-
-    final PhoneCodeAutoRetrievalTimeout autoTimeout = (String verId) {
-      print("autoTimeout caaaaaaaaaaaaaaallleeeeed");
-      this._verificationID = verId;
-    };
-
-    await FirebaseAuth.instance.verifyPhoneNumber(
+    final authService = Provider.of<AuthService>(context, listen: false);
+    await authService.verifyPhoneNumberAutomaticallyOrSendCode(
         phoneNumber: _phoneNumber,
-        timeout: const Duration(seconds: 5),
-        verificationCompleted: verified,
-        verificationFailed: verificationFailed,
-        codeSent: smsSent,
-        codeAutoRetrievalTimeout: autoTimeout);
+        whatTodoWhenVerified: whatTodoWhenVerificationSuccessful,
+        whatTodoWhenVerificationFailed: whatTodoWhenVerificationFailed,
+        whatTodoWhenSmsSent: whatTodoWhenSmsSent);
     setState(() {
       _showSpinner = false;
     });
   }
 
-  _checkEnteredCode() async {
-    AuthCredential credential = PhoneAuthProvider.getCredential(
-        verificationId: _verificationID, smsCode: _smsCode);
-
-    AuthResult result = await _signInWithCredential(credential);
-
-    if (result.user != null) {
-      print('Sms code verification successful');
-      _onAuthenticationSuccessful(firebaseUser: result.user);
-    } else {
-      print('Sms code entered was wrong');
-    }
-  }
-
-  Future<AuthResult> _signInWithCredential(AuthCredential credential) async {
-    AuthResult result =
-        await FirebaseAuth.instance.signInWithCredential(credential);
-    return result;
-  }
-
-  _onAuthenticationSuccessful({@required FirebaseUser firebaseUser}) async {
+  _checkIfUserAlreadyExistsAndNavigate(
+      {@required FirebaseUser firebaseUser}) async {
     print('_onAuthenticationSuccessful called');
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
