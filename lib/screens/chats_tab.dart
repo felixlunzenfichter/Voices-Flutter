@@ -6,6 +6,8 @@ import 'package:voices/models/chat.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/profile_picture.dart';
 import 'chat_screen.dart';
+import 'search_users_screen.dart';
+import 'package:voices/shared widgets/custom_card.dart';
 
 class ChatsTab extends StatefulWidget {
   @override
@@ -27,13 +29,21 @@ class _ChatsTabState extends State<ChatsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final loggedInUser = Provider.of<User>(context, listen: false);
+
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text("Chats"),
         trailing: CupertinoButton(
           child: Icon(Icons.add_circle_outline),
           onPressed: () {
-            //todo open new chat
+            Navigator.of(context, rootNavigator: true).push(
+              CupertinoPageRoute<void>(
+                builder: (context) {
+                  return SearchUsersScreen(loggedInUser: loggedInUser);
+                },
+              ),
+            );
           },
         ),
       ),
@@ -94,7 +104,7 @@ class _ChatItemState extends State<ChatItem> {
     String otherUserUid = widget.chat.uidsOfMembers
         .where((uid) => uid != loggedInUser.uid)
         .toList()[0];
-    otherUserFuture = cloudFirestoreService.getUser(uid: otherUserUid);
+    otherUserFuture = cloudFirestoreService.getUserWithUid(uid: otherUserUid);
   }
 
   @override
@@ -156,8 +166,8 @@ class _ChatItemState extends State<ChatItem> {
               ),
             ],
           ),
-          onPress: () async {
-            await Navigator.of(context, rootNavigator: true).push(
+          onPress: () {
+            Navigator.of(context, rootNavigator: true).push(
               CupertinoPageRoute<void>(
                 builder: (context) {
                   return ChatScreen(
@@ -171,57 +181,6 @@ class _ChatItemState extends State<ChatItem> {
           },
         );
       },
-    );
-  }
-}
-
-class CustomCard extends StatelessWidget {
-  final Widget leading;
-  final Widget middle;
-  final Function onPress;
-  final Function onLongPress;
-  final double paddingInsideHorizontal;
-  final double paddingInsideVertical;
-
-  CustomCard(
-      {@required this.leading,
-      @required this.middle,
-      @required this.onPress,
-      this.onLongPress,
-      this.paddingInsideHorizontal = 15,
-      this.paddingInsideVertical = 10});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      child: GestureDetector(
-        onTap: onPress,
-        onLongPress: onLongPress,
-        child: Container(
-          padding: EdgeInsets.symmetric(
-              horizontal: paddingInsideHorizontal,
-              vertical: paddingInsideVertical),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: Colors.lightBlueAccent,
-          ),
-          child: Row(
-            children: <Widget>[
-              leading,
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: middle,
-                ),
-              ),
-              Icon(
-                Icons.chevron_right,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

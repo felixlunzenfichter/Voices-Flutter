@@ -77,7 +77,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
     FirebaseUser firebaseUser = await authService.getCurrentUser();
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
-    User user = await cloudFirestoreService.getUser(uid: firebaseUser.uid);
+    User user =
+        await cloudFirestoreService.getUserWithUid(uid: firebaseUser.uid);
     setState(() {
       loggedInUser = user;
     });

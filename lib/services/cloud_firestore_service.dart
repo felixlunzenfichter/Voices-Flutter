@@ -22,18 +22,33 @@ class CloudFirestoreService {
     }
   }
 
-  Future<User> getUser({@required String uid}) async {
+  Future<User> getUserWithUid({@required String uid}) async {
     try {
       var userDocument =
           await _fireStore.collection('users').document(uid).get();
-      if (userDocument.data == null) {
-        print('Could not get user info1');
-        return null;
-      }
-
       return User.fromMap(map: userDocument.data);
     } catch (e) {
-      print('Could not get user with uid = $uid');
+      print('Could not get user with uid = $uid because of error: $e');
+      return null;
+    }
+  }
+
+  Future<User> getUserWithUsername({@required String username}) async {
+    try {
+      QuerySnapshot snap = await _fireStore
+          .collection('users')
+          .where('username', isEqualTo: username)
+          .getDocuments();
+
+      var userDocuments = snap.documents;
+      if (userDocuments.isEmpty) {
+        return null;
+      } else {
+        User user = User.fromMap(map: userDocuments[0].data);
+        return user;
+      }
+    } catch (e) {
+      print('Could not get user with username = $username');
       print(e);
       return null;
     }
@@ -60,24 +75,15 @@ class CloudFirestoreService {
     }
   }
 
-  Future<User> getUserWithUsername({@required String username}) async {
+  Future<List<User>> getAllUsers() async {
     try {
-      QuerySnapshot snap = await _fireStore
-          .collection('users')
-          .where('username', isEqualTo: username)
-          .getDocuments();
-
-      var userDocuments = snap.documents;
-      if (userDocuments.isEmpty) {
-        return null;
-      } else {
-        User user = User.fromMap(map: userDocuments[0].data);
-        return user;
-      }
+      return (await _fireStore.collection('users').getDocuments())
+          .documents
+          .map((doc) => User.fromMap(map: doc.data))
+          .toList();
     } catch (e) {
-      print('Could not get user with username = $username');
-      print(e);
-      return null;
+      print('Could not get users because of error: $e');
+      return [];
     }
   }
 
@@ -89,9 +95,41 @@ class CloudFirestoreService {
           .snapshots()
           .map((doc) => User.fromMap(map: doc.data));
     } catch (e) {
-      print('Could not get the user stream');
+      print('Could not get the user stream because of error: $e');
     }
     return Stream.empty();
+  }
+
+  Future<String> getChatWithUsers(
+      {@required String uid1, @required String uid2}) async {
+    try {
+      var docs1 = (await _fireStore
+              .collection('chats')
+              .where('uidsOfMembers', arrayContains: uid1)
+              .getDocuments())
+          .documents;
+      var docs2 = (await _fireStore
+              .collection('chats')
+              .where('uidsOfMembers', arrayContains: uid2)
+              .getDocuments())
+          .documents;
+      String chatId;
+      for (var doc in docs1) {
+        if (docs2.contains(doc)) {
+          chatId = doc.documentID;
+        }
+      }
+      if (chatId != null) {
+        return chatId;
+      } else {
+        //create chat and return chatId
+        Chat chat = await _createChat(uidsOfMembers: [uid1, uid2]);
+        return chat.chatId;
+      }
+    } catch (e) {
+      print('Could not get user because of error: $e');
+      return null;
+    }
   }
 
   Stream<List<Chat>> getChatsStream({@required String loggedInUid}) {
@@ -105,22 +143,6 @@ class CloudFirestoreService {
               return chat;
             }).toList());
     return chatStream;
-  }
-
-  Future<void> uploadChatBlocked(
-      {@required String chatpath,
-      bool hasUser1Blocked,
-      bool hasUser2Blocked}) async {
-    if (hasUser1Blocked != null) {
-      await _fireStore
-          .document(chatpath)
-          .updateData({'hasUser1Blocked': hasUser1Blocked});
-    } else if (hasUser2Blocked != null) {
-      await _fireStore
-          .document(chatpath)
-          .updateData({'hasUser2Blocked': hasUser2Blocked});
-    }
-    return null;
   }
 
   Stream<List<Message>> getMessageStream({@required String chatId}) {
@@ -180,6 +202,25 @@ class CloudFirestoreService {
       whatToDoWhenUserNew(newUser);
     } else {
       whatToDoWhenUserAlreadyExists(user);
+    }
+  }
+
+  Future<Chat> _createChat({@required List<String> uidsOfMembers}) async {
+    try {
+      Chat chat = Chat(
+          uidsOfMembers: uidsOfMembers,
+          lastMessageText: 'No message yet',
+          lastMessageTimestamp: FieldValue.serverTimestamp());
+      var docReference = await _fireStore.collection('chats').add(chat.toMap());
+      chat.chatId = docReference.documentID;
+      await _fireStore
+          .collection('chats')
+          .document(chat.chatId)
+          .updateData(chat.toMap());
+      return chat;
+    } catch (e) {
+      print('Could not create chat because of error $e');
+      return null;
     }
   }
 }
