@@ -4,14 +4,14 @@ import 'package:provider/provider.dart';
 import 'package:voices/screens/login_screen.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/models/user.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:voices/shared widgets/profile_picture.dart';
 
-class ProfileTab extends StatefulWidget {
+class SettingsTab extends StatefulWidget {
   @override
-  _ProfileTabState createState() => _ProfileTabState();
+  _SettingsTabState createState() => _SettingsTabState();
 }
 
-class _ProfileTabState extends State<ProfileTab> {
+class _SettingsTabState extends State<SettingsTab> {
   @override
   Widget build(BuildContext context) {
     final loggedInUser = Provider.of<User>(context);
@@ -23,19 +23,9 @@ class _ProfileTabState extends State<ProfileTab> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  CachedNetworkImage(
+                  ProfilePicture(
                     imageUrl: loggedInUser.imageUrl,
-                    imageBuilder: (context, imageProvider) {
-                      return CircleAvatar(
-                          radius: 60,
-                          backgroundColor: Colors.grey,
-                          backgroundImage: imageProvider);
-                    },
-                    placeholder: (context, url) => SizedBox(
-                      height: 120,
-                      child: CupertinoActivityIndicator(),
-                    ),
-                    errorWidget: (context, url, error) => Icon(Icons.error),
+                    radius: 60,
                   ),
                   Text(loggedInUser.username),
                   CupertinoButton(

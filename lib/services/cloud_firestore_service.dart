@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/models/message.dart';
 import 'package:voices/constants.dart';
+import 'package:voices/models/chat.dart';
 
 class CloudFirestoreService {
   final _fireStore = Firestore.instance;
@@ -93,6 +94,19 @@ class CloudFirestoreService {
     return Stream.empty();
   }
 
+  Stream<List<Chat>> getChatsStream({@required String loggedInUid}) {
+    Stream<List<Chat>> chatStream = _fireStore
+        .collection('chats')
+        .where('uidsOfMembers', arrayContains: loggedInUid)
+        .snapshots()
+        .map((snap) => snap.documents.map((doc) {
+              Chat chat = Chat.fromMap(map: doc.data);
+              chat.chatId = doc.documentID;
+              return chat;
+            }).toList());
+    return chatStream;
+  }
+
   Future<void> uploadChatBlocked(
       {@required String chatpath,
       bool hasUser1Blocked,
@@ -109,11 +123,10 @@ class CloudFirestoreService {
     return null;
   }
 
-  Stream<List<Message>> getMessageStream({@required String chatPath}) {
+  Stream<List<Message>> getMessageStream({@required String chatId}) {
     try {
       var messageStream = _fireStore
-          .document(chatPath)
-          .collection('messages')
+          .collection('chats/$chatId/messages')
           .orderBy('timestamp')
           .snapshots()
           .map((snap) => snap.documents.reversed
@@ -121,17 +134,17 @@ class CloudFirestoreService {
               .toList());
       return messageStream;
     } catch (e) {
-      print('Could not get the message stream');
+      print('Could not get the message stream because of error: $e');
     }
     return Stream.empty();
   }
 
-  Future<void> uploadMessage(
-      {@required String chatPath, @required Message message}) async {
+  Future<void> addMessage(
+      {@required String chatId, @required Message message}) async {
     try {
+      message.timestamp = FieldValue.serverTimestamp();
       await _fireStore
-          .document(chatPath)
-          .collection('messages')
+          .collection("chats/$chatId/messages")
           .add(message.toMap());
     } catch (e) {
       print('Could not upload message');

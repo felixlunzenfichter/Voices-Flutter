@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'profile_tab.dart';
+import 'settings_tab.dart';
 import 'chats_tab.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/services/auth_service.dart';
@@ -15,7 +15,7 @@ class NavigationScreen extends StatefulWidget {
 }
 
 class _NavigationScreenState extends State<NavigationScreen> {
-  FirebaseUser loggedInUser;
+  User loggedInUser;
 
   @override
   void initState() {
@@ -28,13 +28,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
     if (loggedInUser == null) {
       return LoginScreen();
     }
-    final cloudFirestoreService =
-        Provider.of<CloudFirestoreService>(context, listen: false);
-    return StreamProvider<User>.value(
-      value: cloudFirestoreService.getUserStream(uid: loggedInUser?.uid),
-      catchError: (context, object) {
-        return null;
-      },
+    return Provider<User>.value(
+      value: loggedInUser,
       child: CupertinoTabScaffold(
         tabBar: CupertinoTabBar(
           backgroundColor: Colors.white,
@@ -48,7 +43,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
             ),
             BottomNavigationBarItem(
               icon: Icon(
-                Icons.account_circle,
+                Icons.settings,
               ),
             ),
           ],
@@ -66,7 +61,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
             case 1:
               returnValue = CupertinoTabView(builder: (context) {
                 return CupertinoPageScaffold(
-                  child: ProfileTab(),
+                  child: SettingsTab(),
                 );
               });
               break;
@@ -80,8 +75,11 @@ class _NavigationScreenState extends State<NavigationScreen> {
   _getLoggedInUser() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     FirebaseUser firebaseUser = await authService.getCurrentUser();
+    final cloudFirestoreService =
+        Provider.of<CloudFirestoreService>(context, listen: false);
+    User user = await cloudFirestoreService.getUser(uid: firebaseUser.uid);
     setState(() {
-      loggedInUser = firebaseUser;
+      loggedInUser = user;
     });
   }
 }

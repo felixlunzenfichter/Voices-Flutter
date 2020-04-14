@@ -1,20 +1,19 @@
-import 'user.dart';
-
 class Chat {
   String chatId;
-  List<User> users;
+  List<String> uidsOfMembers;
   String lastMessageText;
   var lastMessageTimestamp;
 
   Chat(
       {this.chatId,
-      this.users,
+      this.uidsOfMembers,
       this.lastMessageText,
       this.lastMessageTimestamp});
 
   Chat.fromMap({Map<String, dynamic> map}) {
     this.chatId = map['chatId'];
-    this.users = _convertFirebaseList(firebaseUsersList: map['users']);
+    this.uidsOfMembers =
+        _convertFirebaseListToDartList(list: map['uidsOfMembers']);
     this.lastMessageText = map['lastMessageText'];
     this.lastMessageTimestamp = map['lastMessageTimestamp']?.toDate();
   }
@@ -22,7 +21,7 @@ class Chat {
   Map<String, dynamic> toMap() {
     return {
       'chatId': chatId,
-      'users': users?.map((User u) => u.toMap())?.toList(),
+      'uidsOfMembers': uidsOfMembers,
       'lastMessageText': lastMessageText,
       'lastMessageTimestamp': lastMessageTimestamp,
     };
@@ -31,14 +30,14 @@ class Chat {
   @override
   String toString() {
     String toPrint = '\n{ chatId: $chatId, ';
-    toPrint += 'users: $users, ';
+    toPrint += 'uidsOfMembers: $uidsOfMembers, ';
     toPrint += 'lastMessageText: $lastMessageText, ';
     toPrint += 'lastMessageTimestamp: ${lastMessageTimestamp.toString()} }\n';
     return toPrint;
   }
 
-  List<User> _convertFirebaseList({List<dynamic> firebaseUsersList}) {
-    List<User> users = firebaseUsersList.map((d) => User.fromMap(map: d));
-    return users;
+  List<String> _convertFirebaseListToDartList({List<dynamic> list}) {
+    List<String> dartList = list.map((d) => d.toString());
+    return dartList;
   }
 }
