@@ -31,13 +31,15 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
           children: <Widget>[
             CupertinoTextField(
               placeholder: 'Enter the code here',
+              maxLength: 6,
               keyboardType: TextInputType.number,
               onChanged: (newCode) {
                 _smsCode = newCode;
+                if (newCode.length == 6) {
+                  _checkEnteredCode();
+                }
               },
             ),
-            CupertinoButton(
-                child: Text('Check Code'), onPressed: _checkEnteredCode),
           ],
         ),
       ),
