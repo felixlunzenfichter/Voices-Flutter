@@ -48,8 +48,8 @@ class CloudFirestoreService {
         return user;
       }
     } catch (e) {
-      print('Could not get user with username = $username');
-      print(e);
+      print(
+          'Could not get user with username = $username because of error: $e');
       return null;
     }
   }
@@ -69,8 +69,8 @@ class CloudFirestoreService {
         return user;
       }
     } catch (e) {
-      print('Could not get user with phone number = $phoneNumber');
-      print(e);
+      print(
+          'Could not get user with phone number = $phoneNumber because of error: $e');
       return null;
     }
   }
@@ -133,16 +133,21 @@ class CloudFirestoreService {
   }
 
   Stream<List<Chat>> getChatsStream({@required String loggedInUid}) {
-    Stream<List<Chat>> chatStream = _fireStore
-        .collection('chats')
-        .where('uidsOfMembers', arrayContains: loggedInUid)
-        .snapshots()
-        .map((snap) => snap.documents.map((doc) {
-              Chat chat = Chat.fromMap(map: doc.data);
-              chat.chatId = doc.documentID;
-              return chat;
-            }).toList());
-    return chatStream;
+    try {
+      Stream<List<Chat>> chatStream = _fireStore
+          .collection('chats')
+          .where('uidsOfMembers', arrayContains: loggedInUid)
+          .snapshots()
+          .map((snap) => snap.documents.map((doc) {
+                Chat chat = Chat.fromMap(map: doc.data);
+                chat.chatId = doc.documentID;
+                return chat;
+              }).toList());
+      return chatStream;
+    } catch (e) {
+      print('Could not get the chats stream because of error: $e');
+      return Stream.empty();
+    }
   }
 
   Stream<List<Message>> getMessageStream({@required String chatId}) {
@@ -157,8 +162,8 @@ class CloudFirestoreService {
       return messageStream;
     } catch (e) {
       print('Could not get the message stream because of error: $e');
+      return Stream.empty();
     }
-    return Stream.empty();
   }
 
   Future<void> addMessage(
@@ -169,7 +174,7 @@ class CloudFirestoreService {
           .collection("chats/$chatId/messages")
           .add(message.toMap());
     } catch (e) {
-      print('Could not upload message');
+      print('Could not upload message because of error: $e');
     }
   }
 
@@ -181,7 +186,7 @@ class CloudFirestoreService {
           .document(uid)
           .updateData({'pushToken': pushToken});
     } catch (e) {
-      print('Could not upload push token');
+      print('Could not upload push token because of error: $e');
     }
   }
 
@@ -193,15 +198,21 @@ class CloudFirestoreService {
       @required String uid,
       @required Function whatToDoWhenUserNew,
       @required Function whatToDoWhenUserAlreadyExists}) async {
-    User user = await getUserWithPhoneNumber(phoneNumber: phoneNumber);
+    try {
+      User user = await getUserWithPhoneNumber(phoneNumber: phoneNumber);
 
-    if (user == null) {
-      User newUser = User(
-          uid: uid, phoneNumber: phoneNumber, imageUrl: kDefaultProfilePicUrl);
-      await uploadUser(user: newUser);
-      whatToDoWhenUserNew(newUser);
-    } else {
-      whatToDoWhenUserAlreadyExists(user);
+      if (user == null) {
+        User newUser = User(
+            uid: uid,
+            phoneNumber: phoneNumber,
+            imageUrl: kDefaultProfilePicUrl);
+        await uploadUser(user: newUser);
+        whatToDoWhenUserNew(newUser);
+      } else {
+        whatToDoWhenUserAlreadyExists(user);
+      }
+    } catch (e) {
+      print('Could not check if user exists because of error: $e');
     }
   }
 
