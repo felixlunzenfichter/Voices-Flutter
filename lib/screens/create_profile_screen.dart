@@ -98,19 +98,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
               ),
               CupertinoButton(
                 child: Text('Save'),
-                onPressed: () async {
-                  setState(() {
-                    _showSpinner = true;
-                  });
-                  if (await _isUsernameUnique()) {
-                    _uploadUser();
-                  } else {
-                    print('username is not unique');
-                  }
-                  setState(() {
-                    _showSpinner = false;
-                  });
-                },
+                onPressed: _uploadUser,
               )
             ],
           ),
@@ -149,18 +137,6 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     );
   }
 
-  Future<bool> _isUsernameUnique() async {
-    final cloudFirestoreService =
-        Provider.of<CloudFirestoreService>(context, listen: false);
-    User user =
-        await cloudFirestoreService.getUserWithUsername(username: _username);
-    if (user != null) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-
   void _setImage(ImageSource source) async {
     var selectedImage = await ImagePicker.pickImage(source: source);
     File croppedImage;
@@ -189,6 +165,9 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   }
 
   _uploadUser() async {
+    setState(() {
+      _showSpinner = true;
+    });
     final storageService = Provider.of<StorageService>(context, listen: false);
     String imageUrl = kDefaultProfilePicUrl;
     if (_profilePic != null) {

@@ -33,6 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: Colors.purple,
         body: SafeArea(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               CupertinoTextField(
                 placeholder: 'Enter your phone number',

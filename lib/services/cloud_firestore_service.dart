@@ -33,27 +33,6 @@ class CloudFirestoreService {
     }
   }
 
-  Future<User> getUserWithUsername({@required String username}) async {
-    try {
-      QuerySnapshot snap = await _fireStore
-          .collection('users')
-          .where('username', isEqualTo: username)
-          .getDocuments();
-
-      var userDocuments = snap.documents;
-      if (userDocuments.isEmpty) {
-        return null;
-      } else {
-        User user = User.fromMap(map: userDocuments[0].data);
-        return user;
-      }
-    } catch (e) {
-      print(
-          'Could not get user with username = $username because of error: $e');
-      return null;
-    }
-  }
-
   Future<User> getUserWithPhoneNumber({@required String phoneNumber}) async {
     try {
       QuerySnapshot snap = await _fireStore
@@ -119,6 +98,7 @@ class CloudFirestoreService {
           chatId = doc.documentID;
         }
       }
+
       if (chatId != null) {
         return chatId;
       } else {
@@ -134,6 +114,7 @@ class CloudFirestoreService {
 
   Stream<List<Chat>> getChatsStream({@required String loggedInUid}) {
     try {
+      print("is getting chats executed");
       Stream<List<Chat>> chatStream = _fireStore
           .collection('chats')
           .where('uidsOfMembers', arrayContains: loggedInUid)
@@ -169,12 +150,14 @@ class CloudFirestoreService {
   Future<void> addMessage(
       {@required String chatId, @required Message message}) async {
     try {
-      message.timestamp = FieldValue.serverTimestamp();
-      await _fireStore
-          .collection("chats/$chatId/messages")
-          .add(message.toMap());
+      var messageMap = {
+        'text': message.text,
+        'senderUid': message.senderUid,
+        'timestamp': FieldValue.serverTimestamp()
+      };
+      await _fireStore.collection("chats/$chatId/messages").add(messageMap);
     } catch (e) {
-      print('Could not upload message because of error: $e');
+      print('Could not add message because of error: $e');
     }
   }
 
@@ -219,10 +202,13 @@ class CloudFirestoreService {
   Future<Chat> _createChat({@required List<String> uidsOfMembers}) async {
     try {
       Chat chat = Chat(
-          uidsOfMembers: uidsOfMembers,
-          lastMessageText: 'No message yet',
-          lastMessageTimestamp: FieldValue.serverTimestamp());
-      var docReference = await _fireStore.collection('chats').add(chat.toMap());
+        uidsOfMembers: uidsOfMembers,
+        lastMessageText: 'No message yet',
+      );
+      Map<String, dynamic> chatMap = chat.toMap();
+      chatMap.addEntries(
+          [MapEntry("lastMessageTimestamp", FieldValue.serverTimestamp())]);
+      var docReference = await _fireStore.collection('chats').add(chatMap);
       chat.chatId = docReference.documentID;
       await _fireStore
           .collection('chats')

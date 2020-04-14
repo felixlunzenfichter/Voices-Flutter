@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "560738508359",
-    "firebase_url": "https://voices-dev.firebaseio.com",
-    "project_id": "voices-dev",
-    "storage_bucket": "voices-dev.appspot.com"
+    "project_number": "282278344158",
+    "firebase_url": "https://voices-dev1.firebaseio.com",
+    "project_id": "voices-dev1",
+    "storage_bucket": "voices-dev1.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:560738508359:android:2f18d56b738a5beea25b62",
+        "mobilesdk_app_id": "1:282278344158:android:636561fcb145995bc5594f",
         "android_client_info": {
           "package_name": "co.alix.voices.dev"
         }
       },
       "oauth_client": [
         {
-          "client_id": "560738508359-mj7fd8eltffe2quebpat15gep6ke4ude.apps.googleusercontent.com",
+          "client_id": "282278344158-9om4kfma6s804ojdq7fmsgqem5tnad0h.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "co.alix.voices.dev",
@@ -23,24 +23,24 @@
           }
         },
         {
-          "client_id": "560738508359-njaqaknls9i4hq3uo8gnp28odlhbd8f5.apps.googleusercontent.com",
+          "client_id": "282278344158-ef0ektkp6b0tq574vvdd7todieng1lmh.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCkchEq8EsO2kui59RjcUbAE3hHxmNmam8"
+          "current_key": "AIzaSyAT1QaE0HtNGSmSxla7wNQbgiFVpYI_27o"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "560738508359-njaqaknls9i4hq3uo8gnp28odlhbd8f5.apps.googleusercontent.com",
+              "client_id": "282278344158-ef0ektkp6b0tq574vvdd7todieng1lmh.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "560738508359-mab5c8p94bb9be92e5le3trpveuuom4n.apps.googleusercontent.com",
+              "client_id": "282278344158-37t9u0adpl142gom74l8t4u1rl89dkm5.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "co.alix.voices.dev"

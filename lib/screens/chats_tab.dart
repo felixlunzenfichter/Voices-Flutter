@@ -53,15 +53,15 @@ class _ChatsTabState extends State<ChatsTab> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Expanded(
-                child: StreamBuilder(
+                child: StreamBuilder<List<Chat>>(
                     stream: chatStream,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting ||
                           snapshot.connectionState == ConnectionState.none) {
                         return CupertinoActivityIndicator();
                       }
-                      List<Chat> chats = List.from(
-                          snapshot.data); // to convert it to editable list
+                      List<Chat> chats = List.from(snapshot.data ??
+                          []); // to convert it to editable list
                       chats.sort((chat1, chat2) => (chat2.lastMessageTimestamp)
                           .compareTo(chat1.lastMessageTimestamp));
 
@@ -142,7 +142,7 @@ class _ChatItemState extends State<ChatItem> {
                   ),
                   Expanded(
                     child: Text(
-                      widget.chat.lastMessageTimestamp,
+                      widget.chat.lastMessageTimestamp.toString(),
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.end,
                     ),

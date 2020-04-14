@@ -34,11 +34,11 @@ class _SearchUsersScreenState extends State<SearchUsersScreen> {
     return ModalProgressHUD(
       inAsyncCall: _showSpinner,
       progressIndicator: CupertinoActivityIndicator(),
-      child: CupertinoPageScaffold(
-        navigationBar: CupertinoNavigationBar(
-          middle: Text('Search Users'),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Search Users'),
         ),
-        child: FutureBuilder(
+        body: FutureBuilder(
           future: allUsersFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
@@ -66,7 +66,9 @@ class _SearchUsersScreenState extends State<SearchUsersScreen> {
                 User user = allUsers[index];
                 return UserItem(
                     user: user,
-                    onPress: _whatTodoWhenUserItemIsPressed(user: user));
+                    onPress: () {
+                      _whatTodoWhenUserItemIsPressed(user: user);
+                    });
               },
               padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 20.0),
             );

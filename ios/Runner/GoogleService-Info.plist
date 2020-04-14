@@ -3,21 +3,23 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>560738508359-mab5c8p94bb9be92e5le3trpveuuom4n.apps.googleusercontent.com</string>
+	<string>282278344158-37t9u0adpl142gom74l8t4u1rl89dkm5.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.560738508359-mab5c8p94bb9be92e5le3trpveuuom4n</string>
+	<string>com.googleusercontent.apps.282278344158-37t9u0adpl142gom74l8t4u1rl89dkm5</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>282278344158-9om4kfma6s804ojdq7fmsgqem5tnad0h.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyDqFW3q03L0sjpiI2foHNoRw1O5Y1LAwkU</string>
+	<string>AIzaSyAY2WTe3S0L4ui89iYNk5x5WoIbKHRi54s</string>
 	<key>GCM_SENDER_ID</key>
-	<string>560738508359</string>
+	<string>282278344158</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>co.alix.voices.dev</string>
 	<key>PROJECT_ID</key>
-	<string>voices-dev</string>
+	<string>voices-dev1</string>
 	<key>STORAGE_BUCKET</key>
-	<string>voices-dev.appspot.com</string>
+	<string>voices-dev1.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -29,8 +31,8 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:560738508359:ios:7b87bc3ffb81b876a25b62</string>
+	<string>1:282278344158:ios:4cd2bf4f1e32633ec5594f</string>
 	<key>DATABASE_URL</key>
-	<string>https://voices-dev.firebaseio.com</string>
+	<string>https://voices-dev1.firebaseio.com</string>
 </dict>
 </plist>

@@ -1,2 +1,2 @@
 const String kDefaultProfilePicUrl =
-    'https://firebasestorage.googleapis.com/v0/b/voices-dev.appspot.com/o/default_profile_pic.jpg?alt=media&token=c4cf499e-d0e3-4371-898b-18eed6591f7b';
+    "https://firebasestorage.googleapis.com/v0/b/voices-dev1.appspot.com/o/default_profile_pic.jpg?alt=media&token=1a4a729e-cc6e-4ab0-8fab-cf982c840257";

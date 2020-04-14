@@ -1,29 +1,24 @@
 class Message {
   String senderUid;
-  String receiverUid;
   String text;
-  var timestamp;
+  DateTime timestamp;
 
   Message({
     this.senderUid,
-    this.receiverUid,
     this.text,
     this.timestamp,
   });
 
   Message.fromMap({Map<String, dynamic> map}) {
     this.senderUid = map['senderUid'];
-    this.receiverUid = map['receiverUid'];
     this.text = map['text'];
-    this.timestamp = map['timestamp']?.toDate() ?? DateTime.now();
+    this.timestamp = map['timestamp'].toDate();
   }
 
   toMap() {
     return {
       'text': text,
       'senderUid': senderUid,
-      'receiverUid': receiverUid,
-      'timestamp': timestamp
     };
   }
 }

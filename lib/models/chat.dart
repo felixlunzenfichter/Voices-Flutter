@@ -2,7 +2,7 @@ class Chat {
   String chatId;
   List<String> uidsOfMembers;
   String lastMessageText;
-  var lastMessageTimestamp;
+  DateTime lastMessageTimestamp;
 
   Chat(
       {this.chatId,
@@ -15,7 +15,7 @@ class Chat {
     this.uidsOfMembers =
         _convertFirebaseListToDartList(list: map['uidsOfMembers']);
     this.lastMessageText = map['lastMessageText'];
-    this.lastMessageTimestamp = map['lastMessageTimestamp']?.toDate();
+    this.lastMessageTimestamp = map['lastMessageTimestamp'].toDate();
   }
 
   Map<String, dynamic> toMap() {
@@ -23,7 +23,6 @@ class Chat {
       'chatId': chatId,
       'uidsOfMembers': uidsOfMembers,
       'lastMessageText': lastMessageText,
-      'lastMessageTimestamp': lastMessageTimestamp,
     };
   }
 
@@ -37,7 +36,7 @@ class Chat {
   }
 
   List<String> _convertFirebaseListToDartList({List<dynamic> list}) {
-    List<String> dartList = list.map((d) => d.toString());
+    List<String> dartList = list.map((d) => d.toString()).toList();
     return dartList;
   }
 }
