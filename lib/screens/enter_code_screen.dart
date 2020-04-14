@@ -15,7 +15,7 @@ class EnterCodeScreen extends StatefulWidget {
 
 class _EnterCodeScreenState extends State<EnterCodeScreen> {
   String _smsCode;
-  bool _showSpinner;
+  bool _showSpinner = false;
 
   @override
   Widget build(BuildContext context) {
