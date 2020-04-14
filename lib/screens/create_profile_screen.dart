@@ -207,7 +207,12 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       _showSpinner = false;
     });
     Navigator.of(context).pushAndRemoveUntil(
-      CupertinoPageRoute(builder: (context) => NavigationScreen()),
+      CupertinoPageRoute(
+          builder: (context) => NavigationScreen(
+                loggedInUser: newUser,
+              )),
+
+      ///NavigationScreen takes argument for development purposes
       (Route<dynamic> route) => false,
     );
   }

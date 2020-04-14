@@ -2,9 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/screens/login_screen.dart';
-import 'package:voices/services/auth_service.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/shared widgets/profile_picture.dart';
+
+///commented out for development purposes
+//import 'package:voices/services/auth_service.dart';
 
 class SettingsTab extends StatefulWidget {
   @override
@@ -31,9 +33,11 @@ class _SettingsTabState extends State<SettingsTab> {
                   CupertinoButton(
                       child: Text("Sign Out"),
                       onPressed: () async {
-                        final authService =
-                            Provider.of<AuthService>(context, listen: false);
-                        await authService.signOut();
+                        ///commented out for development purposes
+//                        final authService =
+//                            Provider.of<AuthService>(context, listen: false);
+//                        await authService.signOut();
+
                         Navigator.of(context, rootNavigator: true)
                             .pushAndRemoveUntil(
                           CupertinoPageRoute(
