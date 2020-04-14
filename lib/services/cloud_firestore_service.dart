@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/models/message.dart';
+import 'package:voices/constants.dart';
 
 class CloudFirestoreService {
   final _fireStore = Firestore.instance;
@@ -146,6 +147,26 @@ class CloudFirestoreService {
           .updateData({'pushToken': pushToken});
     } catch (e) {
       print('Could not upload push token');
+    }
+  }
+
+  //check if there is already a user in the users collection with the provided phonenumber and if not create one
+  //if a new user has to be created execute whatToDoWhenUserNew with the new User as an Argument
+  //if the user already exists execute whatToDoWhenUserAlreadyExists with the User as an Argument
+  checkIfUserExists(
+      {@required String phoneNumber,
+      @required String uid,
+      @required Function whatToDoWhenUserNew,
+      @required Function whatToDoWhenUserAlreadyExists}) async {
+    User user = await getUserWithPhoneNumber(phoneNumber: phoneNumber);
+
+    if (user == null) {
+      User newUser = User(
+          uid: uid, phoneNumber: phoneNumber, imageUrl: kDefaultProfilePicUrl);
+      await uploadUser(user: newUser);
+      whatToDoWhenUserNew(newUser);
+    } else {
+      whatToDoWhenUserAlreadyExists(user);
     }
   }
 }

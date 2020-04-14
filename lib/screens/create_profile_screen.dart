@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:voices/constants.dart';
 import 'package:voices/models/user.dart';
@@ -14,9 +13,9 @@ import 'package:image_cropper/image_cropper.dart';
 import 'navigation_screen.dart';
 
 class CreateProfileScreen extends StatefulWidget {
-  final FirebaseUser firebaseUser;
+  final User user;
 
-  CreateProfileScreen({@required this.firebaseUser});
+  CreateProfileScreen({@required this.user});
 
   @override
   _CreateProfileScreenState createState() => _CreateProfileScreenState();
@@ -199,8 +198,8 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
     User newUser = User(
-        uid: widget.firebaseUser.uid,
-        phoneNumber: widget.firebaseUser.phoneNumber,
+        uid: widget.user.uid,
+        phoneNumber: widget.user.phoneNumber,
         username: _username,
         imageUrl: imageUrl);
     await cloudFirestoreService.uploadUser(user: newUser);

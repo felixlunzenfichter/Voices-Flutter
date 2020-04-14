@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:voices/services/cloud_firestore_service.dart';
 
 class AuthService {
   final _auth = FirebaseAuth.instance;
@@ -19,16 +20,26 @@ class AuthService {
     return _auth.signOut();
   }
 
-  verifyPhoneNumberAutomaticallyOrSendCode(
+  ///whatTodoWhenNewUserVerified is the function to be called with the newly created user as an argument if the phone number got verified
+  ///whatTodoWhenExistingUserVerified is the function to be called with the existing user in the users collection as an argument if the phone number got verified
+  ///whatTodoWhenVerificationFailed is the function to be called without arguments if the verification failed
+  ///whatTodoWhenSmsSent is the function to be called without arguments if the code was sent
+  Future<void> verifyPhoneNumberAutomaticallyOrSendCode(
       {@required String phoneNumber,
-      @required Function whatTodoWhenVerified,
+      @required Function whatTodoWhenNewUserVerified,
+      @required Function whatTodoWhenExistingUserVerified,
       @required Function whatTodoWhenVerificationFailed,
       @required Function whatTodoWhenSmsSent}) async {
     try {
       final PhoneVerificationCompleted onVerified =
           (AuthCredential credential) async {
         AuthResult result = await _signInWithCredential(credential);
-        whatTodoWhenVerified(result.user);
+        CloudFirestoreService firestoreService = CloudFirestoreService();
+        await firestoreService.checkIfUserExists(
+            phoneNumber: phoneNumber,
+            uid: result.user.uid,
+            whatToDoWhenUserNew: whatTodoWhenNewUserVerified,
+            whatToDoWhenUserAlreadyExists: whatTodoWhenVerificationFailed);
       };
       final PhoneVerificationFailed onFailed = (AuthException authException) {
         whatTodoWhenVerificationFailed(authException.message);
@@ -52,19 +63,29 @@ class AuthService {
     }
   }
 
+  ///whatTodoWhenCodeCorrectForNewUser is the function to be called with the newly created user as an argument if the code is correct
+  ///whatTodoWhenCodeCorrectForExistingUser is the function to be called with the existing user in the users collection as an argument if the code is correct
+  ///whatTodoWhenCodeFalse is the function to be called without arguments if the code was wrong
   checkEnteredCode(
       {@required String code,
-      @required Function onSuccess,
-      @required Function onFail}) async {
+      @required Function whatTodoWhenCodeCorrectForNewUser,
+      @required Function whatTodoWhenCodeCorrectForExistingUser,
+      @required Function whatTodoWhenCodeFalse}) async {
     AuthCredential credential = PhoneAuthProvider.getCredential(
         verificationId: verificationId, smsCode: code);
 
     AuthResult result = await _signInWithCredential(credential);
     FirebaseUser user = result.user;
     if (user == null) {
-      onFail();
+      whatTodoWhenCodeFalse();
     } else {
-      onSuccess(user);
+      CloudFirestoreService firestoreService = CloudFirestoreService();
+      await firestoreService.checkIfUserExists(
+          phoneNumber: user.phoneNumber,
+          uid: user.uid,
+          whatToDoWhenUserNew: whatTodoWhenCodeCorrectForNewUser,
+          whatToDoWhenUserAlreadyExists:
+              whatTodoWhenCodeCorrectForExistingUser);
     }
   }
 
