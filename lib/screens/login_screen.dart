@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:voices/screens/enter_code_screen.dart';
 import 'package:voices/screens/navigation_screen.dart';
 import 'package:voices/models/user.dart';
+import 'package:voices/shared%20widgets/info_dialog.dart';
 import 'create_profile_screen.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:voices/services/auth_service.dart';
@@ -50,14 +52,15 @@ class _LoginScreenState extends State<LoginScreen> {
       _showSpinner = true;
     });
 
-    final Function whatTodoWhenNewUserVerified = (User user) async {
+    final Function whatTodoWhenNewUserVerified = (User newUser) async {
       Navigator.of(context).pushAndRemoveUntil(
         CupertinoPageRoute(
-            builder: (context) => CreateProfileScreen(user: user)),
+            builder: (context) => CreateProfileScreen(user: newUser)),
         (Route<dynamic> route) => false,
       );
     };
-    final Function whatTodoWhenExistingUserVerified = (User user) async {
+    final Function whatTodoWhenExistingUserVerified =
+        (User existingUser) async {
       Navigator.of(context).pushAndRemoveUntil(
         CupertinoPageRoute(builder: (context) => NavigationScreen()),
         (Route<dynamic> route) => false,
@@ -65,14 +68,20 @@ class _LoginScreenState extends State<LoginScreen> {
     };
 
     final Function whatTodoWhenVerificationFailed = (String errorMessage) {
-      print("Failed caaaaaaaaaaaaaaallleeeeed");
-      //todo show the user that it failed
-      print(errorMessage);
+      setState(() {
+        _showSpinner = false;
+      });
+      showInfoDialog(
+          context: context,
+          dialog: InfoDialog(title: "Verification failed", text: errorMessage));
     };
 
     final Function whatTodoWhenSmsSent = () {
-      print("whatTodoWhenSmsSent caaaaaaaaaaaaaaallleeeeed");
-      //todo add verification id and navigate to codescreen
+      setState(() {
+        _showSpinner = false;
+      });
+      Navigator.of(context)
+          .push(CupertinoPageRoute(builder: (context) => EnterCodeScreen()));
     };
     final authService = Provider.of<AuthService>(context, listen: false);
     await authService.verifyPhoneNumberAutomaticallyOrSendCode(
@@ -81,8 +90,5 @@ class _LoginScreenState extends State<LoginScreen> {
         whatTodoWhenExistingUserVerified: whatTodoWhenExistingUserVerified,
         whatTodoWhenVerificationFailed: whatTodoWhenVerificationFailed,
         whatTodoWhenSmsSent: whatTodoWhenSmsSent);
-    setState(() {
-      _showSpinner = false;
-    });
   }
 }

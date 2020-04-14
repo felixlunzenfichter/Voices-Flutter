@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/models/user.dart';
+import 'package:voices/shared%20widgets/info_dialog.dart';
 import 'navigation_screen.dart';
 import 'create_profile_screen.dart';
 
@@ -20,18 +22,24 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
     return ModalProgressHUD(
       inAsyncCall: _showSpinner,
       progressIndicator: CupertinoActivityIndicator(),
-      child: Column(
-        children: <Widget>[
-          CupertinoTextField(
-            placeholder: 'Enter the code here',
-            keyboardType: TextInputType.number,
-            onChanged: (newCode) {
-              _smsCode = newCode;
-            },
-          ),
-          CupertinoButton(
-              child: Text('Check Code'), onPressed: _checkEnteredCode),
-        ],
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Enter Code'),
+        ),
+        backgroundColor: Colors.green,
+        body: Column(
+          children: <Widget>[
+            CupertinoTextField(
+              placeholder: 'Enter the code here',
+              keyboardType: TextInputType.number,
+              onChanged: (newCode) {
+                _smsCode = newCode;
+              },
+            ),
+            CupertinoButton(
+                child: Text('Check Code'), onPressed: _checkEnteredCode),
+          ],
+        ),
       ),
     );
   }
@@ -40,17 +48,18 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
     setState(() {
       _showSpinner = true;
     });
-    final Function whatTodoWhenCodeCorrectForNewUser = (User user) async {
+    final Function whatTodoWhenCodeCorrectForNewUser = (User newUser) async {
       setState(() {
         _showSpinner = false;
       });
       Navigator.of(context).pushAndRemoveUntil(
         CupertinoPageRoute(
-            builder: (context) => CreateProfileScreen(user: user)),
+            builder: (context) => CreateProfileScreen(user: newUser)),
         (Route<dynamic> route) => false,
       );
     };
-    final Function whatTodoWhenCodeCorrectForExistingUser = (User user) async {
+    final Function whatTodoWhenCodeCorrectForExistingUser =
+        (User existingUser) async {
       setState(() {
         _showSpinner = false;
       });
@@ -63,8 +72,11 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
     final Function whatTodoWhenCodeFalse = () {
       setState(() {
         _showSpinner = false;
+        _smsCode = "";
       });
-      //todo show the user that code is false
+      showInfoDialog(
+          context: context,
+          dialog: InfoDialog(title: "Code was wrong", text: "Please retry"));
     };
 
     final authService = Provider.of<AuthService>(context, listen: false);
