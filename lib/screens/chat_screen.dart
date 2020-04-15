@@ -167,7 +167,7 @@ class MessageSendingSection extends StatefulWidget {
 }
 
 class _MessageSendingSectionState extends State<MessageSendingSection> {
-  final messageTextController = TextEditingController();
+  String _messageText = "";
 
   @override
   Widget build(BuildContext context) {
@@ -189,28 +189,42 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
               placeholder: "Enter message",
               padding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
               decoration: BoxDecoration(
-                  color: Colors.orangeAccent,
-                  borderRadius: BorderRadius.all(Radius.circular(25))),
-              controller: messageTextController,
+                color: Colors.orangeAccent,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(25),
+                ),
+              ),
+              onChanged: (newMessage) {
+                setState(() {
+                  _messageText = newMessage;
+                });
+              },
             ),
           ),
         ),
-        SendButton(
-          onPress: () async {
-            // prevent to send the previously typed message with an empty text field
-            if (messageTextController.text != '') {
-              //Implement send functionality.
-              GlobalChatScreenInfo screenInfo =
-                  Provider.of<GlobalChatScreenInfo>(context, listen: false);
-              Message message = Message(
-                  senderUid: screenInfo.loggedInUser.uid,
-                  text: messageTextController.text);
-              cloudFirestoreService.addMessage(
-                  chatId: screenInfo.chatId, message: message);
-              messageTextController.clear(); // Reset locally the sent message
-            }
-          },
-        ),
+        _messageText != ""
+            ? SendTextButton(
+                onPress: () async {
+                  // prevent to send the previously typed message with an empty text field
+                  //Implement send functionality.
+                  GlobalChatScreenInfo screenInfo =
+                      Provider.of<GlobalChatScreenInfo>(context, listen: false);
+                  Message message = Message(
+                      senderUid: screenInfo.loggedInUser.uid,
+                      text: _messageText);
+                  cloudFirestoreService.addMessage(
+                      chatId: screenInfo.chatId, message: message);
+                  setState(() {
+                    _messageText = "";
+                  });
+                },
+              )
+            : RecordButton(
+                onPress: () {},
+              ),
+        ListenToRecordingButton(
+          onPress: () {},
+        )
       ],
     );
   }
@@ -289,10 +303,10 @@ class MessageBubble extends StatelessWidget {
   }
 }
 
-class SendButton extends StatelessWidget {
+class SendTextButton extends StatelessWidget {
   final Function onPress;
 
-  SendButton({@required this.onPress});
+  SendTextButton({@required this.onPress});
 
   @override
   Widget build(BuildContext context) {
@@ -304,6 +318,52 @@ class SendButton extends StatelessWidget {
             ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
         child: Icon(
           Icons.send,
+          color: Colors.brown,
+          size: 22,
+        ),
+      ),
+    );
+  }
+}
+
+class RecordButton extends StatelessWidget {
+  final Function onPress;
+
+  RecordButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      onPressed: onPress,
+      child: Container(
+        padding: EdgeInsets.all(9),
+        decoration:
+            ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
+        child: Icon(
+          Icons.mic,
+          color: Colors.brown,
+          size: 22,
+        ),
+      ),
+    );
+  }
+}
+
+class ListenToRecordingButton extends StatelessWidget {
+  final Function onPress;
+
+  ListenToRecordingButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      onPressed: onPress,
+      child: Container(
+        padding: EdgeInsets.all(9),
+        decoration:
+            ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
+        child: Icon(
+          Icons.play_arrow,
           color: Colors.brown,
           size: 22,
         ),
