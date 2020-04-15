@@ -114,34 +114,48 @@ class ListOfMessages extends StatefulWidget {
 }
 
 class _ListOfMessagesState extends State<ListOfMessages> {
-  List<Message> messages;
+  List<Message> _messages;
+  final _listKey = GlobalKey<AnimatedListState>();
+  final insertTween = Tween<Offset>();
 
   @override
   void initState() {
     super.initState();
-    messages = widget.messages;
+    _messages = widget.messages;
   }
 
   @override
   void didUpdateWidget(ListOfMessages oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.messages.length < widget.messages.length) {
-      print("new messages arrived");
-      //todo add the new messages to the list nicely
+      for (int i = oldWidget.messages.length - 1;
+          i < widget.messages.length;
+          i++) {
+        _insertMessageAtIndex(message: widget.messages[i], index: i);
+      }
     }
+  }
+
+  _insertMessageAtIndex({@required Message message, @required int index}) {
+    _messages.insert(index, message);
+    _listKey.currentState.insertItem(index);
   }
 
   @override
   Widget build(BuildContext context) {
     GlobalChatScreenInfo screenInfo =
         Provider.of<GlobalChatScreenInfo>(context, listen: false);
-    return ListView.builder(
-      itemCount: messages.length,
-      itemBuilder: (context, index) {
-        Message message = messages[index];
-        return MessageRow(
-          message: message,
-          isMe: screenInfo.loggedInUser.uid == message.senderUid,
+    return AnimatedList(
+      key: _listKey,
+      initialItemCount: _messages.length,
+      itemBuilder: (context, index, animation) {
+        Message message = _messages[index];
+        return SlideTransition(
+          position: animation.drive(insertTween),
+          child: MessageRow(
+            message: message,
+            isMe: screenInfo.loggedInUser.uid == message.senderUid,
+          ),
         );
       },
       reverse: true,

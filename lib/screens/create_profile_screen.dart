@@ -7,10 +7,10 @@ import 'package:provider/provider.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/services/storage_service.dart';
 import 'dart:io';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'navigation_screen.dart';
+import 'package:voices/shared widgets/profile_picture.dart';
 
 class CreateProfileScreen extends StatefulWidget {
   final User user;
@@ -49,21 +49,8 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
                           children: <Widget>[
                             Opacity(
                               opacity: 0.4,
-                              child: CachedNetworkImage(
-                                imageUrl: kDefaultProfilePicUrl,
-                                imageBuilder: (context, imageProvider) {
-                                  return CircleAvatar(
-                                      radius: 60,
-                                      backgroundColor: Colors.grey,
-                                      backgroundImage: imageProvider);
-                                },
-                                placeholder: (context, url) => SizedBox(
-                                  height: 120,
-                                  child: CupertinoActivityIndicator(),
-                                ),
-                                errorWidget: (context, url, error) =>
-                                    Icon(Icons.error),
-                              ),
+                              child: ProfilePicture(
+                                  imageUrl: kDefaultProfilePicUrl, radius: 60),
                             ),
                             Icon(
                               CupertinoIcons.photo_camera_solid,
