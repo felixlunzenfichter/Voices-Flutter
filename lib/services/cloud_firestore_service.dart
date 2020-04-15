@@ -82,25 +82,30 @@ class CloudFirestoreService {
   Future<String> getChatWithUsers(
       {@required String uid1, @required String uid2}) async {
     try {
-      var docs1 = (await _fireStore
+      List<Chat> chats1 = (await _fireStore
               .collection('chats')
               .where('uidsOfMembers', arrayContains: uid1)
               .getDocuments())
-          .documents;
-      var docs2 = (await _fireStore
+          .documents
+          .map((doc) => Chat.fromMap(map: doc.data))
+          .toList();
+      List<Chat> chats2 = (await _fireStore
               .collection('chats')
               .where('uidsOfMembers', arrayContains: uid2)
               .getDocuments())
-          .documents;
-      String chatId;
-      for (var doc in docs1) {
-        if (docs2.contains(doc)) {
-          chatId = doc.documentID;
-        }
-      }
+          .documents
+          .map((doc) => Chat.fromMap(map: doc.data))
+          .toList();
+      List<Chat> allChats12 = chats1 + chats2;
 
-      if (chatId != null) {
-        return chatId;
+      List<Chat> chat12 = allChats12
+          .where((chat) =>
+              chat.uidsOfMembers.contains(uid1) &&
+              chat.uidsOfMembers.contains(uid2))
+          .toList();
+
+      if (chat12.isNotEmpty) {
+        return chat12[0].chatId;
       } else {
         //create chat and return chatId
         Chat chat = await _createChat(uidsOfMembers: [uid1, uid2]);

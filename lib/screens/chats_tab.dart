@@ -31,23 +31,28 @@ class _ChatsTabState extends State<ChatsTab> {
   Widget build(BuildContext context) {
     final loggedInUser = Provider.of<User>(context, listen: false);
 
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text("Chats"),
-        trailing: CupertinoButton(
-          child: Icon(Icons.add_circle_outline),
-          onPressed: () {
-            Navigator.of(context, rootNavigator: true).push(
-              CupertinoPageRoute<void>(
-                builder: (context) {
-                  return SearchUsersScreen(loggedInUser: loggedInUser);
-                },
-              ),
-            );
-          },
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Chats"),
+        actions: <Widget>[
+          CupertinoButton(
+            child: Icon(
+              Icons.add_circle_outline,
+              color: Colors.black,
+            ),
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).push(
+                CupertinoPageRoute<void>(
+                  builder: (context) {
+                    return SearchUsersScreen(loggedInUser: loggedInUser);
+                  },
+                ),
+              );
+            },
+          ),
+        ],
       ),
-      child: SafeArea(
+      body: SafeArea(
         bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

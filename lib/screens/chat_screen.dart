@@ -44,14 +44,15 @@ class _ChatScreenState extends State<ChatScreen> {
         loggedInUser: widget.loggedInUser,
         otherUser: widget.otherUser,
       ),
-      child: CupertinoPageScaffold(
-        backgroundColor: CupertinoColors.white,
-        child: SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.otherUser.username),
+        ),
+        body: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              ChatHeader(),
               Expanded(
                 child: MessagesStream(
                   messagesStream: messageStream,
@@ -61,42 +62,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class ChatHeader extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    GlobalChatScreenInfo screenInfo =
-        Provider.of<GlobalChatScreenInfo>(context, listen: false);
-    return Container(
-      color: Colors.tealAccent,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          CupertinoButton(
-            padding: EdgeInsets.all(0.0),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Icon(
-              Icons.chevron_left,
-              size: 30,
-            ),
-          ),
-          ProfilePicture(imageUrl: screenInfo.otherUser.imageUrl, radius: 30),
-          SizedBox(
-            width: 10,
-          ),
-          Flexible(
-            child: Text(
-              screenInfo.otherUser.username,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
       ),
     );
   }
