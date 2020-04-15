@@ -7,7 +7,8 @@ class TimeStampText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(getTimestampAsString(timestamp: timestamp),
+    return Text(
+        timestamp != null ? getTimestampAsString(timestamp: timestamp) : "",
         style: TextStyle(
           fontSize: 10.0,
         ));

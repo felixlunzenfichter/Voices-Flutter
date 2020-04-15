@@ -85,6 +85,8 @@ class _MessagesStreamState extends State<MessagesStream> {
         }
 
         final List<Message> messages = snapshot.data;
+        print("###############################################");
+        print("fresh messages = $messages");
 
         if (messages == null) {
           return Container(
@@ -113,23 +115,34 @@ class ListOfMessages extends StatefulWidget {
   _ListOfMessagesState createState() => _ListOfMessagesState();
 }
 
-class _ListOfMessagesState extends State<ListOfMessages> {
+class _ListOfMessagesState extends State<ListOfMessages>
+    with SingleTickerProviderStateMixin {
   List<Message> _messages;
   final _listKey = GlobalKey<AnimatedListState>();
-  final insertTween = Tween<Offset>();
+  Animation<Offset> _offsetAnimation;
 
   @override
   void initState() {
     super.initState();
     _messages = widget.messages;
+    _offsetAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(1.5, 0.0),
+    ).animate(CurvedAnimation(
+      parent: AnimationController(
+        duration: const Duration(seconds: 3),
+        vsync: this,
+      ),
+      curve: Curves.elasticIn,
+    ));
   }
 
   @override
   void didUpdateWidget(ListOfMessages oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.messages.length < widget.messages.length) {
-      for (int i = oldWidget.messages.length - 1;
-          i < widget.messages.length;
+      for (int i = 0;
+          i < widget.messages.length - oldWidget.messages.length;
           i++) {
         _insertMessageAtIndex(message: widget.messages[i], index: i);
       }
@@ -139,6 +152,7 @@ class _ListOfMessagesState extends State<ListOfMessages> {
   _insertMessageAtIndex({@required Message message, @required int index}) {
     _messages.insert(index, message);
     _listKey.currentState.insertItem(index);
+    print("inserted message = ${widget.messages[index]} at index = $index");
   }
 
   @override
@@ -151,7 +165,7 @@ class _ListOfMessagesState extends State<ListOfMessages> {
       itemBuilder: (context, index, animation) {
         Message message = _messages[index];
         return SlideTransition(
-          position: animation.drive(insertTween),
+          position: _offsetAnimation,
           child: MessageRow(
             message: message,
             isMe: screenInfo.loggedInUser.uid == message.senderUid,

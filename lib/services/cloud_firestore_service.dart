@@ -139,9 +139,9 @@ class CloudFirestoreService {
     try {
       var messageStream = _fireStore
           .collection('chats/$chatId/messages')
-          .orderBy('timestamp')
+          .orderBy('timestamp', descending: true)
           .snapshots()
-          .map((snap) => snap.documents.reversed
+          .map((snap) => snap.documents
               .map((doc) => Message.fromMap(map: doc.data))
               .toList());
       return messageStream;
