@@ -85,8 +85,6 @@ class _MessagesStreamState extends State<MessagesStream> {
         }
 
         final List<Message> messages = snapshot.data;
-        print("###############################################");
-        print("fresh messages = $messages");
 
         if (messages == null) {
           return Container(
@@ -119,22 +117,11 @@ class _ListOfMessagesState extends State<ListOfMessages>
     with SingleTickerProviderStateMixin {
   List<Message> _messages;
   final _listKey = GlobalKey<AnimatedListState>();
-  Animation<Offset> _offsetAnimation;
 
   @override
   void initState() {
     super.initState();
     _messages = widget.messages;
-    _offsetAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(1.5, 0.0),
-    ).animate(CurvedAnimation(
-      parent: AnimationController(
-        duration: const Duration(seconds: 3),
-        vsync: this,
-      ),
-      curve: Curves.elasticIn,
-    ));
   }
 
   @override
@@ -152,7 +139,6 @@ class _ListOfMessagesState extends State<ListOfMessages>
   _insertMessageAtIndex({@required Message message, @required int index}) {
     _messages.insert(index, message);
     _listKey.currentState.insertItem(index);
-    print("inserted message = ${widget.messages[index]} at index = $index");
   }
 
   @override
@@ -164,12 +150,9 @@ class _ListOfMessagesState extends State<ListOfMessages>
       initialItemCount: _messages.length,
       itemBuilder: (context, index, animation) {
         Message message = _messages[index];
-        return SlideTransition(
-          position: _offsetAnimation,
-          child: MessageRow(
-            message: message,
-            isMe: screenInfo.loggedInUser.uid == message.senderUid,
-          ),
+        return MessageRow(
+          message: message,
+          isMe: screenInfo.loggedInUser.uid == message.senderUid,
         );
       },
       reverse: true,
