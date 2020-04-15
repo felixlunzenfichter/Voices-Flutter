@@ -15,7 +15,7 @@ class Chat {
     this.uidsOfMembers =
         _convertFirebaseListToDartList(list: map['uidsOfMembers']);
     this.lastMessageText = map['lastMessageText'];
-    this.lastMessageTimestamp = map['lastMessageTimestamp'].toDate();
+    this.lastMessageTimestamp = map['lastMessageTimestamp']?.toDate();
   }
 
   Map<String, dynamic> toMap() {

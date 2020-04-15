@@ -5,10 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:voices/models/message.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
-import 'package:voices/shared%20widgets/profile_picture.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
 
-class ChatScreen extends StatefulWidget {
+class ChatScreen extends StatelessWidget {
   final String chatId;
   final User loggedInUser;
   final User otherUser;
@@ -21,32 +20,16 @@ class ChatScreen extends StatefulWidget {
   });
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
-}
-
-class _ChatScreenState extends State<ChatScreen> {
-  Stream<List<Message>> messageStream;
-
-  @override
-  void initState() {
-    super.initState();
-    final cloudFirestoreService =
-        Provider.of<CloudFirestoreService>(context, listen: false);
-    messageStream =
-        cloudFirestoreService.getMessageStream(chatId: widget.chatId);
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Provider<GlobalChatScreenInfo>(
       create: (_) => GlobalChatScreenInfo(
-        chatId: widget.chatId,
-        loggedInUser: widget.loggedInUser,
-        otherUser: widget.otherUser,
+        chatId: chatId,
+        loggedInUser: loggedInUser,
+        otherUser: otherUser,
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.otherUser.username),
+          title: Text(otherUser.username),
         ),
         body: SafeArea(
           child: Column(
@@ -54,9 +37,7 @@ class _ChatScreenState extends State<ChatScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Expanded(
-                child: MessagesStream(
-                  messagesStream: messageStream,
-                ),
+                child: MessagesStream(),
               ),
               MessageSendingSection(),
             ],
@@ -67,21 +48,40 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-class MessagesStream extends StatelessWidget {
-  final messagesStream;
+class MessagesStream extends StatefulWidget {
+  @override
+  _MessagesStreamState createState() => _MessagesStreamState();
+}
 
-  MessagesStream({this.messagesStream});
+class _MessagesStreamState extends State<MessagesStream> {
+  Stream<List<Message>> messagesStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final cloudFirestoreService =
+        Provider.of<CloudFirestoreService>(context, listen: false);
+    GlobalChatScreenInfo screenInfo =
+        Provider.of<GlobalChatScreenInfo>(context, listen: false);
+    messagesStream =
+        cloudFirestoreService.getMessageStream(chatId: screenInfo.chatId);
+  }
 
   @override
   Widget build(BuildContext context) {
-    GlobalChatScreenInfo screenInfo =
-        Provider.of<GlobalChatScreenInfo>(context, listen: false);
     return StreamBuilder<List<Message>>(
       stream: messagesStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting ||
             snapshot.connectionState == ConnectionState.none) {
           return CupertinoActivityIndicator();
+        }
+
+        if (snapshot.hasError) {
+          return Container(
+            color: Colors.red,
+            child: Text(snapshot.error.toString()),
+          );
         }
 
         final List<Message> messages = snapshot.data;
@@ -96,19 +96,56 @@ class MessagesStream extends StatelessWidget {
             ),
           );
         }
-        return ListView.builder(
-          itemCount: messages.length,
-          itemBuilder: (context, index) {
-            Message message = messages[index];
-            return MessageRow(
-              message: message,
-              isMe: screenInfo.loggedInUser.uid == message.senderUid,
-            );
-          },
-          reverse: true,
-          padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 20.0),
+        return ListOfMessages(
+          messages: messages,
         );
       },
+    );
+  }
+}
+
+class ListOfMessages extends StatefulWidget {
+  final List<Message> messages;
+
+  ListOfMessages({@required this.messages});
+
+  @override
+  _ListOfMessagesState createState() => _ListOfMessagesState();
+}
+
+class _ListOfMessagesState extends State<ListOfMessages> {
+  List<Message> messages;
+
+  @override
+  void initState() {
+    super.initState();
+    messages = widget.messages;
+  }
+
+  @override
+  void didUpdateWidget(ListOfMessages oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.messages.length < widget.messages.length) {
+      print("new messages arrived");
+      //todo add the new messages to the list nicely
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    GlobalChatScreenInfo screenInfo =
+        Provider.of<GlobalChatScreenInfo>(context, listen: false);
+    return ListView.builder(
+      itemCount: messages.length,
+      itemBuilder: (context, index) {
+        Message message = messages[index];
+        return MessageRow(
+          message: message,
+          isMe: screenInfo.loggedInUser.uid == message.senderUid,
+        );
+      },
+      reverse: true,
+      padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 20.0),
     );
   }
 }

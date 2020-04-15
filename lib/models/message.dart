@@ -12,7 +12,7 @@ class Message {
   Message.fromMap({Map<String, dynamic> map}) {
     this.senderUid = map['senderUid'];
     this.text = map['text'];
-    this.timestamp = map['timestamp'].toDate();
+    this.timestamp = map['timestamp']?.toDate();
   }
 
   toMap() {

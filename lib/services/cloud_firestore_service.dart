@@ -119,7 +119,6 @@ class CloudFirestoreService {
 
   Stream<List<Chat>> getChatsStream({@required String loggedInUid}) {
     try {
-      print("is getting chats executed");
       Stream<List<Chat>> chatStream = _fireStore
           .collection('chats')
           .where('uidsOfMembers', arrayContains: loggedInUid)
