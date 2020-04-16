@@ -9,12 +9,14 @@ class Message {
     this.timestamp,
   });
 
+  // TODO: Wieso brauchen wir diesen constructor?
   Message.fromMap({Map<String, dynamic> map}) {
     this.senderUid = map['senderUid'];
     this.text = map['text'];
     this.timestamp = map['timestamp']?.toDate() ?? DateTime.now();
   }
 
+  // TODO: Warum ist hier nicht der timestamp?
   toMap() {
     return {
       'text': text,
