@@ -303,15 +303,11 @@ PODS:
   - image_picker (0.0.1):
     - Flutter
   - leveldb-library (1.22)
-  - mic_stream (0.0.1):
-    - Flutter
   - nanopb (0.3.9011):
     - nanopb/decode (= 0.3.9011)
     - nanopb/encode (= 0.3.9011)
   - nanopb/decode (0.3.9011)
   - nanopb/encode (0.3.9011)
-  - permission (0.0.1):
-    - Flutter
   - "permission_handler (5.0.0+hotfix.3)":
     - Flutter
   - PromisesObjC (1.2.8)
@@ -330,8 +326,6 @@ DEPENDENCIES:
   - flutter_plugin_android_lifecycle (from `.symlinks/plugins/flutter_plugin_android_lifecycle/ios`)
   - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
   - image_picker (from `.symlinks/plugins/image_picker/ios`)
-  - mic_stream (from `.symlinks/plugins/mic_stream/ios`)
-  - permission (from `.symlinks/plugins/permission/ios`)
   - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
 
 SPEC REPOS:
@@ -385,10 +379,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/image_cropper/ios"
   image_picker:
     :path: ".symlinks/plugins/image_picker/ios"
-  mic_stream:
-    :path: ".symlinks/plugins/mic_stream/ios"
-  permission:
-    :path: ".symlinks/plugins/permission/ios"
   permission_handler:
     :path: ".symlinks/plugins/permission_handler/ios"
 
@@ -425,9 +415,7 @@ SPEC CHECKSUMS:
   image_cropper: 3c16d7651730ffe85897f5a1c4e2547e6b54989a
   image_picker: e3eacd46b94694dde7cf2705955cece853aa1a8f
   leveldb-library: 55d93ee664b4007aac644a782d11da33fba316f7
-  mic_stream: 9e7c9fe19d0d8bd0d273bd5428bbd13cab6f4429
   nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
-  permission: 51e2d3a8ef3490da0537667d7f1a6a1c5ba8ec47
   permission_handler: 4a985b5448897c27fdeadde84f7452520c0e6c58
   PromisesObjC: c119f3cd559f50b7ae681fa59dc1acd19173b7e6
   TOCropViewController: e9da34f484aedd4e5d5a8ab230ba217cfe16c729

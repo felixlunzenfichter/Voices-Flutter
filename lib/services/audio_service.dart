@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:audio_streams/audio_streams.dart';
+import 'package:audio_streams/audio_streams.dart'; //works only for iOS
 import 'package:mic_stream/mic_stream.dart'; //works only for android
-import 'package:flutter/cupertino.dart'; //works only for iOS
+import 'package:flutter/cupertino.dart';
 
 class AudioService {
   AudioController _iOSAudioController;
@@ -27,23 +27,44 @@ class AudioService {
   startRecordingChunks({@required Function whatToDoWithChunk}) {
     Stream<List<int>> microphoneStream = _getMicrophoneStream();
     int currentNumberOfChunks = 0;
-    _micStreamSubscription = microphoneStream.listen((List<int> micData) {
-      ///this is called whenever there is a new int in the list
-      ///here we want to check if a certain amount of time has passed
-      ///or a certain amount of ints is in the list and then merge them into a file
-      //todo create audiofile
-      print("micData arrived with length = ${micData.length}");
+    _micStreamSubscription = microphoneStream.listen(
+      (List<int> micData) {
+        ///this is called whenever there is a new int in the list
+        ///here we want to check if a certain amount of time has passed
+        ///or a certain amount of ints is in the list and then merge them into a file
+        //todo create audiofile
+        //print("micData arrived with length = ${micData.length}");
 //      var audioFileChunk = new File('output.wav');
 //      audioFileChunk.writeAsBytes(micData, mode: FileMode.append);
 //      whatToDoWithChunk(audioFileChunk);
-    });
+      },
+      onError: (error) {
+        print(
+            "couldn't get correct micData because of error: ${error.toString()}");
+      },
+      onDone: () {
+        print("stream is finished sending data");
+      },
+      cancelOnError: true,
+    ); //cancelOnError is true by default and should be set to false if we want to keep the subscription going even after an error
   }
 
-  stopRecordingChunks() {
-    _micStreamSubscription.cancel();
+  pauseRecordingChunks() {
+    _micStreamSubscription.pause();
   }
 
-  pauseRecording() {}
+  resumeRecordingChunks() {
+    _micStreamSubscription.resume();
+  }
+
+  stopRecordingChunks() async {
+    if (_areWeOnIOS) {
+      await _iOSAudioController.stopAudioStream();
+      _micStreamSubscription.cancel();
+    } else {
+      _micStreamSubscription.cancel();
+    }
+  }
 
   finishRecording() {}
 

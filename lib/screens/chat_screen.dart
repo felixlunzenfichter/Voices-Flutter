@@ -8,6 +8,7 @@ import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
 import 'package:voices/services/audio_service.dart';
 import 'dart:io';
+import 'package:voices/services/permission_service.dart';
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
@@ -180,6 +181,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
 
   @override
   Widget build(BuildContext context) {
+    final audioService = Provider.of<AudioService>(context, listen: false);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
@@ -232,19 +234,19 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
             : StartRecordingButton(
                 onPress: () {},
               ),
-        StopRecordingButton(
-          onPress: () {},
-        ),
         DirectSendButton(
           onPress: () {
-            final audioService =
-                Provider.of<AudioService>(context, listen: false);
             final Function whatToDoWithChunk = (File audioChunk) {
               print(
                   "audioChunk arrived on chatScreen with path = ${audioChunk.path}");
             };
             audioService.startRecordingChunks(
                 whatToDoWithChunk: whatToDoWithChunk);
+          },
+        ),
+        StopRecordingButton(
+          onPress: () {
+            audioService.stopRecordingChunks();
           },
         ),
         ListenToRecordingButton(
