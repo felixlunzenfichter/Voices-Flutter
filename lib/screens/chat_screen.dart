@@ -6,6 +6,8 @@ import 'package:voices/models/message.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
+import 'package:voices/services/audio_service.dart';
+import 'dart:io';
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
@@ -170,9 +172,14 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   String _messageText = "";
 
   @override
+  void initState() {
+    super.initState();
+    final audioService = Provider.of<AudioService>(context, listen: false);
+    audioService.initialize(areWeOnIOS: Platform.isIOS);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final cloudFirestoreService =
-        Provider.of<CloudFirestoreService>(context, listen: false);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
@@ -212,6 +219,9 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   Message message = Message(
                       senderUid: screenInfo.loggedInUser.uid,
                       text: _messageText);
+                  final cloudFirestoreService =
+                      Provider.of<CloudFirestoreService>(context,
+                          listen: false);
                   cloudFirestoreService.addMessage(
                       chatId: screenInfo.chatId, message: message);
                   setState(() {
@@ -219,9 +229,24 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   });
                 },
               )
-            : RecordButton(
+            : StartRecordingButton(
                 onPress: () {},
               ),
+        StopRecordingButton(
+          onPress: () {},
+        ),
+        DirectSendButton(
+          onPress: () {
+            final audioService =
+                Provider.of<AudioService>(context, listen: false);
+            final Function whatToDoWithChunk = (File audioChunk) {
+              print(
+                  "audioChunk arrived on chatScreen with path = ${audioChunk.path}");
+            };
+            audioService.startRecordingChunks(
+                whatToDoWithChunk: whatToDoWithChunk);
+          },
+        ),
         ListenToRecordingButton(
           onPress: () {},
         )
@@ -310,41 +335,51 @@ class SendTextButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoButton(
-      onPressed: onPress,
-      child: Container(
-        padding: EdgeInsets.all(9),
-        decoration:
-            ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
-        child: Icon(
-          Icons.send,
-          color: Colors.brown,
-          size: 22,
-        ),
-      ),
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.send,
     );
   }
 }
 
-class RecordButton extends StatelessWidget {
+class StartRecordingButton extends StatelessWidget {
   final Function onPress;
 
-  RecordButton({@required this.onPress});
+  StartRecordingButton({@required this.onPress});
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoButton(
-      onPressed: onPress,
-      child: Container(
-        padding: EdgeInsets.all(9),
-        decoration:
-            ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
-        child: Icon(
-          Icons.mic,
-          color: Colors.brown,
-          size: 22,
-        ),
-      ),
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.mic,
+    );
+  }
+}
+
+class StopRecordingButton extends StatelessWidget {
+  final Function onPress;
+
+  StopRecordingButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.stop,
+    );
+  }
+}
+
+class DirectSendButton extends StatelessWidget {
+  final Function onPress;
+
+  DirectSendButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.tap_and_play,
     );
   }
 }
@@ -364,6 +399,30 @@ class ListenToRecordingButton extends StatelessWidget {
             ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
         child: Icon(
           Icons.play_arrow,
+          color: Colors.brown,
+          size: 22,
+        ),
+      ),
+    );
+  }
+}
+
+class RoundButton extends StatelessWidget {
+  final Function onPress;
+  final IconData iconData;
+
+  RoundButton({@required this.iconData, @required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      onPressed: onPress,
+      child: Container(
+        padding: EdgeInsets.all(9),
+        decoration:
+            ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
+        child: Icon(
+          iconData,
           color: Colors.brown,
           size: 22,
         ),

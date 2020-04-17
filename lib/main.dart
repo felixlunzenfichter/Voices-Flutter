@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/screens/login_screen.dart';
+import 'package:voices/screens/registration/login_screen.dart';
+import 'package:voices/services/audio_service.dart';
+import 'package:voices/services/permission_service.dart';
 import 'services/auth_service.dart';
 import 'services/cloud_firestore_service.dart';
 import 'services/storage_service.dart';
@@ -32,6 +34,12 @@ class Voices extends StatelessWidget {
         ),
         Provider<StorageService>(
           create: (_) => StorageService(),
+        ),
+        Provider<AudioService>(
+          create: (_) => AudioService(),
+        ),
+        Provider<PermissionService>(
+          create: (_) => PermissionService(),
         ),
       ],
       child: GestureDetector(
