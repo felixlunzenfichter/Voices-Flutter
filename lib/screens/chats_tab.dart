@@ -141,9 +141,12 @@ class _ChatItemState extends State<ChatItem> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Text(
-                    otherUser.username,
-                    overflow: TextOverflow.ellipsis,
+                  Hero(
+                    tag: 'name',
+                    child: Text(
+                      otherUser.username,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   Expanded(
                     child: Text(

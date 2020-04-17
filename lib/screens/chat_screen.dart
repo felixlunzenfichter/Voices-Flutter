@@ -30,7 +30,9 @@ class ChatScreen extends StatelessWidget {
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(otherUser.username),
+          title: Hero(
+              tag: 'name',
+              child: Text(otherUser.username)),
         ),
         body: SafeArea(
           child: Column(

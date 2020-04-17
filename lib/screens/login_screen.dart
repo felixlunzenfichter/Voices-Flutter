@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
         appBar: AppBar(
           title: Text('Login with phone number'),
         ),
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.green,
         body: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
