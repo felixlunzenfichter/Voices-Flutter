@@ -41,6 +41,7 @@ class _State extends State<VoicesAnimated> with SingleTickerProviderStateMixin {
     );
   }
 
+
   @override
   void initState() {
     // TODO: implement initState
