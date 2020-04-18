@@ -6,9 +6,8 @@ import 'package:voices/models/message.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
-import 'package:voices/services/audio_service.dart';
+import 'package:voices/services/recorder_service.dart';
 import 'dart:io';
-import 'package:voices/services/permission_service.dart';
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
@@ -175,13 +174,15 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   @override
   void initState() {
     super.initState();
-    final audioService = Provider.of<AudioService>(context, listen: false);
-    audioService.initialize(areWeOnIOS: Platform.isIOS);
+    final recorderService =
+        Provider.of<RecorderService>(context, listen: false);
+    recorderService.initialize();
   }
 
   @override
   Widget build(BuildContext context) {
-    final audioService = Provider.of<AudioService>(context, listen: false);
+    final recorderService =
+        Provider.of<RecorderService>(context, listen: false);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
@@ -232,21 +233,23 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 },
               )
             : StartRecordingButton(
-                onPress: () {},
+                onPress: () {
+                  recorderService.startRecording();
+                },
               ),
         DirectSendButton(
           onPress: () {
-            final Function whatToDoWithChunk = (File audioChunk) {
-              print(
-                  "audioChunk arrived on chatScreen with path = ${audioChunk.path}");
-            };
-            audioService.startRecordingChunks(
-                whatToDoWithChunk: whatToDoWithChunk);
+//            final Function whatToDoWithChunk = (File audioChunk) {
+//              print(
+//                  "audioChunk arrived on chatScreen with path = ${audioChunk.path}");
+//            };
+//            audioService.startRecordingChunks(
+//                whatToDoWithChunk: whatToDoWithChunk);
           },
         ),
         StopRecordingButton(
-          onPress: () {
-            audioService.stopRecordingChunks();
+          onPress: () async {
+            AudioRecording audio = await recorderService.stopRecording();
           },
         ),
         ListenToRecordingButton(
