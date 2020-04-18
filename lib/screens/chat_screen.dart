@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/message.dart';
 import 'package:voices/models/user.dart';
@@ -51,7 +54,6 @@ class ChatScreen extends StatelessWidget {
   }
 }
 
-
 class MessagesStream extends StatefulWidget {
   @override
   _MessagesStreamState createState() => _MessagesStreamState();
@@ -80,7 +82,6 @@ class _MessagesStreamState extends State<MessagesStream> {
             snapshot.connectionState == ConnectionState.none) {
           return CupertinoActivityIndicator();
         }
-
 
         if (snapshot.hasError) {
           return Container(
@@ -173,51 +174,48 @@ class MessageSendingSection extends StatefulWidget {
 
 class _MessageSendingSectionState extends State<MessageSendingSection> {
   String _messageText = "";
-  AudioRecording _audioRecording;
-
-  @override
-  void initState() {
-    super.initState();
-    final recorderService =
-        Provider.of<RecorderService>(context, listen: false);
-    recorderService.initialize();
-  }
+  Recording _currentAudioRecording;
 
   @override
   Widget build(BuildContext context) {
-    final recorderService =
-        Provider.of<RecorderService>(context, listen: false);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    final recorderService = Provider.of<RecorderService>(context);
+    return Column(
       children: <Widget>[
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(left: 10.0),
-            child: CupertinoTextField(
-              textCapitalization: TextCapitalization.sentences,
-              autocorrect: false,
-              maxLength: 200,
-              expands: true,
-              maxLines: null,
-              minLines: null,
-              placeholder: "Enter message",
-              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-              decoration: BoxDecoration(
-                color: Colors.orangeAccent,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(25),
+        RecordingInfo(
+          status: recorderService.recordingStatus,
+          currentRecording: _currentAudioRecording,
+        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10.0),
+                child: CupertinoTextField(
+                  textCapitalization: TextCapitalization.sentences,
+                  autocorrect: false,
+                  maxLength: 200,
+                  expands: true,
+                  maxLines: null,
+                  minLines: null,
+                  placeholder: "Enter message",
+                  padding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+                  decoration: BoxDecoration(
+                    color: Colors.orangeAccent,
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(25),
+                    ),
+                  ),
+                  onChanged: (newMessage) {
+                    setState(() {
+                      _messageText = newMessage;
+                    });
+                  },
                 ),
               ),
-              onChanged: (newMessage) {
-                setState(() {
-                  _messageText = newMessage;
-                });
-              },
             ),
-          ),
-        ),
-        _messageText != ""
-            ? SendTextButton(
+            if (_messageText != "")
+              SendTextButton(
                 onPress: () async {
                   // prevent to send the previously typed message with an empty text field
                   //Implement send functionality.
@@ -235,39 +233,108 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                     _messageText = "";
                   });
                 },
-              )
-            : StartRecordingButton(
-                onPress: () {
-                  recorderService.startRecording();
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Unset ||
+                recorderService.recordingStatus == RecordingStatus.Stopped)
+              StartRecordingButton(
+                onPress: () async {
+                  final whatToDoWithIntermediateRecording =
+                      (Recording audioRecording) async {
+                    setState(() {
+                      _currentAudioRecording = audioRecording;
+                    });
+                    //todo every so many seconds read the data out of the file and upload it to firebase (also convert the chunk into a compressed filetype)
+                    var byteList =
+                        await File(audioRecording.path).readAsBytes();
+                  };
+                  await recorderService.startRecording(
+                      whatToDoWithIntermediateRecording:
+                          whatToDoWithIntermediateRecording);
                 },
               ),
-        DirectSendButton(
-          onPress: () {
-//            final Function whatToDoWithChunk = (File audioChunk) {
-//              print(
-//                  "audioChunk arrived on chatScreen with path = ${audioChunk.path}");
-//            };
-//            audioService.startRecordingChunks(
-//                whatToDoWithChunk: whatToDoWithChunk);
-          },
+            if (recorderService.recordingStatus == RecordingStatus.Recording)
+              PauseButton(
+                onPress: () async {
+                  await recorderService.pauseRecording();
+                },
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Paused)
+              ResumeButton(
+                onPress: () async {
+                  await recorderService.resumeRecording();
+                },
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Recording ||
+                recorderService.recordingStatus == RecordingStatus.Paused)
+              StopRecordingButton(
+                onPress: () async {
+                  _currentAudioRecording =
+                      await recorderService.stopRecording();
+                  print("Audio file path = ${_currentAudioRecording.path}");
+                },
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Stopped)
+              ListenToRecordingButton(
+                onPress: () async {
+                  final playerService =
+                      Provider.of<PlayerService>(context, listen: false);
+                  await playerService.initializePlayer(
+                      filePath: _currentAudioRecording.path);
+                  await playerService.playAudio();
+                },
+              )
+          ],
         ),
-        StopRecordingButton(
-          onPress: () async {
-            _audioRecording = await recorderService.stopRecording();
-            print("Audio file path = ${_audioRecording.audioFile.path}");
-          },
-        ),
-        ListenToRecordingButton(
-          onPress: () async {
-            final playerService =
-                Provider.of<PlayerService>(context, listen: false);
-            await playerService.initializePlayer(
-                filePath: _audioRecording.audioFile.path);
-            await playerService.playAudio();
-          },
-        )
       ],
     );
+  }
+}
+
+class RecordingInfo extends StatelessWidget {
+  final RecordingStatus status;
+  final Recording currentRecording;
+
+  RecordingInfo({@required this.status, this.currentRecording});
+
+  @override
+  Widget build(BuildContext context) {
+    switch (status) {
+      case RecordingStatus.Unset:
+        {
+          return Text("Ready to record");
+        }
+        break;
+      case RecordingStatus.Initialized:
+        {
+          return Text("Recorder is initialized");
+        }
+        break;
+      case RecordingStatus.Recording:
+        {
+          return Text(
+              "Is recording: ${currentRecording?.duration?.inSeconds.toString()}s");
+        }
+        break;
+
+      case RecordingStatus.Paused:
+        {
+          return Text(
+              "Is paused: ${currentRecording?.duration?.inSeconds.toString()}s");
+        }
+        break;
+
+      case RecordingStatus.Stopped:
+        {
+          return Text("Recording saved under ${currentRecording?.path}");
+        }
+        break;
+
+      default:
+        {
+          return Text("status = $status is unknown");
+        }
+        break;
+    }
   }
 }
 
@@ -372,6 +439,34 @@ class StartRecordingButton extends StatelessWidget {
   }
 }
 
+class PauseButton extends StatelessWidget {
+  final Function onPress;
+
+  PauseButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.pause,
+    );
+  }
+}
+
+class ResumeButton extends StatelessWidget {
+  final Function onPress;
+
+  ResumeButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.play_arrow,
+    );
+  }
+}
+
 class StopRecordingButton extends StatelessWidget {
   final Function onPress;
 
@@ -386,20 +481,6 @@ class StopRecordingButton extends StatelessWidget {
   }
 }
 
-class DirectSendButton extends StatelessWidget {
-  final Function onPress;
-
-  DirectSendButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.tap_and_play,
-    );
-  }
-}
-
 class ListenToRecordingButton extends StatelessWidget {
   final Function onPress;
 
@@ -407,18 +488,9 @@ class ListenToRecordingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoButton(
-      onPressed: onPress,
-      child: Container(
-        padding: EdgeInsets.all(9),
-        decoration:
-            ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
-        child: Icon(
-          Icons.play_arrow,
-          color: Colors.brown,
-          size: 22,
-        ),
-      ),
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.play_arrow,
     );
   }
 }

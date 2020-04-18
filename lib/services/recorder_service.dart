@@ -1,19 +1,59 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
-import 'package:file/local.dart';
 import 'package:path_provider/path_provider.dart';
 
-class RecorderService {
-  static final int samplingFrequency =
+class RecorderService with ChangeNotifier {
+  bool hasPermission;
+  RecordingStatus recordingStatus = RecordingStatus.Unset;
+  FlutterAudioRecorder _recorder;
+  static final int _samplingFrequency =
       44100; //this is the industry standard for audio files
 
-  bool _hasPermission;
-  FlutterAudioRecorder recorder;
+  startRecording(
+      {FunctionThatTakesRecordingAsArgument
+          whatToDoWithIntermediateRecording}) async {
+    await _initializeRecorder();
+    if (hasPermission) {
+      if (whatToDoWithIntermediateRecording != null) {
+        const tick = const Duration(milliseconds: 15);
+        Timer.periodic(tick, (Timer t) async {
+          if (recordingStatus == RecordingStatus.Stopped) {
+            t.cancel();
+          }
+          var recording = await _recorder.current(channel: 0);
+          whatToDoWithIntermediateRecording(recording);
+        });
+      }
+      await _recorder.start();
+      recordingStatus = RecordingStatus.Recording;
+      notifyListeners();
+    }
+  }
 
-  initialize() async {
-    _hasPermission = await FlutterAudioRecorder.hasPermissions;
-    String customPath = '/flutter_audio_recorder_';
+  pauseRecording() async {
+    await _recorder.pause();
+    recordingStatus = RecordingStatus.Paused;
+    notifyListeners();
+  }
+
+  resumeRecording() async {
+    await _recorder.resume();
+    recordingStatus = RecordingStatus.Recording;
+    notifyListeners();
+  }
+
+  Future<Recording> stopRecording() async {
+    Recording result = await _recorder.stop();
+    recordingStatus = RecordingStatus.Stopped;
+    notifyListeners();
+    return result;
+  }
+
+  _initializeRecorder() async {
+    hasPermission = await FlutterAudioRecorder.hasPermissions;
+    String customPath = '/voices_';
     Directory appDocDirectory;
     if (Platform.isIOS) {
       appDocDirectory = await getApplicationDocumentsDirectory();
@@ -24,64 +64,12 @@ class RecorderService {
         customPath +
         DateTime.now().millisecondsSinceEpoch.toString();
 
-    recorder = FlutterAudioRecorder(customPath,
-        audioFormat: AudioFormat.WAV, sampleRate: samplingFrequency);
-    await recorder.initialized;
+    _recorder = FlutterAudioRecorder(customPath,
+        audioFormat: AudioFormat.WAV, sampleRate: _samplingFrequency);
+    await _recorder.initialized;
+    recordingStatus = RecordingStatus.Initialized;
+    notifyListeners();
   }
-
-  //takes a callback that is executed whenever a chunk is ready
-  startRecording() async {
-    if (_hasPermission) {
-      await recorder.start();
-    }
-  }
-
-  pauseRecording() async {
-    await recorder.pause();
-  }
-
-  resumeRecording() async {
-    await recorder.resume();
-  }
-
-  Future<AudioRecording> stopRecording() async {
-    Recording result = await recorder.stop();
-    LocalFileSystem localFileSystem = FlutterAudioRecorder.fs;
-    File file = localFileSystem.file(result.path);
-    AudioRecording audioRecording =
-        AudioRecording(audioFile: file, length: result.duration);
-    return audioRecording;
-  }
-
-//  static final int chunkTimeInSec = 2;
-//  //takes a callback that is executed whenever a chunk is ready
-//  startRecordingChunks({@required Function whatToDoWithChunk}) async {
-//    //todo dynamically create recorders that are ready to start listening when the one before is finished
-//    //have a recorder stop recording after 2 seconds and have another recorder start recording
-//    await recorder.start();
-//    Recording recording = await recorder.current(channel: 0);
-//  }
-//
-//  pauseRecordingChunks() async {
-//    //todo stop the recorder thats currently recording a chunk
-//    await recorder.pause();
-//  }
-//
-//  resumeRecordingChunks() async {
-//    await recorder.resume();
-//  }
-//
-//  stopRecordingChunks() async {
-//    //todo stop recorder thats currently recording a chunk and return his last chunk
-//    Recording result = await recorder.stop();
-//    LocalFileSystem localFileSystem = FlutterAudioRecorder.fs;
-//    File file = localFileSystem.file(result.path);
-//  }
 }
 
-class AudioRecording {
-  final File audioFile;
-  final Duration length;
-
-  AudioRecording({@required this.audioFile, @required this.length});
-}
+typedef FunctionThatTakesRecordingAsArgument = Function(Recording recording);

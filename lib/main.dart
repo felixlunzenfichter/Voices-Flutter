@@ -36,7 +36,7 @@ class Voices extends StatelessWidget {
         Provider<StorageService>(
           create: (_) => StorageService(),
         ),
-        Provider<RecorderService>(
+        ChangeNotifierProvider<RecorderService>(
           create: (_) => RecorderService(),
         ),
         Provider<PlayerService>(
