@@ -1,11 +1,8 @@
 import 'dart:async';
-import 'dart:io';
-import 'package:audio_streams/audio_streams.dart'; //works only for iOS
-import 'package:mic_stream/mic_stream.dart'; //works only for android
 import 'package:flutter/cupertino.dart';
+import 'dart:io';
 
 class AudioService {
-  AudioController _iOSAudioController;
   StreamSubscription<List<int>> _micStreamSubscription;
   bool _areWeOnIOS = false;
   static final int samplingFrequency =
@@ -15,28 +12,20 @@ class AudioService {
 
   initialize({@required bool areWeOnIOS}) async {
     _areWeOnIOS = areWeOnIOS;
-    if (_areWeOnIOS) {
-      _iOSAudioController =
-          AudioController(CommonFormat.Int16, samplingFrequency, 1, true);
-      await _iOSAudioController.intialize();
-    }
   }
-
-  startRecording() {}
 
   startRecordingChunks({@required Function whatToDoWithChunk}) {
     Stream<List<int>> microphoneStream = _getMicrophoneStream();
-    int currentNumberOfChunks = 0;
     _micStreamSubscription = microphoneStream.listen(
       (List<int> micData) {
         ///this is called whenever there is a new int in the list
         ///here we want to check if a certain amount of time has passed
         ///or a certain amount of ints is in the list and then merge them into a file
         //todo create audiofile
-        //print("micData arrived with length = ${micData.length}");
-//      var audioFileChunk = new File('output.wav');
-//      audioFileChunk.writeAsBytes(micData, mode: FileMode.append);
-//      whatToDoWithChunk(audioFileChunk);
+        print("micData arrived with length = ${micData.length}");
+        var audioFileChunk = new File('output.wav');
+        audioFileChunk.writeAsBytes(micData, mode: FileMode.append);
+        whatToDoWithChunk(audioFileChunk);
       },
       onError: (error) {
         print(
@@ -57,24 +46,11 @@ class AudioService {
     _micStreamSubscription.resume();
   }
 
-  stopRecordingChunks() async {
-    if (_areWeOnIOS) {
-      await _iOSAudioController.stopAudioStream();
-      _micStreamSubscription.cancel();
-    } else {
-      _micStreamSubscription.cancel();
-    }
+  stopRecordingChunks() {
+    _micStreamSubscription.cancel();
   }
 
-  finishRecording() {}
-
   Stream<List<int>> _getMicrophoneStream() {
-    if (_areWeOnIOS) {
-      return _iOSAudioController.startAudioStream();
-    } else {
-      return microphone(
-          sampleRate: samplingFrequency,
-          audioFormat: AudioFormat.ENCODING_PCM_16BIT);
-    }
+    return Stream.empty();
   }
 }
