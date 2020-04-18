@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sequence_animation/flutter_sequence_animation.dart';
+import 'package:voices/constants.dart';
 
 class VoicesAnimated extends StatefulWidget {
   @override
@@ -11,18 +12,6 @@ class _State extends State<VoicesAnimated> with SingleTickerProviderStateMixin {
   // Animation related fields.
   AnimationController controller;
   SequenceAnimation sequenceAnimation;
-
-  // TODO: is busy loop
-  Future<Null> _playAnimation() async {
-    try {
-      while (true) {
-        await controller.forward().orCancel;
-        await controller.reverse().orCancel;
-      }
-    } on TickerCanceled {
-      // the animation got canceled, probably because we were disposed
-    }
-  }
 
   Widget _buildAnimation(BuildContext context, Widget child) {
     return new AnimatedBuilder(
@@ -44,7 +33,6 @@ class _State extends State<VoicesAnimated> with SingleTickerProviderStateMixin {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     controller = new AnimationController(vsync: this);
@@ -52,28 +40,39 @@ class _State extends State<VoicesAnimated> with SingleTickerProviderStateMixin {
     sequenceAnimation = new SequenceAnimationBuilder()
         .addAnimatable(
         animatable: new ColorTween(begin: Colors.red, end: Colors.yellow),
-        from:  const Duration(seconds: 0),
-        to: const Duration(seconds: 2),
+        from:  const Duration(microseconds: 0),
+        to: const Duration(milliseconds: animationspeed),
         tag: "color"
     ).addAnimatable(
         animatable: new ColorTween(begin: Colors.yellow, end: Colors.blueAccent),
-        from:  const Duration(seconds: 2),
-        to: const Duration(seconds: 4),
+        from:  const Duration(milliseconds: animationspeed),
+        to: const Duration(milliseconds: animationspeed * 2),
         tag: "color",
         curve: Curves.easeOut
     ).addAnimatable(
         animatable: new ColorTween(begin: Colors.blueAccent, end: Colors.pink),
         //  animatable: new Tween<double>(begin: 200.0, end: 40.0),
-        from:  const Duration(seconds: 5),
-        to: const Duration(seconds: 6),
+        from:  const Duration(milliseconds: animationspeed * 2),
+        to: const Duration(milliseconds: animationspeed * 3),
         tag: "color",
         curve: Curves.fastOutSlowIn
     ).animate(controller);
+
+    controller.forward();
+
+    controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        controller.reverse();
+      } else if (status == AnimationStatus.dismissed) {
+        controller.forward();
+      }
+
+      print(status);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    _playAnimation();
 
     return AnimatedBuilder(
         animation: controller,
