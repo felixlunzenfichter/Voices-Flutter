@@ -17,10 +17,11 @@ class ChatScreen extends StatelessWidget {
   ChatScreen({
     @required this.chatId,
     @required
-        this.loggedInUser, //is needed because this screen can't access it with provider
+        this.loggedInUser, //is needed because this screen can't access it with provider TODO: What's provider? something to do with state management?
     @required this.otherUser,
   });
 
+  // TODO: What does this do exactly?
   @override
   Widget build(BuildContext context) {
     return Provider<GlobalChatScreenInfo>(
@@ -31,7 +32,9 @@ class ChatScreen extends StatelessWidget {
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(otherUser.username),
+          title: Hero(
+              tag: 'name',
+              child: Text(otherUser.username)),
         ),
         body: SafeArea(
           child: Column(
@@ -49,6 +52,7 @@ class ChatScreen extends StatelessWidget {
     );
   }
 }
+
 
 class MessagesStream extends StatefulWidget {
   @override
@@ -78,6 +82,7 @@ class _MessagesStreamState extends State<MessagesStream> {
             snapshot.connectionState == ConnectionState.none) {
           return CupertinoActivityIndicator();
         }
+
 
         if (snapshot.hasError) {
           return Container(

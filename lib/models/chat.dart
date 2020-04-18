@@ -1,3 +1,5 @@
+//
+
 class Chat {
   String chatId;
   List<String> uidsOfMembers;

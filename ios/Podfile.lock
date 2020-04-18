@@ -158,8 +158,6 @@ PODS:
     - abseil/base/base_internal
     - abseil/base/config
     - abseil/meta/type_traits
-  - audio_streams (0.0.1):
-    - Flutter
   - BoringSSL-GRPC (0.0.3):
     - BoringSSL-GRPC/Implementation (= 0.0.3)
     - BoringSSL-GRPC/Interface (= 0.0.3)
@@ -307,8 +305,6 @@ PODS:
   - just_audio (0.0.1):
     - Flutter
   - leveldb-library (1.22)
-  - mic_stream (0.0.1):
-    - Flutter
   - nanopb (0.3.9011):
     - nanopb/decode (= 0.3.9011)
     - nanopb/encode (= 0.3.9011)
@@ -318,15 +314,12 @@ PODS:
     - Flutter
   - path_provider_macos (0.0.1):
     - Flutter
-  - permission (0.0.1):
-    - Flutter
   - "permission_handler (5.0.0+hotfix.3)":
     - Flutter
   - PromisesObjC (1.2.8)
   - TOCropViewController (2.5.2)
 
 DEPENDENCIES:
-  - audio_streams (from `.symlinks/plugins/audio_streams/ios`)
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
   - cloud_firestore_web (from `.symlinks/plugins/cloud_firestore_web/ios`)
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
@@ -340,10 +333,8 @@ DEPENDENCIES:
   - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
   - image_picker (from `.symlinks/plugins/image_picker/ios`)
   - just_audio (from `.symlinks/plugins/just_audio/ios`)
-  - mic_stream (from `.symlinks/plugins/mic_stream/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
   - path_provider_macos (from `.symlinks/plugins/path_provider_macos/ios`)
-  - permission (from `.symlinks/plugins/permission/ios`)
   - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
 
 SPEC REPOS:
@@ -373,8 +364,6 @@ SPEC REPOS:
     - TOCropViewController
 
 EXTERNAL SOURCES:
-  audio_streams:
-    :path: ".symlinks/plugins/audio_streams/ios"
   cloud_firestore:
     :path: ".symlinks/plugins/cloud_firestore/ios"
   cloud_firestore_web:
@@ -401,20 +390,15 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/image_picker/ios"
   just_audio:
     :path: ".symlinks/plugins/just_audio/ios"
-  mic_stream:
-    :path: ".symlinks/plugins/mic_stream/ios"
   path_provider:
     :path: ".symlinks/plugins/path_provider/ios"
   path_provider_macos:
     :path: ".symlinks/plugins/path_provider_macos/ios"
-  permission:
-    :path: ".symlinks/plugins/permission/ios"
   permission_handler:
     :path: ".symlinks/plugins/permission_handler/ios"
 
 SPEC CHECKSUMS:
   abseil: 18063d773f5366ff8736a050fe035a28f635fd27
-  audio_streams: 5cd579e9b26b5bbd465aa445878990047a316407
   BoringSSL-GRPC: db8764df3204ccea016e1c8dd15d9a9ad63ff318
   cloud_firestore: 85aabb8ad61987d6d139f8788ff86229c3506a2f
   cloud_firestore_web: 9ec3dc7f5f98de5129339802d491c1204462bfec
@@ -447,11 +431,9 @@ SPEC CHECKSUMS:
   image_picker: e3eacd46b94694dde7cf2705955cece853aa1a8f
   just_audio: baa7252489dbcf47a4c7cc9ca663e9661c99aafa
   leveldb-library: 55d93ee664b4007aac644a782d11da33fba316f7
-  mic_stream: 9e7c9fe19d0d8bd0d273bd5428bbd13cab6f4429
   nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
   path_provider: fb74bd0465e96b594bb3b5088ee4a4e7bb1f2a9d
   path_provider_macos: f760a3c5b04357c380e2fddb6f9db6f3015897e0
-  permission: 51e2d3a8ef3490da0537667d7f1a6a1c5ba8ec47
   permission_handler: 4a985b5448897c27fdeadde84f7452520c0e6c58
   PromisesObjC: c119f3cd559f50b7ae681fa59dc1acd19173b7e6
   TOCropViewController: e9da34f484aedd4e5d5a8ab230ba217cfe16c729
