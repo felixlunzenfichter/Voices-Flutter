@@ -7,7 +7,7 @@ import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
-import 'dart:io';
+import 'package:voices/services/player_service.dart';
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
@@ -170,6 +170,7 @@ class MessageSendingSection extends StatefulWidget {
 
 class _MessageSendingSectionState extends State<MessageSendingSection> {
   String _messageText = "";
+  AudioRecording _audioRecording;
 
   @override
   void initState() {
@@ -249,11 +250,18 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
         ),
         StopRecordingButton(
           onPress: () async {
-            AudioRecording audio = await recorderService.stopRecording();
+            _audioRecording = await recorderService.stopRecording();
+            print("Audio file path = ${_audioRecording.audioFile.path}");
           },
         ),
         ListenToRecordingButton(
-          onPress: () {},
+          onPress: () async {
+            final playerService =
+                Provider.of<PlayerService>(context, listen: false);
+            await playerService.initializePlayer(
+                filePath: _audioRecording.audioFile.path);
+            await playerService.playAudio();
+          },
         )
       ],
     );
@@ -421,6 +429,7 @@ class RoundButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoButton(
+      padding: EdgeInsets.all(0),
       onPressed: onPress,
       child: Container(
         padding: EdgeInsets.all(9),

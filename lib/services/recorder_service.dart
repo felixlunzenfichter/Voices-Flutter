@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:file/local.dart';
+import 'package:path_provider/path_provider.dart';
 
 class RecorderService {
   static final int samplingFrequency =
@@ -12,7 +13,18 @@ class RecorderService {
 
   initialize() async {
     _hasPermission = await FlutterAudioRecorder.hasPermissions;
-    recorder = FlutterAudioRecorder("file_path",
+    String customPath = '/flutter_audio_recorder_';
+    Directory appDocDirectory;
+    if (Platform.isIOS) {
+      appDocDirectory = await getApplicationDocumentsDirectory();
+    } else {
+      appDocDirectory = await getExternalStorageDirectory();
+    }
+    customPath = appDocDirectory.path +
+        customPath +
+        DateTime.now().millisecondsSinceEpoch.toString();
+
+    recorder = FlutterAudioRecorder(customPath,
         audioFormat: AudioFormat.WAV, sampleRate: samplingFrequency);
     await recorder.initialized;
   }

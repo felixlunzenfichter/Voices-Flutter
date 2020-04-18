@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/screens/registration/login_screen.dart';
+import 'package:voices/services/player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/permission_service.dart';
 import 'services/auth_service.dart';
@@ -37,6 +38,9 @@ class Voices extends StatelessWidget {
         ),
         Provider<RecorderService>(
           create: (_) => RecorderService(),
+        ),
+        Provider<PlayerService>(
+          create: (_) => PlayerService(),
         ),
         Provider<PermissionService>(
           create: (_) => PermissionService(),
