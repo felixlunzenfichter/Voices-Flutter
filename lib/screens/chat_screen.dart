@@ -174,6 +174,9 @@ class MessageSendingSection extends StatefulWidget {
 
 class _MessageSendingSectionState extends State<MessageSendingSection> {
   String _messageText = "";
+  bool _isDirectSendEnabled = false;
+  int _secondsSent = 0;
+  final int _chunkSizeInSeconds = 2;
 
   @override
   Widget build(BuildContext context) {
@@ -232,13 +235,24 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
               ),
             if (recorderService.recordingStatus == RecordingStatus.Unset ||
                 recorderService.recordingStatus == RecordingStatus.Stopped)
-              StartRecordingButton(
+              StartButton(
                 onPress: () async {
                   final whatToDoWithUnfinishedRecording =
                       (Recording unfinishedRecording) async {
-                    //todo every so many seconds read the data out of the file and upload it to firebase (also convert the chunk into a compressed filetype)
-                    var byteList =
-                        await File(unfinishedRecording.path).readAsBytes();
+                    int recordingLength = unfinishedRecording
+                        .duration.inSeconds; //this is rounded down
+                    bool isNewChunkReady =
+                        recordingLength > _secondsSent + _chunkSizeInSeconds;
+                    if (_isDirectSendEnabled && isNewChunkReady) {
+                      //a new chunk is ready
+                      int startInSec = _secondsSent;
+                      int endInSec = (recordingLength ~/ _chunkSizeInSeconds) *
+                          _chunkSizeInSeconds;
+                      //todo cut the file from start to end and upload it to firebase (maybe convert)
+                      var byteList =
+                          await File(unfinishedRecording.path).readAsBytes();
+                      _secondsSent = endInSec;
+                    }
                   };
                   await recorderService.startRecording(
                       whatToDoWithUnfinishedRecording:
@@ -259,11 +273,27 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
               ),
             if (recorderService.recordingStatus == RecordingStatus.Recording ||
                 recorderService.recordingStatus == RecordingStatus.Paused)
-              StopRecordingButton(
+              StopButton(
                 onPress: () async {
                   await recorderService.stopRecording();
+                  if (_isDirectSendEnabled) {
+                    //todo send the last part of the recording as it probably wasn't sent yet
+                  } else {
+                    //todo send whole recording
+                  }
                   print(
                       "Audio file path = ${recorderService.currentRecording.path}");
+                  _isDirectSendEnabled = false;
+                },
+              ),
+            if (!_isDirectSendEnabled &&
+                (recorderService.recordingStatus == RecordingStatus.Recording ||
+                    recorderService.recordingStatus == RecordingStatus.Paused))
+              ActivateDirectSendButton(
+                onPress: () async {
+                  setState(() {
+                    _isDirectSendEnabled = true;
+                  });
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Stopped)
@@ -418,10 +448,10 @@ class SendTextButton extends StatelessWidget {
   }
 }
 
-class StartRecordingButton extends StatelessWidget {
+class StartButton extends StatelessWidget {
   final Function onPress;
 
-  StartRecordingButton({@required this.onPress});
+  StartButton({@required this.onPress});
 
   @override
   Widget build(BuildContext context) {
@@ -460,16 +490,30 @@ class ResumeButton extends StatelessWidget {
   }
 }
 
-class StopRecordingButton extends StatelessWidget {
+class StopButton extends StatelessWidget {
   final Function onPress;
 
-  StopRecordingButton({@required this.onPress});
+  StopButton({@required this.onPress});
 
   @override
   Widget build(BuildContext context) {
     return RoundButton(
       onPress: onPress,
       iconData: Icons.stop,
+    );
+  }
+}
+
+class ActivateDirectSendButton extends StatelessWidget {
+  final Function onPress;
+
+  ActivateDirectSendButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.all_out,
     );
   }
 }
