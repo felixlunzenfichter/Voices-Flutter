@@ -11,6 +11,7 @@ import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/player_service.dart';
+import 'package:voices/services/file_converter_service.dart';
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
@@ -249,9 +250,14 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                       int endInSec = (recordingLength ~/ _chunkSizeInSeconds) *
                           _chunkSizeInSeconds;
                       //todo cut the file from start to end and upload it to firebase (maybe convert)
-                      var byteList =
-                          await File(unfinishedRecording.path).readAsBytes();
-                      _secondsSent = endInSec;
+//                      final fileConverterService =
+//                          Provider.of<FileConverterService>(context,listen:false);
+//
+//                      await fileConverterService.createAudioFileChunkFromFile(
+//                          file: File(unfinishedRecording.path),
+//                          startInSec: startInSec,
+//                          endInSec: endInSec);
+//                      _secondsSent = endInSec;
                     }
                   };
                   await recorderService.startRecording(
@@ -276,13 +282,21 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
               StopButton(
                 onPress: () async {
                   await recorderService.stopRecording();
+                  print(
+                      "Audio file path = ${recorderService.currentRecording.path}");
                   if (_isDirectSendEnabled) {
                     //todo send the last part of the recording as it probably wasn't sent yet
                   } else {
                     //todo send whole recording
                   }
-                  print(
-                      "Audio file path = ${recorderService.currentRecording.path}");
+                  final fileConverterService =
+                      Provider.of<FileConverterService>(context, listen: false);
+                  File chunkFile =
+                      await fileConverterService.createAudioFileChunkFromFile(
+                          file: File(recorderService.currentRecording.path),
+                          startInSec: 2,
+                          endInSec: 4);
+                  print("chunkFile path = ${chunkFile.path}");
                   _isDirectSendEnabled = false;
                 },
               ),

@@ -1,7 +1,6 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/models/message.dart';
 import 'package:voices/constants.dart';
