@@ -244,7 +244,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                     bool isNewChunkReady =
                         recordingLength > _secondsSent + _chunkSizeInSeconds;
                     if (_isDirectSendEnabled && isNewChunkReady) {
-                      //a new chunk is ready
+                      //todo make sure this code is not executed before the last execution completed
                       int startInSec = _secondsSent;
                       int endInSec = (recordingLength ~/ _chunkSizeInSeconds) *
                           _chunkSizeInSeconds;
@@ -314,8 +314,6 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
 }
 
 class RecordingInfo extends StatelessWidget {
-  RecordingInfo();
-
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
