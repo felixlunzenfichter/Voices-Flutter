@@ -182,6 +182,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
+    final fileConverterService =
+        Provider.of<FileConverterService>(context, listen: false);
     return Column(
       children: <Widget>[
         RecordingInfo(),
@@ -289,14 +291,13 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   } else {
                     //todo send whole recording
                   }
-                  final fileConverterService =
-                      Provider.of<FileConverterService>(context, listen: false);
-                  File chunkFile =
-                      await fileConverterService.createAudioFileChunkFromFile(
-                          file: File(recorderService.currentRecording.path),
-                          startInSec: 2,
-                          endInSec: 4);
-                  print("chunkFile path = ${chunkFile.path}");
+
+                  await fileConverterService.createAudioFileChunkFromFile(
+                      file: File(recorderService.currentRecording.path),
+                      startInSec: 2,
+                      endInSec: 4);
+                  print(
+                      "chunkFile path = ${fileConverterService.editedAudioFile.path}");
                   _isDirectSendEnabled = false;
                 },
               ),
@@ -316,7 +317,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   final playerService =
                       Provider.of<PlayerService>(context, listen: false);
                   await playerService.initializePlayer(
-                      filePath: recorderService.currentRecording.path);
+                      filePath: fileConverterService.editedAudioFile.path);
                   await playerService.playAudio();
                 },
               )
