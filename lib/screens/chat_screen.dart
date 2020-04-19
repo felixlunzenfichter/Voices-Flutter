@@ -174,17 +174,13 @@ class MessageSendingSection extends StatefulWidget {
 
 class _MessageSendingSectionState extends State<MessageSendingSection> {
   String _messageText = "";
-  Recording _currentAudioRecording;
 
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
     return Column(
       children: <Widget>[
-        RecordingInfo(
-          status: recorderService.recordingStatus,
-          currentRecording: _currentAudioRecording,
-        ),
+        RecordingInfo(),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -238,18 +234,15 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 recorderService.recordingStatus == RecordingStatus.Stopped)
               StartRecordingButton(
                 onPress: () async {
-                  final whatToDoWithIntermediateRecording =
-                      (Recording audioRecording) async {
-                    setState(() {
-                      _currentAudioRecording = audioRecording;
-                    });
+                  final whatToDoWithUnfinishedRecording =
+                      (Recording unfinishedRecording) async {
                     //todo every so many seconds read the data out of the file and upload it to firebase (also convert the chunk into a compressed filetype)
                     var byteList =
-                        await File(audioRecording.path).readAsBytes();
+                        await File(unfinishedRecording.path).readAsBytes();
                   };
                   await recorderService.startRecording(
-                      whatToDoWithIntermediateRecording:
-                          whatToDoWithIntermediateRecording);
+                      whatToDoWithUnfinishedRecording:
+                          whatToDoWithUnfinishedRecording);
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Recording)
@@ -268,9 +261,9 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 recorderService.recordingStatus == RecordingStatus.Paused)
               StopRecordingButton(
                 onPress: () async {
-                  _currentAudioRecording =
-                      await recorderService.stopRecording();
-                  print("Audio file path = ${_currentAudioRecording.path}");
+                  await recorderService.stopRecording();
+                  print(
+                      "Audio file path = ${recorderService.currentRecording.path}");
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Stopped)
@@ -279,7 +272,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   final playerService =
                       Provider.of<PlayerService>(context, listen: false);
                   await playerService.initializePlayer(
-                      filePath: _currentAudioRecording.path);
+                      filePath: recorderService.currentRecording.path);
                   await playerService.playAudio();
                 },
               )
@@ -291,14 +284,12 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
 }
 
 class RecordingInfo extends StatelessWidget {
-  final RecordingStatus status;
-  final Recording currentRecording;
-
-  RecordingInfo({@required this.status, this.currentRecording});
+  RecordingInfo();
 
   @override
   Widget build(BuildContext context) {
-    switch (status) {
+    final recorderService = Provider.of<RecorderService>(context);
+    switch (recorderService.recordingStatus) {
       case RecordingStatus.Unset:
         {
           return Text("Ready to record");
@@ -312,26 +303,28 @@ class RecordingInfo extends StatelessWidget {
       case RecordingStatus.Recording:
         {
           return Text(
-              "Is recording: ${currentRecording?.duration?.inSeconds.toString()}s");
+              "Is recording: ${recorderService.currentRecording?.duration?.inSeconds.toString()}s");
         }
         break;
 
       case RecordingStatus.Paused:
         {
           return Text(
-              "Is paused: ${currentRecording?.duration?.inSeconds.toString()}s");
+              "Is paused: ${recorderService.currentRecording?.duration?.inSeconds.toString()}s");
         }
         break;
 
       case RecordingStatus.Stopped:
         {
-          return Text("Recording saved under ${currentRecording?.path}");
+          return Text(
+              "Recording saved under ${recorderService.currentRecording?.path}");
         }
         break;
 
       default:
         {
-          return Text("status = $status is unknown");
+          return Text(
+              "recordingStatus = ${recorderService.recordingStatus} is unknown");
         }
         break;
     }
