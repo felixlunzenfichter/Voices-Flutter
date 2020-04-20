@@ -7,6 +7,7 @@ import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 
 class FileConverterService {
   File editedAudioFile;
+  final FlutterFFmpeg _flutterFfmpeg = new FlutterFFmpeg();
 
   createAudioFileChunkFromFile(
       {@required File file,
@@ -17,7 +18,16 @@ class FileConverterService {
     if (await newFile.exists()) {
       await newFile.delete();
     }
-    newFile = File(path);
+
+//    //ffmpeg doesn't need to be written into execute
+//    //clip out audio starting from second 2 take 4 seconds
+//    int rc = await _flutterFfmpeg.execute("-ss 2 -t 4 -i ${file.path} $path");
+//    if (rc == -1) {
+//      print("An error occured while executing ffmpeg command");
+//    } else {
+//      print("FFmpeg process exited successfully with rc $rc");
+//    }
+//    editedAudioFile = File(path);
 
     //todo fill newBytes so it corresponds to a wav file that only contains the audio from start to end
     //Uint8List is a subtype of List<int> (more efficient)

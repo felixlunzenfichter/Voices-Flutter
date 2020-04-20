@@ -26,6 +26,7 @@ class RecorderService with ChangeNotifier {
             t.cancel();
           }
           currentRecording = await _recorder.current(channel: 0);
+          print("currentRecording duration = ${currentRecording.duration}");
           notifyListeners();
           whatToDoWithUnfinishedRecording(currentRecording);
         });
