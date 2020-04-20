@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:wave_generator/wave_generator.dart';
+import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 
 class FileConverterService {
   File editedAudioFile;
