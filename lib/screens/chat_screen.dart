@@ -292,13 +292,13 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                     //todo send whole recording
                   }
 
-//                  await fileConverterService.createAudioFileChunkFromFile(
-//                      file: File(recorderService.currentRecording.path),
-//                      startInSec: 2,
-//                      endInSec: 4);
-//                  print(
-//                      "chunkFile path = ${fileConverterService.editedAudioFile.path}");
-//                  _isDirectSendEnabled = false;
+                  await fileConverterService.createAudioFileChunkFromFile(
+                      file: File(recorderService.currentRecording.path),
+                      startInSec: 2,
+                      endInSec: 4);
+                  print(
+                      "chunkFile path = ${fileConverterService.editedAudioFile.path}");
+                  _isDirectSendEnabled = false;
                 },
               ),
             if (!_isDirectSendEnabled &&
