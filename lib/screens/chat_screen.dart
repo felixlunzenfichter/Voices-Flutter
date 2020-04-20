@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,7 +9,6 @@ import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/player_service.dart';
-import 'package:voices/services/file_converter_service.dart';
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
@@ -143,11 +140,6 @@ class _ListOfMessagesState extends State<ListOfMessages>
     }
   }
 
-  _insertMessageAtIndex({@required Message message, @required int index}) {
-    _messages.insert(index, message);
-    _listKey.currentState.insertItem(index);
-  }
-
   @override
   Widget build(BuildContext context) {
     GlobalChatScreenInfo screenInfo =
@@ -166,6 +158,11 @@ class _ListOfMessagesState extends State<ListOfMessages>
       padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 20.0),
     );
   }
+
+  _insertMessageAtIndex({@required Message message, @required int index}) {
+    _messages.insert(index, message);
+    _listKey.currentState.insertItem(index);
+  }
 }
 
 class MessageSendingSection extends StatefulWidget {
@@ -175,15 +172,10 @@ class MessageSendingSection extends StatefulWidget {
 
 class _MessageSendingSectionState extends State<MessageSendingSection> {
   String _messageText = "";
-  bool _isDirectSendEnabled = false;
-  int _secondsSent = 0;
-  final int _chunkSizeInSeconds = 2;
 
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
-    final fileConverterService =
-        Provider.of<FileConverterService>(context, listen: false);
     return Column(
       children: <Widget>[
         RecordingInfo(),
@@ -240,31 +232,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 recorderService.recordingStatus == RecordingStatus.Stopped)
               StartButton(
                 onPress: () async {
-                  final whatToDoWithUnfinishedRecording =
-                      (Recording unfinishedRecording) async {
-                    int recordingLength = unfinishedRecording
-                        .duration.inSeconds; //this is rounded down
-                    bool isNewChunkReady =
-                        recordingLength > _secondsSent + _chunkSizeInSeconds;
-                    if (_isDirectSendEnabled && isNewChunkReady) {
-                      //todo make sure this code is not executed before the last execution completed
-                      int startInSec = _secondsSent;
-                      int endInSec = (recordingLength ~/ _chunkSizeInSeconds) *
-                          _chunkSizeInSeconds;
-                      //todo cut the file from start to end and upload it to firebase (maybe convert)
-//                      final fileConverterService =
-//                          Provider.of<FileConverterService>(context,listen:false);
-//
-//                      await fileConverterService.createAudioFileChunkFromFile(
-//                          file: File(unfinishedRecording.path),
-//                          startInSec: startInSec,
-//                          endInSec: endInSec);
-//                      _secondsSent = endInSec;
-                    }
-                  };
-                  await recorderService.startRecording(
-                      whatToDoWithUnfinishedRecording:
-                          whatToDoWithUnfinishedRecording);
+                  await recorderService.startRecording();
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Recording)
@@ -286,29 +254,14 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   await recorderService.stopRecording();
                   print(
                       "Audio file path = ${recorderService.currentRecording.path}");
-                  if (_isDirectSendEnabled) {
-                    //todo send the last part of the recording as it probably wasn't sent yet
-                  } else {
-                    //todo send whole recording
-                  }
-
-                  await fileConverterService.createAudioFileChunkFromFile(
-                      file: File(recorderService.currentRecording.path),
-                      startInSec: 2,
-                      endInSec: 4);
-                  print(
-                      "chunkFile path = ${fileConverterService.editedAudioFile.path}");
-                  _isDirectSendEnabled = false;
                 },
               ),
-            if (!_isDirectSendEnabled &&
+            if (!recorderService.isDirectSendActivated &&
                 (recorderService.recordingStatus == RecordingStatus.Recording ||
                     recorderService.recordingStatus == RecordingStatus.Paused))
               ActivateDirectSendButton(
                 onPress: () async {
-                  setState(() {
-                    _isDirectSendEnabled = true;
-                  });
+                  recorderService.activateDirectSend();
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Stopped)
@@ -316,9 +269,11 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 onPress: () async {
                   final playerService =
                       Provider.of<PlayerService>(context, listen: false);
-                  await playerService.initializePlayer(
-                      filePath: fileConverterService.editedAudioFile.path);
-                  await playerService.playAudio();
+                  for (String path in recorderService.currentRecordingChunks
+                      .map((recording) => recording.path)) {
+                    await playerService.initializePlayer(filePath: path);
+                    await playerService.playAudio();
+                  }
                 },
               )
           ],
