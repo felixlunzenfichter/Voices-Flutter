@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 placeholder: 'Enter your phone number',
                 keyboardType: TextInputType.number,
                 onChanged: (newNumber) {
-                  _phoneNumber = newNumber;
+                  _phoneNumber = newNumber.trim();
                 },
               ),
               CupertinoButton(

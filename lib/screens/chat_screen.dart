@@ -8,6 +8,7 @@ import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
 
 class ChatScreen extends StatelessWidget {
+
   final String chatId;
   final User loggedInUser;
   final User otherUser;
@@ -19,7 +20,6 @@ class ChatScreen extends StatelessWidget {
     @required this.otherUser,
   });
 
-  // TODO: What does this do exactly?
   @override
   Widget build(BuildContext context) {
     return Provider<GlobalChatScreenInfo>(
@@ -78,7 +78,6 @@ class _MessagesStreamState extends State<MessagesStream> {
             snapshot.connectionState == ConnectionState.none) {
           return CupertinoActivityIndicator();
         }
-
 
         if (snapshot.hasError) {
           return Container(
