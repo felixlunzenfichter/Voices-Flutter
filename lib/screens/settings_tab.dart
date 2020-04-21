@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/screens/login_screen.dart';
+import 'package:voices/screens/registration/login_screen.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/shared widgets/profile_picture.dart';
 

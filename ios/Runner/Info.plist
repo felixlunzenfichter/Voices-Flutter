@@ -62,5 +62,10 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSSpeechRecognitionUsageDescription</key>
+    <string>Voices wants to be able to convert your voice into text</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Voices wants to access your microphone so you can record voice messages</string>
+
 </dict>
 </plist>

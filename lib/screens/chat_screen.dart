@@ -1,11 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/message.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
+import 'package:voices/services/recorder_service.dart';
+import 'package:voices/services/player_service.dart';
 
 class ChatScreen extends StatelessWidget {
 
@@ -48,7 +53,6 @@ class ChatScreen extends StatelessWidget {
     );
   }
 }
-
 
 class MessagesStream extends StatefulWidget {
   @override
@@ -169,52 +173,189 @@ class MessageSendingSection extends StatefulWidget {
 }
 
 class _MessageSendingSectionState extends State<MessageSendingSection> {
-  final messageTextController = TextEditingController();
+  String _messageText = "";
+  bool _isDirectSendEnabled = false;
+  int _secondsSent = 0;
+  final int _chunkSizeInSeconds = 2;
 
   @override
   Widget build(BuildContext context) {
-    final cloudFirestoreService =
-        Provider.of<CloudFirestoreService>(context, listen: false);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    final recorderService = Provider.of<RecorderService>(context);
+    return Column(
       children: <Widget>[
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(left: 10.0),
-            child: CupertinoTextField(
-              textCapitalization: TextCapitalization.sentences,
-              autocorrect: false,
-              maxLength: 200,
-              expands: true,
-              maxLines: null,
-              minLines: null,
-              placeholder: "Enter message",
-              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-              decoration: BoxDecoration(
-                  color: Colors.orangeAccent,
-                  borderRadius: BorderRadius.all(Radius.circular(25))),
-              controller: messageTextController,
+        RecordingInfo(),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10.0),
+                child: CupertinoTextField(
+                  textCapitalization: TextCapitalization.sentences,
+                  autocorrect: false,
+                  maxLength: 200,
+                  expands: true,
+                  maxLines: null,
+                  minLines: null,
+                  placeholder: "Enter message",
+                  padding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+                  decoration: BoxDecoration(
+                    color: Colors.orangeAccent,
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(25),
+                    ),
+                  ),
+                  onChanged: (newMessage) {
+                    setState(() {
+                      _messageText = newMessage;
+                    });
+                  },
+                ),
+              ),
             ),
-          ),
-        ),
-        SendButton(
-          onPress: () async {
-            // prevent to send the previously typed message with an empty text field
-            if (messageTextController.text != '') {
-              //Implement send functionality.
-              GlobalChatScreenInfo screenInfo =
-                  Provider.of<GlobalChatScreenInfo>(context, listen: false);
-              Message message = Message(
-                  senderUid: screenInfo.loggedInUser.uid,
-                  text: messageTextController.text);
-              cloudFirestoreService.addMessage(
-                  chatId: screenInfo.chatId, message: message);
-              messageTextController.clear(); // Reset locally the sent message
-            }
-          },
+            if (_messageText != "")
+              SendTextButton(
+                onPress: () async {
+                  // prevent to send the previously typed message with an empty text field
+                  //Implement send functionality.
+                  GlobalChatScreenInfo screenInfo =
+                      Provider.of<GlobalChatScreenInfo>(context, listen: false);
+                  Message message = Message(
+                      senderUid: screenInfo.loggedInUser.uid,
+                      text: _messageText);
+                  final cloudFirestoreService =
+                      Provider.of<CloudFirestoreService>(context,
+                          listen: false);
+                  cloudFirestoreService.addMessage(
+                      chatId: screenInfo.chatId, message: message);
+                  setState(() {
+                    _messageText = "";
+                  });
+                },
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Unset ||
+                recorderService.recordingStatus == RecordingStatus.Stopped)
+              StartButton(
+                onPress: () async {
+                  final whatToDoWithUnfinishedRecording =
+                      (Recording unfinishedRecording) async {
+                    int recordingLength = unfinishedRecording
+                        .duration.inSeconds; //this is rounded down
+                    bool isNewChunkReady =
+                        recordingLength > _secondsSent + _chunkSizeInSeconds;
+                    if (_isDirectSendEnabled && isNewChunkReady) {
+                      //todo make sure this code is not executed before the last execution completed
+                      int startInSec = _secondsSent;
+                      int endInSec = (recordingLength ~/ _chunkSizeInSeconds) *
+                          _chunkSizeInSeconds;
+                      //todo cut the file from start to end and upload it to firebase (maybe convert)
+                      var byteList =
+                          await File(unfinishedRecording.path).readAsBytes();
+                      _secondsSent = endInSec;
+                    }
+                  };
+                  await recorderService.startRecording(
+                      whatToDoWithUnfinishedRecording:
+                          whatToDoWithUnfinishedRecording);
+                },
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Recording)
+              PauseButton(
+                onPress: () async {
+                  await recorderService.pauseRecording();
+                },
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Paused)
+              ResumeButton(
+                onPress: () async {
+                  await recorderService.resumeRecording();
+                },
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Recording ||
+                recorderService.recordingStatus == RecordingStatus.Paused)
+              StopButton(
+                onPress: () async {
+                  await recorderService.stopRecording();
+                  if (_isDirectSendEnabled) {
+                    //todo send the last part of the recording as it probably wasn't sent yet
+                  } else {
+                    //todo send whole recording
+                  }
+                  print(
+                      "Audio file path = ${recorderService.currentRecording.path}");
+                  _isDirectSendEnabled = false;
+                },
+              ),
+            if (!_isDirectSendEnabled &&
+                (recorderService.recordingStatus == RecordingStatus.Recording ||
+                    recorderService.recordingStatus == RecordingStatus.Paused))
+              ActivateDirectSendButton(
+                onPress: () async {
+                  setState(() {
+                    _isDirectSendEnabled = true;
+                  });
+                },
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Stopped)
+              ListenToRecordingButton(
+                onPress: () async {
+                  final playerService =
+                      Provider.of<PlayerService>(context, listen: false);
+                  await playerService.initializePlayer(
+                      filePath: recorderService.currentRecording.path);
+                  await playerService.playAudio();
+                },
+              )
+          ],
         ),
       ],
     );
+  }
+}
+
+class RecordingInfo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final recorderService = Provider.of<RecorderService>(context);
+    switch (recorderService.recordingStatus) {
+      case RecordingStatus.Unset:
+        {
+          return Text("Ready to record");
+        }
+        break;
+      case RecordingStatus.Initialized:
+        {
+          return Text("Recorder is initialized");
+        }
+        break;
+      case RecordingStatus.Recording:
+        {
+          return Text(
+              "Is recording: ${recorderService.currentRecording?.duration?.inSeconds.toString()}s");
+        }
+        break;
+
+      case RecordingStatus.Paused:
+        {
+          return Text(
+              "Is paused: ${recorderService.currentRecording?.duration?.inSeconds.toString()}s");
+        }
+        break;
+
+      case RecordingStatus.Stopped:
+        {
+          return Text(
+              "Recording saved under ${recorderService.currentRecording?.path}");
+        }
+        break;
+
+      default:
+        {
+          return Text(
+              "recordingStatus = ${recorderService.recordingStatus} is unknown");
+        }
+        break;
+    }
   }
 }
 
@@ -291,21 +432,121 @@ class MessageBubble extends StatelessWidget {
   }
 }
 
-class SendButton extends StatelessWidget {
+class SendTextButton extends StatelessWidget {
   final Function onPress;
 
-  SendButton({@required this.onPress});
+  SendTextButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.send,
+    );
+  }
+}
+
+class StartButton extends StatelessWidget {
+  final Function onPress;
+
+  StartButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.mic,
+    );
+  }
+}
+
+class PauseButton extends StatelessWidget {
+  final Function onPress;
+
+  PauseButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.pause,
+    );
+  }
+}
+
+class ResumeButton extends StatelessWidget {
+  final Function onPress;
+
+  ResumeButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.play_arrow,
+    );
+  }
+}
+
+class StopButton extends StatelessWidget {
+  final Function onPress;
+
+  StopButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.stop,
+    );
+  }
+}
+
+class ActivateDirectSendButton extends StatelessWidget {
+  final Function onPress;
+
+  ActivateDirectSendButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.all_out,
+    );
+  }
+}
+
+class ListenToRecordingButton extends StatelessWidget {
+  final Function onPress;
+
+  ListenToRecordingButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.play_arrow,
+    );
+  }
+}
+
+class RoundButton extends StatelessWidget {
+  final Function onPress;
+  final IconData iconData;
+
+  RoundButton({@required this.iconData, @required this.onPress});
 
   @override
   Widget build(BuildContext context) {
     return CupertinoButton(
+      padding: EdgeInsets.all(0),
       onPressed: onPress,
       child: Container(
         padding: EdgeInsets.all(9),
         decoration:
             ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
         child: Icon(
-          Icons.send,
+          iconData,
           color: Colors.brown,
           size: 22,
         ),

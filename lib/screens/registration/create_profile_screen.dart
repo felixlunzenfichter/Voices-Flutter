@@ -4,12 +4,12 @@ import 'package:voices/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
+import 'package:voices/screens/registration/ask_for_permissions_screen.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/services/storage_service.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'navigation_screen.dart';
 import 'package:voices/shared widgets/profile_picture.dart';
 
 class CreateProfileScreen extends StatefulWidget {
@@ -172,14 +172,14 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     setState(() {
       _showSpinner = false;
     });
-    Navigator.of(context).pushAndRemoveUntil(
+    Navigator.of(context).push(
       CupertinoPageRoute(
-          builder: (context) => NavigationScreen(
-                loggedInUser: newUser,
-              )),
+        builder: (context) => AskForPermissionsScreen(
+          user: newUser,
+        ),
+      ),
 
-      ///NavigationScreen takes argument for development purposes
-      (Route<dynamic> route) => false,
+      ///AskForPermissionsScreen takes argument for development purposes
     );
   }
 }
