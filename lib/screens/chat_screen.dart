@@ -13,7 +13,6 @@ import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/player_service.dart';
 
 class ChatScreen extends StatelessWidget {
-
   final String chatId;
   final User loggedInUser;
   final User otherUser;
@@ -21,7 +20,7 @@ class ChatScreen extends StatelessWidget {
   ChatScreen({
     @required this.chatId,
     @required
-        this.loggedInUser, //is needed because this screen can't access it with provider TODO: What's provider? something to do with state management?
+        this.loggedInUser, //is needed because this screen can't access it with provider
     @required this.otherUser,
   });
 
@@ -177,6 +176,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   bool _isDirectSendEnabled = false;
   int _secondsSent = 0;
   final int _chunkSizeInSeconds = 2;
+  TextEditingController controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -190,26 +190,13 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(left: 10.0),
-                child: CupertinoTextField(
-                  textCapitalization: TextCapitalization.sentences,
-                  autocorrect: false,
-                  maxLength: 200,
-                  expands: true,
-                  maxLines: null,
-                  minLines: null,
-                  placeholder: "Enter message",
-                  padding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-                  decoration: BoxDecoration(
-                    color: Colors.orangeAccent,
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(25),
-                    ),
-                  ),
-                  onChanged: (newMessage) {
+                child: MyTextField(
+                  onChanged: (newValue) {
                     setState(() {
-                      _messageText = newMessage;
+                      _messageText = newValue;
                     });
                   },
+                  controller: controller,
                 ),
               ),
             ),
@@ -230,9 +217,11 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                       chatId: screenInfo.chatId, message: message);
                   setState(() {
                     _messageText = "";
+                    controller.text = '';
                   });
                 },
               ),
+            // TODO: Use buttom sheet to bring up audio recorder.
             if (recorderService.recordingStatus == RecordingStatus.Unset ||
                 recorderService.recordingStatus == RecordingStatus.Stopped)
               StartButton(
@@ -309,6 +298,35 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
           ],
         ),
       ],
+    );
+  }
+}
+
+class MyTextField extends StatelessWidget {
+  final Function onChanged;
+  final TextEditingController controller;
+
+  MyTextField({@required this.onChanged, @required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoTextField(
+      textCapitalization: TextCapitalization.sentences,
+      autocorrect: false,
+      maxLength: 200,
+      expands: true,
+      maxLines: null,
+      minLines: null,
+      placeholder: "Enter message",
+      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+      decoration: BoxDecoration(
+        color: Colors.orangeAccent,
+        borderRadius: BorderRadius.all(
+          Radius.circular(25),
+        ),
+      ),
+      onChanged: onChanged,
+      controller: controller,
     );
   }
 }
