@@ -172,10 +172,12 @@ class MessageSendingSection extends StatefulWidget {
 }
 
 class _MessageSendingSectionState extends State<MessageSendingSection> {
-  String _messageText = "";
+  String _messageText = '';
   bool _isDirectSendEnabled = false;
   int _secondsSent = 0;
   final int _chunkSizeInSeconds = 2;
+
+  // Necessary to clear the text field after sending.
   TextEditingController controller = TextEditingController();
 
   @override
@@ -200,7 +202,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 ),
               ),
             ),
-            if (_messageText != "")
+            if (_messageText != '')
               SendTextButton(
                 onPress: () async {
                   // prevent to send the previously typed message with an empty text field
@@ -216,9 +218,11 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   cloudFirestoreService.addMessage(
                       chatId: screenInfo.chatId, message: message);
                   setState(() {
-                    _messageText = "";
-                    controller.text = '';
+                    _messageText = '';
                   });
+
+                  // Clear the text field
+                  controller.text = '';
                 },
               ),
             // TODO: Use buttom sheet to bring up audio recorder.
