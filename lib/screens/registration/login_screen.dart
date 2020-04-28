@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
 //              VoicesAnimated(),
               Container(
                 height: 200.0,
-                width: 500.0,
+                width: MediaQuery.of(context).size.width,
                 color: Colors.white,
                 child: Image.asset('assets/logo.png'),
               ),
