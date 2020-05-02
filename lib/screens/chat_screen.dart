@@ -228,7 +228,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
             // TODO: Use buttom sheet to bring up audio recorder.
             if (recorderService.recordingStatus == RecordingStatus.Unset ||
                 recorderService.recordingStatus == RecordingStatus.Stopped)
-              StartButton(
+              RecordButton(
                 onPress: () async {
                   final whatToDoWithUnfinishedRecording =
                       (Recording unfinishedRecording) async {
@@ -253,13 +253,13 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Recording)
-              PauseButton(
+              PauseRecordingButton(
                 onPress: () async {
                   await recorderService.pauseRecording();
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Paused)
-              ResumeButton(
+              ResumeRecordingButton(
                 onPress: () async {
                   await recorderService.resumeRecording();
                 },
@@ -468,10 +468,10 @@ class SendTextButton extends StatelessWidget {
   }
 }
 
-class StartButton extends StatelessWidget {
+class RecordButton extends StatelessWidget {
   final Function onPress;
 
-  StartButton({@required this.onPress});
+  RecordButton({@required this.onPress});
 
   @override
   Widget build(BuildContext context) {
@@ -482,10 +482,10 @@ class StartButton extends StatelessWidget {
   }
 }
 
-class PauseButton extends StatelessWidget {
+class PauseRecordingButton extends StatelessWidget {
   final Function onPress;
 
-  PauseButton({@required this.onPress});
+  PauseRecordingButton({@required this.onPress});
 
   @override
   Widget build(BuildContext context) {
@@ -496,10 +496,10 @@ class PauseButton extends StatelessWidget {
   }
 }
 
-class ResumeButton extends StatelessWidget {
+class ResumeRecordingButton extends StatelessWidget {
   final Function onPress;
 
-  ResumeButton({@required this.onPress});
+  ResumeRecordingButton({@required this.onPress});
 
   @override
   Widget build(BuildContext context) {
@@ -545,9 +545,16 @@ class ListenToRecordingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.play_arrow,
+    return CupertinoButton(
+      padding: EdgeInsets.all(0),
+      onPressed: onPress,
+      child: Container(
+        padding: EdgeInsets.all(0),
+        decoration: ShapeDecoration(color: Colors.white, shape: CircleBorder()),
+        child: Image.asset('assets/play_1.png'),
+        height: 50.0,
+        width: 50.0,
+      ),
     );
   }
 }
