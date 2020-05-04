@@ -13,7 +13,7 @@ class RecorderService with ChangeNotifier {
   Recording currentRecording;
   FlutterAudioRecorder _recorder;
   static const Duration DEFAULT_CHUNK_SIZE =
-      Duration(seconds: 2); //the last chunk might have a different size
+      Duration(seconds: 5); //the last chunk might have a different size
   static const int SAMPLING_FREQUENCY =
       44100; //this is the industry standard for audio files (44100 samples per second)
   final FileConverterService fileConverterService = FileConverterService();
