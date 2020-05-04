@@ -11,7 +11,7 @@ class FileConverterService {
       @required Duration endTime,
       @required String chunkFilename}) async {
     assert(endTime > startTime);
-    assert(File != null);
+    assert(file != null);
 
     String path = file.parent.path + "/$chunkFilename.wav";
     File newFile = File(path);
@@ -27,9 +27,29 @@ class FileConverterService {
     if (await _flutterFfmpeg
             .execute("-ss $start -t $length -i ${file.path} $path") ==
         -1) {
-      print("An error occured while executing ffmpeg command");
+      print("An error occured while executing ffmpeg trim command");
     } else {
-      print("ffmpeg exited successfully");
+      print("ffmpeg trimming exited successfully");
+    }
+    return File(path);
+  }
+
+  Future<File> appendChunkToFileAndSave(
+      {@required File file,
+      @required File chunk,
+      @required String newFilename}) async {
+    assert(file != null);
+    assert(chunk != null);
+    assert(newFilename != null);
+
+    String path = file.parent.path + "/$newFilename.wav";
+
+    if (await _flutterFfmpeg.execute(
+            "-i ${file.path} -i ${chunk.path} -filter_complex “[0][1]concat=n=2” $path") ==
+        -1) {
+      print("An error occured while executing ffmpeg concat command");
+    } else {
+      print("ffmpeg concatenating exited successfully");
     }
     return File(path);
   }
