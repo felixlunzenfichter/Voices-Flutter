@@ -1,24 +1,34 @@
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:voices/models/audio_chunk.dart';
 
 class PlayerService with ChangeNotifier {
-  List<String> audioChunkPaths = [];
+  List<AudioChunk> audioChunks = [];
   Duration currentPosition;
   Duration totalLengthOfAllChunks;
   double currentSpeed = 1.0;
   PlayerStatus status = PlayerStatus.idle;
   final _player = AudioPlayer();
+  int _currentChunkIndex = 0;
+  Duration get _lengthOfChunksBeforeCurrent {
+    Duration result = Duration(seconds: 0);
+    for (int i = 0; i < _currentChunkIndex; i++) {
+      result += audioChunks[i].length;
+    }
+    return result;
+  }
 
-  initializePlayer({@required List<String> audioChunks}) {
+  initializePlayer({@required List<AudioChunk> audioChunks}) {
     currentPosition = Duration(seconds: 0);
-    audioChunkPaths = audioChunks;
+    _currentChunkIndex = 0;
+    audioChunks = audioChunks;
     status = PlayerStatus.idle;
     //todo update totalLength
     notifyListeners();
   }
 
-  appendChunk({@required String audioChunk}) {
-    audioChunkPaths.add(audioChunk);
+  appendChunk({@required AudioChunk audioChunk}) {
+    audioChunks.add(audioChunk);
     //todo update totalLength
   }
 
@@ -26,14 +36,13 @@ class PlayerService with ChangeNotifier {
   play() async {
     status = PlayerStatus.playing;
     notifyListeners();
-    //todo find out in which chunk the current position is located and play from there
-    int foundChunk = 2;
-    for (int i = foundChunk; i < audioChunkPaths.length; i++) {
+    for (int i = _currentChunkIndex; i < audioChunks.length; i++) {
       if (status == PlayerStatus.idle || status == PlayerStatus.paused) {
         //if the player is paused or stopped we don't want to play the remaining chunks
         return;
       }
-      String path = audioChunkPaths[i];
+      _currentChunkIndex = i;
+      String path = audioChunks[i].path;
       assert(path != null);
       await _player.setFilePath(path);
       await _player.play();
@@ -48,6 +57,8 @@ class PlayerService with ChangeNotifier {
 
   stop() async {
     status = PlayerStatus.idle;
+    currentPosition = Duration(days: 0);
+    _currentChunkIndex = 0;
     notifyListeners();
     await _player.stop();
   }
@@ -57,6 +68,7 @@ class PlayerService with ChangeNotifier {
         .paused; //set the status to paused because we need to prevent the for loop in the play function to keep going
     //todo find the current chunk where the position is located and start playing from there
     String foundChunk = "";
+    _currentChunkIndex = 2;
     _player.setFilePath(foundChunk);
     Duration positionRelativeToChunkStart = position - Duration(days: 10);
     await _player.seek(positionRelativeToChunkStart);

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:provider/provider.dart';
+import 'package:voices/models/audio_chunk.dart';
 import 'package:voices/models/message.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
@@ -270,11 +271,13 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 onPress: () async {
                   final playerService =
                       Provider.of<PlayerService>(context, listen: false);
-                  playerService.audioChunkPaths = [];
-                  for (Recording chunk
+                  playerService.audioChunks = [];
+                  for (Recording recordingChunk
                       in recorderService.currentRecordingChunks) {
-                    String path = chunk.path;
-                    playerService.audioChunkPaths.add(path);
+                    AudioChunk chunk = AudioChunk(
+                        path: recordingChunk.path,
+                        length: recordingChunk.duration);
+                    playerService.appendChunk(audioChunk: chunk);
                   }
                   await playerService.play();
                 },
