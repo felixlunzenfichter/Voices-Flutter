@@ -80,6 +80,13 @@ class PlayerService with ChangeNotifier {
     notifyListeners();
     await _player.setSpeed(speed);
   }
+
+  Stream<Duration> getPositionStream() async* {
+    Stream<Duration> relativePositionStream = _player.getPositionStream();
+    await for (Duration relativePosition in relativePositionStream) {
+      yield _lengthOfChunksBeforeCurrent + relativePosition;
+    }
+  }
 }
 
 enum PlayerStatus { playing, paused, idle }
