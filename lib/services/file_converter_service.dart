@@ -46,20 +46,15 @@ class FileConverterService {
     String parentDirectoryPath = file.parent.path;
 
     //we need to create a text file that contains the paths of the files we want to concatenate
-    //todo check if its necessary to delete text file or if it can be overwritten
     String textFilePath = parentDirectoryPath + "/filesToConcatenate.txt";
     File textFile = File(textFilePath);
-    if (await textFile.exists()) {
-      await textFile.delete();
-    }
     String textFileContent = "file '${file.path}'\nfile '${chunk.path}'";
     await textFile.writeAsString(textFileContent, flush: true);
 
     String newFilePath = parentDirectoryPath + "/$newFilename.wav";
 
-    //todo check what -c copy does, it seems like we need to add the option -y to overwrite the output
     if (await _flutterFfmpeg.execute(
-            "-f concat -safe 0 -i ${textFile.path} -c copy $newFilePath") ==
+            "-f concat -y -safe 0 -i ${textFile.path} -c copy $newFilePath") ==
         -1) {
       print("An error occured while executing ffmpeg concat command");
     } else {
