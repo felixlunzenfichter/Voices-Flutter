@@ -270,10 +270,13 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 onPress: () async {
                   final playerService =
                       Provider.of<PlayerService>(context, listen: false);
-                  String file1Path =
-                      recorderService.currentRecordingChunks[0].path;
-                  await playerService.initializePlayer(filePath: file1Path);
-                  await playerService.playAudio();
+                  playerService.audioChunkPaths = [];
+                  for (Recording chunk
+                      in recorderService.currentRecordingChunks) {
+                    String path = chunk.path;
+                    playerService.audioChunkPaths.add(path);
+                  }
+                  await playerService.play();
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Stopped)
