@@ -177,12 +177,17 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   int _secondsSent = 0;
   final int _chunkSizeInSeconds = 2;
 
+  // Necessary to switch between displaying the play xor pause button.
+  bool playing = false;
+
   // Necessary to clear the text field after sending.
   TextEditingController controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
+    final PlayerService player = Provider.of<PlayerService>(context);
+
     return Column(
       children: <Widget>[
         RecordingInfo(),
@@ -273,6 +278,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                     //todo send the last part of the recording as it probably wasn't sent yet
                   } else {
                     //todo send whole recording
+                    await player.initializePlayer(
+                        filePath: recorderService.currentRecording.path);
                   }
                   print(
                       "Audio file path = ${recorderService.currentRecording.path}");
@@ -289,16 +296,28 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   });
                 },
               ),
-            if (recorderService.recordingStatus == RecordingStatus.Stopped)
-              ListenToRecordingButton(
+            if (recorderService.recordingStatus == RecordingStatus.Stopped &&
+                !playing)
+              ButtonFromPicture(
                 onPress: () async {
-                  final playerService =
-                      Provider.of<PlayerService>(context, listen: false);
-                  await playerService.initializePlayer(
-                      filePath: recorderService.currentRecording.path);
-                  await playerService.playAudio();
+                  setState(() {
+                    playing = true;
+                  });
+                  await player.playAudio();
+                  setState(() {
+                    playing = false;
+                  });
                 },
-              )
+                image: Image.asset('assets/play_1.png'),
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Stopped &&
+                playing)
+              ButtonFromPicture(onPress: () async {
+                await player.pauseAudio();
+              },
+                image: Image.asset('assets/pause_1.png'),
+              ),
+
           ],
         ),
       ],
@@ -538,10 +557,12 @@ class ActivateDirectSendButton extends StatelessWidget {
   }
 }
 
-class ListenToRecordingButton extends StatelessWidget {
+// Button in message sending section that uses self made icons.
+class ButtonFromPicture extends StatelessWidget {
   final Function onPress;
+  final Image image;
 
-  ListenToRecordingButton({@required this.onPress});
+  ButtonFromPicture({@required this.onPress, @required this.image});
 
   @override
   Widget build(BuildContext context) {
@@ -551,7 +572,7 @@ class ListenToRecordingButton extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(0),
         decoration: ShapeDecoration(color: Colors.white, shape: CircleBorder()),
-        child: Image.asset('assets/play_1.png'),
+        child: image,
         height: 50.0,
         width: 50.0,
       ),
@@ -559,6 +580,7 @@ class ListenToRecordingButton extends StatelessWidget {
   }
 }
 
+// Button used in message sending section. This Button contains an icon.
 class RoundButton extends StatelessWidget {
   final Function onPress;
   final IconData iconData;
