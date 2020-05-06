@@ -19,6 +19,7 @@ const languages = const [
 class SpeechToTextService extends ChangeNotifier {
   SpeechRecognition _speech;
 
+  //todo use those
   bool _speechRecognitionAvailable = false;
   bool _isListening = false;
 

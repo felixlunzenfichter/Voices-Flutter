@@ -177,15 +177,16 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
-    final SpeechToTextService speechToText = Provider.of<SpeechToTextService>(
-        context);
+    final SpeechToTextService speechToText =
+        Provider.of<SpeechToTextService>(context);
 
     return Column(
       children: <Widget>[
         RecordingInfo(),
         if (recorderService.currentStatus == RecordingStatus.Stopped)
           PlayerInfo(),
-        Text(speechToText.fullTranscription + " " +
+        Text(speechToText.fullTranscription +
+            " " +
             speechToText.transciptionCurrentRecoringSnippet),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -227,8 +228,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                       senderUid: screenInfo.loggedInUser.uid,
                       text: _messageText);
                   final cloudFirestoreService =
-                  Provider.of<CloudFirestoreService>(context,
-                      listen: false);
+                      Provider.of<CloudFirestoreService>(context,
+                          listen: false);
                   cloudFirestoreService.addMessage(
                       chatId: screenInfo.chatId, message: message);
                   setState(() {
@@ -242,29 +243,6 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 onPress: () async {
                   // Speech to text converter
                   speechToText.start();
-
-
-                  final whatToDoWithUnfinishedRecording =
-                      (Recording unfinishedRecording) async {
-                    int recordingLength = unfinishedRecording
-                        .duration.inSeconds; //this is rounded down
-                    bool isNewChunkReady =
-                        recordingLength > _secondsSent + _chunkSizeInSeconds;
-                    if (_isDirectSendEnabled && isNewChunkReady) {
-                      //todo make sure this code is not executed before the last execution completed
-                      int startInSec = _secondsSent;
-                      int endInSec = (recordingLength ~/
-                          _chunkSizeInSeconds) *
-                          _chunkSizeInSeconds;
-                      //todo cut the file from start to end and upload it to firebase (maybe convert)
-                      var byteList =
-                      await File(unfinishedRecording.path).readAsBytes();
-                      _secondsSent = endInSec;
-                    }
-                  };
-                  await recorderService.startRecording(
-                      whatToDoWithUnfinishedRecording:
-                      whatToDoWithUnfinishedRecording);
                   await recorderService.startRecording();
                 },
               ),

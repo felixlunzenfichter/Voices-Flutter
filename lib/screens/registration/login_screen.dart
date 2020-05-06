@@ -6,7 +6,6 @@ import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/screens/navigation_screen.dart';
 import 'create_profile_screen.dart';
-import 'package:voices/shared widgets/animated_voices_text.dart';
 
 ///commented out for development purposes
 //import 'package:voices/screens/enter_code_screen.dart';
