@@ -9,7 +9,7 @@ class RecorderService with ChangeNotifier {
   bool hasPermission = false;
   bool isDirectSendActivated = false;
   Duration _howMuchOfCurrentMessageSent = Duration(milliseconds: 0);
-  RecordingStatus status = RecordingStatus.Unset;
+  RecordingStatus currentStatus = RecordingStatus.Unset;
   Recording currentRecording;
   FlutterAudioRecorder _recorder;
   static const Duration DEFAULT_CHUNK_SIZE =
@@ -33,7 +33,7 @@ class RecorderService with ChangeNotifier {
           milliseconds:
               15); //this timer updates the current recording therefore the time should be chosen however much we need it to be updated. If we are just tracking seconds we could let the timer tick less often than 15ms.
       Timer.periodic(tickToUpdateUI, (Timer t) async {
-        if (status == RecordingStatus.Stopped) {
+        if (currentStatus == RecordingStatus.Stopped) {
           t.cancel();
         }
         currentRecording = await _recorder.current(channel: 0);
@@ -44,7 +44,7 @@ class RecorderService with ChangeNotifier {
           seconds:
               1); //this timer updates the current recording therefore the time should be chosen however much we need it to be updated. If we are just tracking seconds we could let the timer tick less often than 15ms.
       Timer.periodic(tickToGenerateChunks, (Timer t) async {
-        if (status == RecordingStatus.Stopped) {
+        if (currentStatus == RecordingStatus.Stopped) {
           t.cancel();
         }
         if (isDirectSendActivated) {
@@ -56,20 +56,20 @@ class RecorderService with ChangeNotifier {
       _howMuchOfCurrentMessageSent = Duration(milliseconds: 0);
       currentRecordingChunks = [];
       currentRecording = null;
-      status = RecordingStatus.Recording;
+      currentStatus = RecordingStatus.Recording;
       notifyListeners();
     }
   }
 
   pauseRecording() async {
     await _recorder.pause();
-    status = RecordingStatus.Paused;
+    currentStatus = RecordingStatus.Paused;
     notifyListeners();
   }
 
   resumeRecording() async {
     await _recorder.resume();
-    status = RecordingStatus.Recording;
+    currentStatus = RecordingStatus.Recording;
     notifyListeners();
   }
 
@@ -83,7 +83,7 @@ class RecorderService with ChangeNotifier {
       currentRecording = result;
     }
     isDirectSendActivated = false;
-    status = RecordingStatus.Stopped;
+    currentStatus = RecordingStatus.Stopped;
     notifyListeners();
   }
 
@@ -103,7 +103,7 @@ class RecorderService with ChangeNotifier {
     _recorder = FlutterAudioRecorder(customPath,
         audioFormat: AudioFormat.WAV, sampleRate: SAMPLING_FREQUENCY);
     await _recorder.initialized;
-    status = RecordingStatus.Initialized;
+    currentStatus = RecordingStatus.Initialized;
     notifyListeners();
   }
 

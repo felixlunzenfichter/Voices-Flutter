@@ -8,12 +8,13 @@ class PlayerServiceSingle with ChangeNotifier {
   //properties that the outside needs access to
   double currentSpeed = 1.0;
   Duration currentPosition = Duration(seconds: 0);
-  PlayerStatus status = PlayerStatus.idle;
+  PlayerStatus currentStatus = PlayerStatus.idle;
   AudioChunk audioChunk;
 
   //private variables
   final _player = AudioPlayer();
   StreamSubscription<Duration> _positionStreamSubscription;
+  StreamSubscription<AudioPlaybackState> _statusStreamSubscription;
 
   //audioChunks is the list of chunks that will be played in order
   initializePlayer({@required AudioChunk audioChunk}) async {
@@ -24,40 +25,54 @@ class PlayerServiceSingle with ChangeNotifier {
       currentPosition = newPosition;
       notifyListeners();
     });
+    _statusStreamSubscription = _player.playbackStateStream.listen((newState) {
+      switch (newState) {
+        case AudioPlaybackState.completed:
+          currentStatus = PlayerStatus.idle;
+          break;
+        case AudioPlaybackState.paused:
+          currentStatus = PlayerStatus.paused;
+          break;
+        case AudioPlaybackState.playing:
+          currentStatus = PlayerStatus.playing;
+          break;
+        default:
+          currentStatus = PlayerStatus.idle;
+          break;
+      }
+      notifyListeners();
+    });
     await _player.setFilePath(audioChunk.path);
     notifyListeners();
   }
 
+  disposePlayer() {
+    _positionStreamSubscription.cancel();
+    _statusStreamSubscription.cancel();
+    _player.dispose();
+  }
+
   //find the current chunk based on the current position and play from there
-  play() async {
-    status = PlayerStatus.playing;
-    notifyListeners();
-    _positionStreamSubscription.resume();
-    await _player.play();
+  play() {
+    _player.play();
   }
 
   pause() {
-    status = PlayerStatus.paused;
-    notifyListeners();
-    _positionStreamSubscription.pause();
     _player.pause();
   }
 
   stop() {
-    status = PlayerStatus.idle;
-    currentPosition = Duration(seconds: 0);
-    notifyListeners();
     _player.stop();
   }
 
-  jumpToPosition({@required Duration position}) async {
-    await _player.seek(position);
+  jumpToPosition({@required Duration position}) {
+    _player.seek(position);
   }
 
-  setSpeed({@required double speed}) async {
+  setSpeed({@required double speed}) {
     currentSpeed = speed;
     notifyListeners();
-    await _player.setSpeed(speed);
+    _player.setSpeed(speed);
   }
 }
 

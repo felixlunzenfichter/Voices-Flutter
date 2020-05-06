@@ -180,7 +180,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
     return Column(
       children: <Widget>[
         RecordingInfo(),
-        if (recorderService.status == RecordingStatus.Stopped) PlayerInfo(),
+        if (recorderService.currentStatus == RecordingStatus.Stopped)
+          PlayerInfo(),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -230,27 +231,27 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   });
                 },
               ),
-            if (recorderService.status == RecordingStatus.Unset ||
-                recorderService.status == RecordingStatus.Stopped)
+            if (recorderService.currentStatus == RecordingStatus.Unset ||
+                recorderService.currentStatus == RecordingStatus.Stopped)
               StartRecordingButton(
                 onPress: () async {
                   await recorderService.startRecording();
                 },
               ),
-            if (recorderService.status == RecordingStatus.Recording)
+            if (recorderService.currentStatus == RecordingStatus.Recording)
               PauseRecordingButton(
                 onPress: () async {
                   await recorderService.pauseRecording();
                 },
               ),
-            if (recorderService.status == RecordingStatus.Paused)
+            if (recorderService.currentStatus == RecordingStatus.Paused)
               ResumeRecordingButton(
                 onPress: () async {
                   await recorderService.resumeRecording();
                 },
               ),
-            if (recorderService.status == RecordingStatus.Recording ||
-                recorderService.status == RecordingStatus.Paused)
+            if (recorderService.currentStatus == RecordingStatus.Recording ||
+                recorderService.currentStatus == RecordingStatus.Paused)
               StopRecordingButton(
                 onPress: () async {
                   await recorderService.stopRecording();
@@ -263,8 +264,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 },
               ),
             if (!recorderService.isDirectSendActivated &&
-                (recorderService.status == RecordingStatus.Recording ||
-                    recorderService.status == RecordingStatus.Paused))
+                (recorderService.currentStatus == RecordingStatus.Recording ||
+                    recorderService.currentStatus == RecordingStatus.Paused))
               ActivateDirectSendButton(
                 onPress: () async {
                   recorderService.activateDirectSend();
@@ -421,7 +422,7 @@ class RecordingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
-    switch (recorderService.status) {
+    switch (recorderService.currentStatus) {
       case RecordingStatus.Unset:
         {
           return Text("Ready to record");
@@ -455,7 +456,8 @@ class RecordingInfo extends StatelessWidget {
 
       default:
         {
-          return Text("recordingStatus = ${recorderService.status} is unknown");
+          return Text(
+              "recordingStatus = ${recorderService.currentStatus} is unknown");
         }
         break;
     }
@@ -466,13 +468,13 @@ class PlayerInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final playerService = Provider.of<PlayerServiceSingle>(context);
-    print(playerService.status);
+    print(playerService.currentStatus);
     return Container(
-      color: Colors.purple,
+      color: Colors.yellow,
       height: 70,
       child: Row(
         children: <Widget>[
-          if (playerService.status == PlayerStatus.playing)
+          if (playerService.currentStatus == PlayerStatus.playing)
             PauseButton(
               onPress: () {
                 playerService.pause();
@@ -500,15 +502,15 @@ class PlayerInfo extends StatelessWidget {
               },
             ),
           ),
-          if (playerService.status == PlayerStatus.playing ||
-              playerService.status == PlayerStatus.paused)
+          if (playerService.currentStatus == PlayerStatus.playing ||
+              playerService.currentStatus == PlayerStatus.paused)
             StopButton(
               onPress: () {
                 playerService.stop();
               },
             ),
-          if (playerService.status == PlayerStatus.playing ||
-              playerService.status == PlayerStatus.paused)
+          if (playerService.currentStatus == PlayerStatus.playing ||
+              playerService.currentStatus == PlayerStatus.paused)
             SpeedButton(
               onPress: () {
                 if (playerService.currentSpeed == 1) {
@@ -518,6 +520,8 @@ class PlayerInfo extends StatelessWidget {
                 }
               },
             ),
+          Text("${playerService.currentPosition.inSeconds}s    "),
+          Text("${playerService.currentSpeed}x")
         ],
       ),
     );
