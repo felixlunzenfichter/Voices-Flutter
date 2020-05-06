@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +10,6 @@ import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/player_service.dart';
-import 'package:voices/services/file_converter_service.dart';
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
@@ -281,21 +278,6 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   await playerService.play();
                 },
               ),
-            if (recorderService.recordingStatus == RecordingStatus.Stopped)
-              ConcatenateButton(
-                onPress: () async {
-                  final fileService =
-                      Provider.of<FileConverterService>(context, listen: false);
-                  File file1 =
-                      File(recorderService.currentRecordingChunks[0].path);
-                  File file2 =
-                      File(recorderService.currentRecordingChunks[1].path);
-                  File concatenatedFile =
-                      await fileService.appendChunkToFileAndSave(
-                          file: file1, chunk: file2, newFilename: "soup");
-                  await concatenatedFile.copy(file1.path);
-                },
-              )
           ],
         ),
       ],

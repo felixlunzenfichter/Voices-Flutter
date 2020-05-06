@@ -34,35 +34,6 @@ class FileConverterService {
     return File(path);
   }
 
-  //this method returns the concatenated file once the ffmpeg command is done executing
-  Future<File> appendChunkToFileAndSave(
-      {@required File file,
-      @required File chunk,
-      @required String newFilename}) async {
-    assert(file != null);
-    assert(chunk != null);
-    assert(newFilename != null);
-
-    String parentDirectoryPath = file.parent.path;
-
-    //we need to create a text file that contains the paths of the files we want to concatenate
-    String textFilePath = parentDirectoryPath + "/filesToConcatenate.txt";
-    File textFile = File(textFilePath);
-    String textFileContent = "file '${file.path}'\nfile '${chunk.path}'";
-    await textFile.writeAsString(textFileContent, flush: true);
-
-    String newFilePath = parentDirectoryPath + "/$newFilename.wav";
-
-    if (await _flutterFfmpeg.execute(
-            "-f concat -y -safe 0 -i ${textFile.path} -c copy $newFilePath") ==
-        -1) {
-      print("An error occured while executing ffmpeg concat command");
-    } else {
-      print("ffmpeg concatenating exited successfully");
-    }
-    return File(newFilePath);
-  }
-
   String _convertDurationToExpectedFormat({@required Duration duration}) {
     return "${_twoDigits(duration.inHours)}:${_twoDigits(duration.inMinutes)}:${_twoDigits(duration.inSeconds)}.${_fourDigits(duration.inMilliseconds)}";
   }
