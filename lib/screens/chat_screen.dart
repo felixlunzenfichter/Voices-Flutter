@@ -9,7 +9,7 @@ import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
-import 'package:voices/services/player_service_single.dart';
+import 'package:voices/services/player_service.dart';
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
@@ -256,7 +256,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 onPress: () async {
                   await recorderService.stopRecording();
                   final playerService =
-                      Provider.of<PlayerServiceSingle>(context, listen: false);
+                      Provider.of<PlayerService>(context, listen: false);
                   playerService.initializePlayer(
                       audioChunk: AudioChunk(
                           path: recorderService.currentRecording.path,
@@ -476,7 +476,7 @@ class RecordingInfo extends StatelessWidget {
 class PlayerInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final playerService = Provider.of<PlayerServiceSingle>(context);
+    final playerService = Provider.of<PlayerService>(context);
     print(playerService.currentStatus);
     return Container(
       color: Colors.yellow,
@@ -497,7 +497,7 @@ class PlayerInfo extends StatelessWidget {
             ),
           SizedBox(
             width: 200,
-            child: Consumer<PlayerServiceSingle>(
+            child: Consumer<PlayerService>(
               builder: (context, playerService, child) {
                 final Duration lengthOfAudio = playerService.audioChunk.length;
                 final double progress =

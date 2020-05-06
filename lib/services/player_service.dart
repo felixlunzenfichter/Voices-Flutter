@@ -1,105 +1,94 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:voices/models/audio_chunk.dart';
-import 'recorder_service.dart';
 
 class PlayerService with ChangeNotifier {
   //properties that the outside needs access to
-  Duration totalLengthOfAllChunks;
   double currentSpeed = 1.0;
-  PlayerStatus status = PlayerStatus.idle;
+  Duration currentPosition = Duration(seconds: 0);
+  PlayerStatus currentStatus = PlayerStatus.idle;
+  AudioChunk audioChunk;
 
   //private variables
   final _player = AudioPlayer();
-  List<AudioChunk> _audioChunks = [];
-  int _currentChunkIndex = 0;
-  Duration get _lengthOfChunksBeforeCurrent {
-    Duration result = Duration(seconds: 0);
-    for (int i = 0; i < _currentChunkIndex; i++) {
-      result += _audioChunks[i].length;
-    }
-    return result;
-  }
+  StreamSubscription<Duration> _positionStreamSubscription;
+  StreamSubscription<AudioPlaybackState> _statusStreamSubscription;
+  //if we change the speed of the player it starts playing shortly and we want to ignore that.
+  bool _shouldIgnorePlaying = false;
 
   //audioChunks is the list of chunks that will be played in order
-  initializePlayer({@required List<AudioChunk> audioChunks}) {
-    _currentChunkIndex = 0;
-    _audioChunks = audioChunks;
-    status = PlayerStatus.idle;
-    totalLengthOfAllChunks = Duration(seconds: 0);
-    for (var chunk in audioChunks) {
-      totalLengthOfAllChunks += chunk.length;
-    }
-    notifyListeners();
-  }
-
-  //add a chunk to be played after the chunks that have already been added
-  appendChunk({@required AudioChunk audioChunk}) {
-    _audioChunks.add(audioChunk);
-    totalLengthOfAllChunks += audioChunk.length;
-  }
-
-  //find the current chunk based on the current position and play from there
-  play() async {
-    status = PlayerStatus.playing;
-    notifyListeners();
-    for (int i = _currentChunkIndex; i < _audioChunks.length; i++) {
-      if (status == PlayerStatus.idle || status == PlayerStatus.paused) {
-        //if the player is paused or stopped we don't want to play the remaining chunks
-        return;
+  initializePlayer({@required AudioChunk audioChunk}) async {
+    this.audioChunk = audioChunk;
+    _positionStreamSubscription =
+        _player.getPositionStream().listen((newPosition) {
+      currentPosition = newPosition;
+      notifyListeners();
+    });
+    _statusStreamSubscription = _player.playbackStateStream.listen((newState) {
+      switch (newState) {
+        case AudioPlaybackState.paused:
+          currentStatus = PlayerStatus.paused;
+          break;
+        case AudioPlaybackState.playing:
+          if (!_shouldIgnorePlaying) {
+            currentStatus = PlayerStatus.playing;
+          }
+          break;
+        default:
+          currentStatus = PlayerStatus.idle;
+          break;
       }
-      _currentChunkIndex = i;
-      String path = _audioChunks[i].path;
-      await _player.setFilePath(path);
-      await _player.play();
-    }
+      notifyListeners();
+    });
+    await _player.setFilePath(audioChunk.path);
   }
 
-  pause() async {
-    status = PlayerStatus.paused;
-    notifyListeners();
-    await _player.pause();
+  disposePlayer() {
+    _positionStreamSubscription.cancel();
+    _statusStreamSubscription.cancel();
+    _player.dispose();
   }
 
-  stop() async {
-    status = PlayerStatus.idle;
-    _currentChunkIndex = 0;
-    notifyListeners();
-    await _player.stop();
-  }
-
-  jumpToPosition({@required Duration position}) async {
-    status = PlayerStatus
-        .paused; //set the status to paused because we need to prevent the for loop in the play function to keep going
-    if (_audioChunks.length == 1) {
-      //there is only one chunk which might be longer than the default chunk size
-      await _player.seek(position);
-      play();
+  play() {
+    if (currentSpeed == 1) {
+      _player.play();
     } else {
-      //the chunks in the list are all the default chunk size
-      //find the current chunk where the position is located and start playing from there
-      _currentChunkIndex = position.inMilliseconds ~/
-          RecorderService.DEFAULT_CHUNK_SIZE.inMilliseconds;
-      _player.setFilePath(_audioChunks[_currentChunkIndex].path);
-      Duration positionRelativeToChunkStart = Duration(
-          milliseconds: position.inMilliseconds %
-              RecorderService.DEFAULT_CHUNK_SIZE.inMilliseconds);
-      await _player.seek(positionRelativeToChunkStart);
-      play();
+      //_player.setSpeed automatically plays the audio
+      _player.setSpeed(currentSpeed);
     }
+  }
+
+  pause() {
+    _player.pause();
+  }
+
+  stop() {
+    _player.stop();
+  }
+
+  jumpToPosition({@required Duration position}) {
+    _player.seek(position);
   }
 
   setSpeed({@required double speed}) async {
     currentSpeed = speed;
     notifyListeners();
-    await _player.setSpeed(speed);
-  }
-
-  Stream<Duration> getPositionStream() async* {
-    Stream<Duration> relativePositionStream = _player.getPositionStream();
-    await for (Duration relativePosition in relativePositionStream) {
-      yield _lengthOfChunksBeforeCurrent + relativePosition;
+    if (currentStatus == PlayerStatus.paused) {
+      //if the player is paused changing the speed will make it play so we need to pause it again
+      _shouldIgnorePlaying = true;
+      await _player.setSpeed(speed);
+      _player.pause();
+    } else if (currentStatus == PlayerStatus.idle) {
+      //if the player is stopped changing the speed will make it play so we need to stop it again
+      _shouldIgnorePlaying = true;
+      await _player.setSpeed(speed);
+      _player.stop();
+    } else {
+      await _player.setSpeed(speed);
     }
+    _shouldIgnorePlaying = false;
   }
 }
 
