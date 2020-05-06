@@ -9,7 +9,7 @@ import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
-import 'package:voices/services/player_service.dart';
+import 'package:voices/services/player_service_single.dart';
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
@@ -177,6 +177,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
+    final playerService = Provider.of<PlayerServiceSingle>(context);
+    print(playerService.status);
     return Column(
       children: <Widget>[
         RecordingInfo(),
@@ -231,26 +233,26 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
               ),
             if (recorderService.recordingStatus == RecordingStatus.Unset ||
                 recorderService.recordingStatus == RecordingStatus.Stopped)
-              StartButton(
+              StartRecordingButton(
                 onPress: () async {
                   await recorderService.startRecording();
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Recording)
-              PauseButton(
+              PauseRecordingButton(
                 onPress: () async {
                   await recorderService.pauseRecording();
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Paused)
-              ResumeButton(
+              ResumeRecordingButton(
                 onPress: () async {
                   await recorderService.resumeRecording();
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Recording ||
                 recorderService.recordingStatus == RecordingStatus.Paused)
-              StopButton(
+              StopRecordingButton(
                 onPress: () async {
                   await recorderService.stopRecording();
                 },
@@ -264,23 +266,185 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Stopped)
-              ListenToRecordingButton(
+              PlayButton(
                 onPress: () async {
-                  final playerService =
-                      Provider.of<PlayerService>(context, listen: false);
-                  List<AudioChunk> audioChunks = recorderService
-                      .currentRecordingChunks
-                      .map((recordingChunk) => AudioChunk(
-                          path: recordingChunk.path,
-                          length: recordingChunk.duration))
-                      .toList();
-                  playerService.initializePlayer(audioChunks: audioChunks);
+                  playerService.initializePlayer(
+                      audioChunk: AudioChunk(
+                          path: recorderService.currentRecording.path,
+                          length: recorderService.currentRecording.duration));
                   await playerService.play();
+                },
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Stopped &&
+                playerService.status == PlayerStatus.playing)
+              PauseButton(
+                onPress: () {
+                  playerService.pause();
+                },
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Stopped &&
+                (playerService.status == PlayerStatus.playing ||
+                    playerService.status == PlayerStatus.paused))
+              StopButton(
+                onPress: () {
+                  playerService.stop();
+                },
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Stopped &&
+                (playerService.status == PlayerStatus.playing ||
+                    playerService.status == PlayerStatus.paused))
+              SpeedButton(
+                onPress: () {
+                  if (playerService.currentSpeed == 1) {
+                    playerService.setSpeed(speed: 2);
+                  } else {
+                    playerService.setSpeed(speed: 1);
+                  }
                 },
               ),
           ],
         ),
       ],
+    );
+  }
+}
+
+class SendTextButton extends StatelessWidget {
+  final Function onPress;
+
+  SendTextButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.send,
+    );
+  }
+}
+
+class StartRecordingButton extends StatelessWidget {
+  final Function onPress;
+
+  StartRecordingButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.mic,
+    );
+  }
+}
+
+class PauseRecordingButton extends StatelessWidget {
+  final Function onPress;
+
+  PauseRecordingButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.pause,
+    );
+  }
+}
+
+class ResumeRecordingButton extends StatelessWidget {
+  final Function onPress;
+
+  ResumeRecordingButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.play_arrow,
+    );
+  }
+}
+
+class StopRecordingButton extends StatelessWidget {
+  final Function onPress;
+
+  StopRecordingButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.stop,
+    );
+  }
+}
+
+class SpeedButton extends StatelessWidget {
+  final Function onPress;
+
+  SpeedButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.fast_forward,
+    );
+  }
+}
+
+class PauseButton extends StatelessWidget {
+  final Function onPress;
+
+  PauseButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.pause,
+    );
+  }
+}
+
+class StopButton extends StatelessWidget {
+  final Function onPress;
+
+  StopButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.stop,
+    );
+  }
+}
+
+class ActivateDirectSendButton extends StatelessWidget {
+  final Function onPress;
+
+  ActivateDirectSendButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.all_out,
+    );
+  }
+}
+
+class PlayButton extends StatelessWidget {
+  final Function onPress;
+
+  PlayButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.play_arrow,
     );
   }
 }
@@ -400,118 +564,6 @@ class MessageBubble extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class SendTextButton extends StatelessWidget {
-  final Function onPress;
-
-  SendTextButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.send,
-    );
-  }
-}
-
-class StartButton extends StatelessWidget {
-  final Function onPress;
-
-  StartButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.mic,
-    );
-  }
-}
-
-class PauseButton extends StatelessWidget {
-  final Function onPress;
-
-  PauseButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.pause,
-    );
-  }
-}
-
-class ResumeButton extends StatelessWidget {
-  final Function onPress;
-
-  ResumeButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.play_arrow,
-    );
-  }
-}
-
-class StopButton extends StatelessWidget {
-  final Function onPress;
-
-  StopButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.stop,
-    );
-  }
-}
-
-class ConcatenateButton extends StatelessWidget {
-  final Function onPress;
-
-  ConcatenateButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.control_point,
-    );
-  }
-}
-
-class ActivateDirectSendButton extends StatelessWidget {
-  final Function onPress;
-
-  ActivateDirectSendButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.all_out,
-    );
-  }
-}
-
-class ListenToRecordingButton extends StatelessWidget {
-  final Function onPress;
-
-  ListenToRecordingButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.play_arrow,
     );
   }
 }
