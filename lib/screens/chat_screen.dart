@@ -7,6 +7,7 @@ import 'package:voices/models/audio_chunk.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
+import 'package:voices/services/speech_to_text_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/player_service.dart';
@@ -176,11 +177,16 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
+    final SpeechToTextService speechToText = Provider.of<SpeechToTextService>(
+        context);
+
     return Column(
       children: <Widget>[
         RecordingInfo(),
         if (recorderService.currentStatus == RecordingStatus.Stopped)
           PlayerInfo(),
+        Text(speechToText.fullTranscription + " " +
+            speechToText.transciptionCurrentRecoringSnippet),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -221,8 +227,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                       senderUid: screenInfo.loggedInUser.uid,
                       text: _messageText);
                   final cloudFirestoreService =
-                      Provider.of<CloudFirestoreService>(context,
-                          listen: false);
+                  Provider.of<CloudFirestoreService>(context,
+                      listen: false);
                   cloudFirestoreService.addMessage(
                       chatId: screenInfo.chatId, message: message);
                   setState(() {
@@ -234,25 +240,56 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 recorderService.currentStatus == RecordingStatus.Stopped)
               StartRecordingButton(
                 onPress: () async {
+                  // Speech to text converter
+                  speechToText.start();
+
+
+                  final whatToDoWithUnfinishedRecording =
+                      (Recording unfinishedRecording) async {
+                    int recordingLength = unfinishedRecording
+                        .duration.inSeconds; //this is rounded down
+                    bool isNewChunkReady =
+                        recordingLength > _secondsSent + _chunkSizeInSeconds;
+                    if (_isDirectSendEnabled && isNewChunkReady) {
+                      //todo make sure this code is not executed before the last execution completed
+                      int startInSec = _secondsSent;
+                      int endInSec = (recordingLength ~/
+                          _chunkSizeInSeconds) *
+                          _chunkSizeInSeconds;
+                      //todo cut the file from start to end and upload it to firebase (maybe convert)
+                      var byteList =
+                      await File(unfinishedRecording.path).readAsBytes();
+                      _secondsSent = endInSec;
+                    }
+                  };
+                  await recorderService.startRecording(
+                      whatToDoWithUnfinishedRecording:
+                      whatToDoWithUnfinishedRecording);
                   await recorderService.startRecording();
                 },
               ),
             if (recorderService.currentStatus == RecordingStatus.Recording)
               PauseRecordingButton(
                 onPress: () async {
+                  // pause speech to text.
+
                   await recorderService.pauseRecording();
+                  speechToText.pause();
                 },
               ),
             if (recorderService.currentStatus == RecordingStatus.Paused)
               ResumeRecordingButton(
                 onPress: () async {
                   await recorderService.resumeRecording();
+                  speechToText.start();
                 },
               ),
             if (recorderService.currentStatus == RecordingStatus.Recording ||
                 recorderService.currentStatus == RecordingStatus.Paused)
               StopRecordingButton(
                 onPress: () async {
+                  // Stop voice to text conversion service.
+                  speechToText.stop();
                   await recorderService.stopRecording();
                   final playerService =
                       Provider.of<PlayerService>(context, listen: false);

@@ -321,6 +321,8 @@ PODS:
   - "permission_handler (5.0.0+hotfix.3)":
     - Flutter
   - PromisesObjC (1.2.8)
+  - speech_recognition (0.3.0):
+    - Flutter
   - TOCropViewController (2.5.2)
 
 DEPENDENCIES:
@@ -341,6 +343,7 @@ DEPENDENCIES:
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
   - path_provider_macos (from `.symlinks/plugins/path_provider_macos/ios`)
   - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
+  - speech_recognition (from `.symlinks/plugins/speech_recognition/ios`)
 
 SPEC REPOS:
   trunk:
@@ -404,6 +407,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_macos/ios"
   permission_handler:
     :path: ".symlinks/plugins/permission_handler/ios"
+  speech_recognition:
+    :path: ".symlinks/plugins/speech_recognition/ios"
 
 SPEC CHECKSUMS:
   abseil: 18063d773f5366ff8736a050fe035a28f635fd27
@@ -446,6 +451,7 @@ SPEC CHECKSUMS:
   path_provider_macos: f760a3c5b04357c380e2fddb6f9db6f3015897e0
   permission_handler: 4a985b5448897c27fdeadde84f7452520c0e6c58
   PromisesObjC: c119f3cd559f50b7ae681fa59dc1acd19173b7e6
+  speech_recognition: b5319aace06c3633c0547de44899f6e0bf8b2168
   TOCropViewController: e9da34f484aedd4e5d5a8ab230ba217cfe16c729
 
 PODFILE CHECKSUM: f7f257a519ffe02b7debb3516297a5cb7377b944
