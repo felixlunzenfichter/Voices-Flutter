@@ -19,11 +19,10 @@ class ChatScreen extends StatelessWidget {
   ChatScreen({
     @required this.chatId,
     @required
-        this.loggedInUser, //is needed because this screen can't access it with provider TODO: What's provider? something to do with state management?
+        this.loggedInUser, //is needed because this screen can't access it with provider
     @required this.otherUser,
   });
 
-  // TODO: What does this do exactly?
   @override
   Widget build(BuildContext context) {
     return Provider<GlobalChatScreenInfo>(
@@ -258,7 +257,9 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   final playerService =
                       Provider.of<PlayerService>(context, listen: false);
                   playerService.initializePlayer(
-                      audioChunk: AudioChunk(
+                    //todo audiochunk is the object used to pass information from recording to player
+                    //merge with voice message?
+                  audioChunk: AudioChunk(
                           path: recorderService.currentRecording.path,
                           length: recorderService.currentRecording.duration));
                 },
@@ -271,6 +272,28 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   recorderService.activateDirectSend();
                 },
               ),
+            if (recorderService.recordingStatus == RecordingStatus.Stopped &&
+                !playing)
+              ButtonFromPicture(
+                onPress: () async {
+                  setState(() {
+                    playing = true;
+                  });
+                  await player.playAudio();
+                  setState(() {
+                    playing = false;
+                  });
+                },
+                image: Image.asset('assets/play_1.png'),
+              ),
+            if (recorderService.recordingStatus == RecordingStatus.Stopped &&
+                playing)
+              ButtonFromPicture(onPress: () async {
+                await player.pauseAudio();
+              },
+                image: Image.asset('assets/pause_1.png'),
+              ),
+
           ],
         ),
       ],

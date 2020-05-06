@@ -74,6 +74,7 @@ class _State extends State<VoicesAnimated> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
+    // Without controller.dispose() the animation will keep costing resources after it should have been disposed.
     controller.dispose();
     super.dispose();
   }

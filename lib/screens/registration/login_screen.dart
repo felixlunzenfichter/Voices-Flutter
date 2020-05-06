@@ -19,7 +19,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-
   bool _showSpinner = false;
   String _phoneNumber = '';
 
@@ -32,18 +31,26 @@ class _LoginScreenState extends State<LoginScreen> {
         appBar: AppBar(
           title: Text('Login with phone number'),
         ),
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.white,
         body: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              VoicesAnimated(),
-              SizedBox(height: 20.0,),
+//              VoicesAnimated(),
+              Container(
+                height: 200.0,
+                width: MediaQuery.of(context).size.width,
+                color: Colors.white,
+                child: Image.asset('assets/logo.png'),
+              ),
+              SizedBox(
+                height: 20.0,
+              ),
               CupertinoTextField(
                 placeholder: 'Enter your phone number',
                 keyboardType: TextInputType.number,
                 onChanged: (newNumber) {
-                  _phoneNumber = newNumber;
+                  _phoneNumber = newNumber.trim();
                 },
               ),
               CupertinoButton(
