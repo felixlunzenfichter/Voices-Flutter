@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:voices/models/user.dart';
-import 'package:voices/models/message.dart';
+import 'package:voices/models/text_message.dart';
 import 'package:voices/constants.dart';
 import 'package:voices/models/chat.dart';
 
@@ -134,14 +134,14 @@ class CloudFirestoreService {
     }
   }
 
-  Stream<List<Message>> getMessageStream({@required String chatId}) {
+  Stream<List<TextMessage>> getMessageStream({@required String chatId}) {
     try {
       var messageStream = _fireStore
           .collection('chats/$chatId/messages')
           .orderBy('timestamp', descending: true)
           .snapshots()
           .map((snap) => snap.documents
-              .map((doc) => Message.fromMap(map: doc.data))
+              .map((doc) => TextMessage.fromMap(map: doc.data))
               .toList());
       return messageStream;
     } catch (e) {
@@ -151,7 +151,7 @@ class CloudFirestoreService {
   }
 
   Future<void> addMessage(
-      {@required String chatId, @required Message message}) async {
+      {@required String chatId, @required TextMessage message}) async {
     try {
       var messageMap = {
         'text': message.text,

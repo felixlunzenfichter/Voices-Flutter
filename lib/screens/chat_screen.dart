@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/audio_chunk.dart';
-import 'package:voices/models/message.dart';
+import 'package:voices/models/text_message.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
@@ -59,7 +59,7 @@ class MessagesStream extends StatefulWidget {
 }
 
 class _MessagesStreamState extends State<MessagesStream> {
-  Stream<List<Message>> messagesStream;
+  Stream<List<TextMessage>> messagesStream;
 
   @override
   void initState() {
@@ -74,7 +74,7 @@ class _MessagesStreamState extends State<MessagesStream> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<Message>>(
+    return StreamBuilder<List<TextMessage>>(
       stream: messagesStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting ||
@@ -89,7 +89,7 @@ class _MessagesStreamState extends State<MessagesStream> {
           );
         }
 
-        final List<Message> messages = snapshot.data;
+        final List<TextMessage> messages = snapshot.data;
 
         if (messages == null) {
           return Container(
@@ -110,7 +110,7 @@ class _MessagesStreamState extends State<MessagesStream> {
 }
 
 class ListOfMessages extends StatefulWidget {
-  final List<Message> messages;
+  final List<TextMessage> messages;
 
   ListOfMessages({@required this.messages});
 
@@ -120,7 +120,7 @@ class ListOfMessages extends StatefulWidget {
 
 class _ListOfMessagesState extends State<ListOfMessages>
     with SingleTickerProviderStateMixin {
-  List<Message> _messages;
+  List<TextMessage> _messages;
   final _listKey = GlobalKey<AnimatedListState>();
 
   @override
@@ -149,7 +149,7 @@ class _ListOfMessagesState extends State<ListOfMessages>
       key: _listKey,
       initialItemCount: _messages.length,
       itemBuilder: (context, index, animation) {
-        Message message = _messages[index];
+        TextMessage message = _messages[index];
         return MessageRow(
           message: message,
           isMe: screenInfo.loggedInUser.uid == message.senderUid,
@@ -160,7 +160,7 @@ class _ListOfMessagesState extends State<ListOfMessages>
     );
   }
 
-  _insertMessageAtIndex({@required Message message, @required int index}) {
+  _insertMessageAtIndex({@required TextMessage message, @required int index}) {
     _messages.insert(index, message);
     _listKey.currentState.insertItem(index);
   }
@@ -218,7 +218,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   //Implement send functionality.
                   GlobalChatScreenInfo screenInfo =
                       Provider.of<GlobalChatScreenInfo>(context, listen: false);
-                  Message message = Message(
+                  TextMessage message = TextMessage(
                       senderUid: screenInfo.loggedInUser.uid,
                       text: _messageText);
                   final cloudFirestoreService =
@@ -498,7 +498,7 @@ class RecordingInfo extends StatelessWidget {
 class MessageRow extends StatelessWidget {
   MessageRow({this.message, this.isMe});
 
-  final Message message;
+  final TextMessage message;
   final bool isMe;
 
   @override
