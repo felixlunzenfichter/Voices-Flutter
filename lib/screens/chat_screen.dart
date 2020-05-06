@@ -271,14 +271,13 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 onPress: () async {
                   final playerService =
                       Provider.of<PlayerService>(context, listen: false);
-                  playerService.audioChunks = [];
-                  for (Recording recordingChunk
-                      in recorderService.currentRecordingChunks) {
-                    AudioChunk chunk = AudioChunk(
-                        path: recordingChunk.path,
-                        length: recordingChunk.duration);
-                    playerService.appendChunk(audioChunk: chunk);
-                  }
+                  List<AudioChunk> audioChunks = recorderService
+                      .currentRecordingChunks
+                      .map((recordingChunk) => AudioChunk(
+                          path: recordingChunk.path,
+                          length: recordingChunk.duration))
+                      .toList();
+                  playerService.initializePlayer(audioChunks: audioChunks);
                   await playerService.play();
                 },
               ),
