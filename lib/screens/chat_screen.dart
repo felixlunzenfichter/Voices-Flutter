@@ -257,9 +257,9 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   final playerService =
                       Provider.of<PlayerService>(context, listen: false);
                   playerService.initializePlayer(
-                    //todo audiochunk is the object used to pass information from recording to player
-                    //merge with voice message?
-                  audioChunk: AudioChunk(
+                      //todo audiochunk is the object used to pass information from recording to player
+                      //merge with voice message?
+                      audioChunk: AudioChunk(
                           path: recorderService.currentRecording.path,
                           length: recorderService.currentRecording.duration));
                 },
@@ -272,31 +272,32 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   recorderService.activateDirectSend();
                 },
               ),
-            if (recorderService.recordingStatus == RecordingStatus.Stopped &&
-                !playing)
-              ButtonFromPicture(
-                onPress: () async {
-                  setState(() {
-                    playing = true;
-                  });
-                  await player.playAudio();
-                  setState(() {
-                    playing = false;
-                  });
-                },
-                image: Image.asset('assets/play_1.png'),
-              ),
-            if (recorderService.recordingStatus == RecordingStatus.Stopped &&
-                playing)
-              ButtonFromPicture(onPress: () async {
-                await player.pauseAudio();
-              },
-                image: Image.asset('assets/pause_1.png'),
-              ),
-
           ],
         ),
       ],
+    );
+  }
+}
+
+// Button in message sending section that uses self made icons.
+class ButtonFromPicture extends StatelessWidget {
+  final Function onPress;
+  final Image image;
+
+  ButtonFromPicture({@required this.onPress, @required this.image});
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      padding: EdgeInsets.all(0),
+      onPressed: onPress,
+      child: Container(
+        padding: EdgeInsets.all(0),
+        decoration: ShapeDecoration(color: Colors.white, shape: CircleBorder()),
+        child: image,
+        height: 50.0,
+        width: 50.0,
+      ),
     );
   }
 }
@@ -510,16 +511,18 @@ class PlayerInfo extends StatelessWidget {
       child: Row(
         children: <Widget>[
           if (playerService.currentStatus == PlayerStatus.playing)
-            PauseButton(
+            ButtonFromPicture(
               onPress: () {
                 playerService.pause();
               },
+              image: Image.asset('assets/pause_1.png'),
             )
           else
-            PlayButton(
+            ButtonFromPicture(
               onPress: () async {
                 await playerService.play();
               },
+              image: Image.asset('assets/play_1.png'),
             ),
           Expanded(
             child: LinearProgressIndicator(
