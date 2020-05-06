@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:voices/models/audio_chunk.dart';
@@ -5,13 +7,23 @@ import 'package:voices/models/audio_chunk.dart';
 class PlayerServiceSingle with ChangeNotifier {
   //properties that the outside needs access to
   double currentSpeed = 1.0;
+  Duration currentPosition = Duration(seconds: 0);
   PlayerStatus status = PlayerStatus.idle;
+  AudioChunk audioChunk;
 
   //private variables
   final _player = AudioPlayer();
+  StreamSubscription<Duration> _positionStreamSubscription;
 
   //audioChunks is the list of chunks that will be played in order
   initializePlayer({@required AudioChunk audioChunk}) async {
+    this.audioChunk = audioChunk;
+    currentPosition = Duration(seconds: 0);
+    _positionStreamSubscription =
+        _player.getPositionStream().listen((newPosition) {
+      currentPosition = newPosition;
+      notifyListeners();
+    });
     await _player.setFilePath(audioChunk.path);
     notifyListeners();
   }
@@ -20,19 +32,22 @@ class PlayerServiceSingle with ChangeNotifier {
   play() async {
     status = PlayerStatus.playing;
     notifyListeners();
+    _positionStreamSubscription.resume();
     await _player.play();
   }
 
-  pause() async {
+  pause() {
     status = PlayerStatus.paused;
     notifyListeners();
-    await _player.pause();
+    _positionStreamSubscription.pause();
+    _player.pause();
   }
 
-  stop() async {
+  stop() {
     status = PlayerStatus.idle;
+    currentPosition = Duration(seconds: 0);
     notifyListeners();
-    await _player.stop();
+    _player.stop();
   }
 
   jumpToPosition({@required Duration position}) async {
@@ -43,10 +58,6 @@ class PlayerServiceSingle with ChangeNotifier {
     currentSpeed = speed;
     notifyListeners();
     await _player.setSpeed(speed);
-  }
-
-  Stream<Duration> getPositionStream() {
-    return _player.getPositionStream();
   }
 }
 

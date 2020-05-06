@@ -177,11 +177,10 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
-    final playerService = Provider.of<PlayerServiceSingle>(context);
-    print(playerService.status);
     return Column(
       children: <Widget>[
         RecordingInfo(),
+        if (recorderService.status == RecordingStatus.Stopped) PlayerInfo(),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -231,75 +230,44 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   });
                 },
               ),
-            if (recorderService.recordingStatus == RecordingStatus.Unset ||
-                recorderService.recordingStatus == RecordingStatus.Stopped)
+            if (recorderService.status == RecordingStatus.Unset ||
+                recorderService.status == RecordingStatus.Stopped)
               StartRecordingButton(
                 onPress: () async {
                   await recorderService.startRecording();
                 },
               ),
-            if (recorderService.recordingStatus == RecordingStatus.Recording)
+            if (recorderService.status == RecordingStatus.Recording)
               PauseRecordingButton(
                 onPress: () async {
                   await recorderService.pauseRecording();
                 },
               ),
-            if (recorderService.recordingStatus == RecordingStatus.Paused)
+            if (recorderService.status == RecordingStatus.Paused)
               ResumeRecordingButton(
                 onPress: () async {
                   await recorderService.resumeRecording();
                 },
               ),
-            if (recorderService.recordingStatus == RecordingStatus.Recording ||
-                recorderService.recordingStatus == RecordingStatus.Paused)
+            if (recorderService.status == RecordingStatus.Recording ||
+                recorderService.status == RecordingStatus.Paused)
               StopRecordingButton(
                 onPress: () async {
                   await recorderService.stopRecording();
-                },
-              ),
-            if (!recorderService.isDirectSendActivated &&
-                (recorderService.recordingStatus == RecordingStatus.Recording ||
-                    recorderService.recordingStatus == RecordingStatus.Paused))
-              ActivateDirectSendButton(
-                onPress: () async {
-                  recorderService.activateDirectSend();
-                },
-              ),
-            if (recorderService.recordingStatus == RecordingStatus.Stopped)
-              PlayButton(
-                onPress: () async {
+                  final playerService =
+                      Provider.of<PlayerServiceSingle>(context, listen: false);
                   playerService.initializePlayer(
                       audioChunk: AudioChunk(
                           path: recorderService.currentRecording.path,
                           length: recorderService.currentRecording.duration));
-                  await playerService.play();
                 },
               ),
-            if (recorderService.recordingStatus == RecordingStatus.Stopped &&
-                playerService.status == PlayerStatus.playing)
-              PauseButton(
-                onPress: () {
-                  playerService.pause();
-                },
-              ),
-            if (recorderService.recordingStatus == RecordingStatus.Stopped &&
-                (playerService.status == PlayerStatus.playing ||
-                    playerService.status == PlayerStatus.paused))
-              StopButton(
-                onPress: () {
-                  playerService.stop();
-                },
-              ),
-            if (recorderService.recordingStatus == RecordingStatus.Stopped &&
-                (playerService.status == PlayerStatus.playing ||
-                    playerService.status == PlayerStatus.paused))
-              SpeedButton(
-                onPress: () {
-                  if (playerService.currentSpeed == 1) {
-                    playerService.setSpeed(speed: 2);
-                  } else {
-                    playerService.setSpeed(speed: 1);
-                  }
+            if (!recorderService.isDirectSendActivated &&
+                (recorderService.status == RecordingStatus.Recording ||
+                    recorderService.status == RecordingStatus.Paused))
+              ActivateDirectSendButton(
+                onPress: () async {
+                  recorderService.activateDirectSend();
                 },
               ),
           ],
@@ -453,7 +421,7 @@ class RecordingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
-    switch (recorderService.recordingStatus) {
+    switch (recorderService.status) {
       case RecordingStatus.Unset:
         {
           return Text("Ready to record");
@@ -487,11 +455,72 @@ class RecordingInfo extends StatelessWidget {
 
       default:
         {
-          return Text(
-              "recordingStatus = ${recorderService.recordingStatus} is unknown");
+          return Text("recordingStatus = ${recorderService.status} is unknown");
         }
         break;
     }
+  }
+}
+
+class PlayerInfo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final playerService = Provider.of<PlayerServiceSingle>(context);
+    print(playerService.status);
+    return Container(
+      color: Colors.purple,
+      height: 70,
+      child: Row(
+        children: <Widget>[
+          if (playerService.status == PlayerStatus.playing)
+            PauseButton(
+              onPress: () {
+                playerService.pause();
+              },
+            )
+          else
+            PlayButton(
+              onPress: () async {
+                await playerService.play();
+              },
+            ),
+          SizedBox(
+            width: 200,
+            child: Consumer<PlayerServiceSingle>(
+              builder: (context, playerService, child) {
+                final Duration lengthOfAudio = playerService.audioChunk.length;
+                final double progress =
+                    playerService.currentPosition.inMilliseconds.toDouble() /
+                        lengthOfAudio.inMilliseconds.toDouble();
+
+                return LinearProgressIndicator(
+                  backgroundColor: Colors.grey,
+                  value: progress,
+                );
+              },
+            ),
+          ),
+          if (playerService.status == PlayerStatus.playing ||
+              playerService.status == PlayerStatus.paused)
+            StopButton(
+              onPress: () {
+                playerService.stop();
+              },
+            ),
+          if (playerService.status == PlayerStatus.playing ||
+              playerService.status == PlayerStatus.paused)
+            SpeedButton(
+              onPress: () {
+                if (playerService.currentSpeed == 1) {
+                  playerService.setSpeed(speed: 2);
+                } else {
+                  playerService.setSpeed(speed: 1);
+                }
+              },
+            ),
+        ],
+      ),
+    );
   }
 }
 
