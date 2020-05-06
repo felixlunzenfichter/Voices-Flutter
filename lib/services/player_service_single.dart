@@ -15,11 +15,12 @@ class PlayerServiceSingle with ChangeNotifier {
   final _player = AudioPlayer();
   StreamSubscription<Duration> _positionStreamSubscription;
   StreamSubscription<AudioPlaybackState> _statusStreamSubscription;
+  //if we change the speed of the player it starts playing shortly and we want to ignore that.
+  bool _shouldIgnorePlaying = false;
 
   //audioChunks is the list of chunks that will be played in order
   initializePlayer({@required AudioChunk audioChunk}) async {
     this.audioChunk = audioChunk;
-    currentPosition = Duration(seconds: 0);
     _positionStreamSubscription =
         _player.getPositionStream().listen((newPosition) {
       currentPosition = newPosition;
@@ -27,14 +28,13 @@ class PlayerServiceSingle with ChangeNotifier {
     });
     _statusStreamSubscription = _player.playbackStateStream.listen((newState) {
       switch (newState) {
-        case AudioPlaybackState.completed:
-          currentStatus = PlayerStatus.idle;
-          break;
         case AudioPlaybackState.paused:
           currentStatus = PlayerStatus.paused;
           break;
         case AudioPlaybackState.playing:
-          currentStatus = PlayerStatus.playing;
+          if (!_shouldIgnorePlaying) {
+            currentStatus = PlayerStatus.playing;
+          }
           break;
         default:
           currentStatus = PlayerStatus.idle;
@@ -43,7 +43,6 @@ class PlayerServiceSingle with ChangeNotifier {
       notifyListeners();
     });
     await _player.setFilePath(audioChunk.path);
-    notifyListeners();
   }
 
   disposePlayer() {
@@ -52,9 +51,13 @@ class PlayerServiceSingle with ChangeNotifier {
     _player.dispose();
   }
 
-  //find the current chunk based on the current position and play from there
   play() {
-    _player.play();
+    if (currentSpeed == 1) {
+      _player.play();
+    } else {
+      //_player.setSpeed automatically plays the audio
+      _player.setSpeed(currentSpeed);
+    }
   }
 
   pause() {
@@ -69,10 +72,23 @@ class PlayerServiceSingle with ChangeNotifier {
     _player.seek(position);
   }
 
-  setSpeed({@required double speed}) {
+  setSpeed({@required double speed}) async {
     currentSpeed = speed;
     notifyListeners();
-    _player.setSpeed(speed);
+    if (currentStatus == PlayerStatus.paused) {
+      //if the player is paused changing the speed will make it play so we need to pause it again
+      _shouldIgnorePlaying = true;
+      await _player.setSpeed(speed);
+      _player.pause();
+    } else if (currentStatus == PlayerStatus.idle) {
+      //if the player is stopped changing the speed will make it play so we need to stop it again
+      _shouldIgnorePlaying = true;
+      await _player.setSpeed(speed);
+      _player.stop();
+    } else {
+      await _player.setSpeed(speed);
+    }
+    _shouldIgnorePlaying = false;
   }
 }
 

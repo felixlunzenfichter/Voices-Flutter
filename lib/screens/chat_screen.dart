@@ -350,14 +350,23 @@ class StopRecordingButton extends StatelessWidget {
 
 class SpeedButton extends StatelessWidget {
   final Function onPress;
+  final String text;
 
-  SpeedButton({@required this.onPress});
+  SpeedButton({@required this.onPress, @required this.text});
 
   @override
   Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.fast_forward,
+    return CupertinoButton(
+      padding: EdgeInsets.all(0),
+      onPressed: onPress,
+      child: Container(
+        padding: EdgeInsets.all(9),
+        decoration:
+            ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
+        child: Text(
+          text,
+        ),
+      ),
     );
   }
 }
@@ -509,19 +518,18 @@ class PlayerInfo extends StatelessWidget {
                 playerService.stop();
               },
             ),
-          if (playerService.currentStatus == PlayerStatus.playing ||
-              playerService.currentStatus == PlayerStatus.paused)
-            SpeedButton(
-              onPress: () {
-                if (playerService.currentSpeed == 1) {
-                  playerService.setSpeed(speed: 2);
-                } else {
-                  playerService.setSpeed(speed: 1);
-                }
-              },
-            ),
-          Text("${playerService.currentPosition.inSeconds}s    "),
-          Text("${playerService.currentSpeed}x")
+          SpeedButton(
+            onPress: () {
+              if (playerService.currentSpeed == 1) {
+                playerService.setSpeed(speed: 2);
+              } else {
+                playerService.setSpeed(speed: 1);
+              }
+            },
+            text: "${playerService.currentSpeed}x",
+          ),
+          Text("${playerService.currentPosition.inSeconds}s of"),
+          Text("  ${playerService.audioChunk.length.inSeconds}s"),
         ],
       ),
     );
