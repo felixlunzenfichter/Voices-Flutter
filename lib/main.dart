@@ -9,6 +9,7 @@ import 'package:voices/services/permission_service.dart';
 import 'services/auth_service.dart';
 import 'services/cloud_firestore_service.dart';
 import 'services/storage_service.dart';
+import 'services/speech_to_text_service.dart';
 
 ///commented out for development purposes
 //import 'screens/navigation_screen.dart';
@@ -44,6 +45,9 @@ class Voices extends StatelessWidget {
         ),
         Provider<PermissionService>(
           create: (_) => PermissionService(),
+        ),
+        ChangeNotifierProvider<SpeechToTextService>(
+          create: (_) => SpeechToTextService(),
         ),
       ],
       child: GestureDetector(

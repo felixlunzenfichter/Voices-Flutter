@@ -8,9 +8,11 @@ import 'package:provider/provider.dart';
 import 'package:voices/models/message.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
+import 'package:voices/services/speech_to_text_service.dart';
 import 'package:voices/shared%20widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/player_service.dart';
+import 'package:speech_recognition/speech_recognition.dart';
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
@@ -141,11 +143,6 @@ class _ListOfMessagesState extends State<ListOfMessages>
     }
   }
 
-  _insertMessageAtIndex({@required Message message, @required int index}) {
-    _messages.insert(index, message);
-    _listKey.currentState.insertItem(index);
-  }
-
   @override
   Widget build(BuildContext context) {
     GlobalChatScreenInfo screenInfo =
@@ -164,6 +161,12 @@ class _ListOfMessagesState extends State<ListOfMessages>
       padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 20.0),
     );
   }
+
+  _insertMessageAtIndex({@required Message message, @required int index}) {
+    _messages.insert(index, message);
+    _listKey.currentState.insertItem(index);
+  }
+
 }
 
 class MessageSendingSection extends StatefulWidget {
@@ -187,10 +190,14 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
     final PlayerService player = Provider.of<PlayerService>(context);
+    final SpeechToTextService speechToText = Provider.of<SpeechToTextService>(
+        context);
 
     return Column(
       children: <Widget>[
         RecordingInfo(),
+        Text(speechToText.fullTranscription + " " +
+            speechToText.transciptionCurrentRecoringSnippet),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -213,13 +220,13 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   // prevent to send the previously typed message with an empty text field
                   //Implement send functionality.
                   GlobalChatScreenInfo screenInfo =
-                      Provider.of<GlobalChatScreenInfo>(context, listen: false);
+                  Provider.of<GlobalChatScreenInfo>(context, listen: false);
                   Message message = Message(
                       senderUid: screenInfo.loggedInUser.uid,
                       text: _messageText);
                   final cloudFirestoreService =
-                      Provider.of<CloudFirestoreService>(context,
-                          listen: false);
+                  Provider.of<CloudFirestoreService>(context,
+                      listen: false);
                   cloudFirestoreService.addMessage(
                       chatId: screenInfo.chatId, message: message);
                   setState(() {
@@ -235,6 +242,10 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 recorderService.recordingStatus == RecordingStatus.Stopped)
               RecordButton(
                 onPress: () async {
+                  // Speech to text converter
+                  speechToText.start();
+
+
                   final whatToDoWithUnfinishedRecording =
                       (Recording unfinishedRecording) async {
                     int recordingLength = unfinishedRecording
@@ -244,35 +255,43 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                     if (_isDirectSendEnabled && isNewChunkReady) {
                       //todo make sure this code is not executed before the last execution completed
                       int startInSec = _secondsSent;
-                      int endInSec = (recordingLength ~/ _chunkSizeInSeconds) *
+                      int endInSec = (recordingLength ~/
+                          _chunkSizeInSeconds) *
                           _chunkSizeInSeconds;
                       //todo cut the file from start to end and upload it to firebase (maybe convert)
                       var byteList =
-                          await File(unfinishedRecording.path).readAsBytes();
+                      await File(unfinishedRecording.path).readAsBytes();
                       _secondsSent = endInSec;
                     }
                   };
                   await recorderService.startRecording(
                       whatToDoWithUnfinishedRecording:
-                          whatToDoWithUnfinishedRecording);
+                      whatToDoWithUnfinishedRecording);
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Recording)
               PauseRecordingButton(
                 onPress: () async {
+                  // pause speech to text.
+
                   await recorderService.pauseRecording();
+                  speechToText.pause();
                 },
               ),
             if (recorderService.recordingStatus == RecordingStatus.Paused)
               ResumeRecordingButton(
                 onPress: () async {
                   await recorderService.resumeRecording();
+                  speechToText.start();
                 },
               ),
-            if (recorderService.recordingStatus == RecordingStatus.Recording ||
+            if (recorderService.recordingStatus ==
+                RecordingStatus.Recording ||
                 recorderService.recordingStatus == RecordingStatus.Paused)
               StopButton(
                 onPress: () async {
+                  // Stop voice to text conversion service.
+                  speechToText.stop();
                   await recorderService.stopRecording();
                   if (_isDirectSendEnabled) {
                     //todo send the last part of the recording as it probably wasn't sent yet
@@ -282,13 +301,16 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                         filePath: recorderService.currentRecording.path);
                   }
                   print(
-                      "Audio file path = ${recorderService.currentRecording.path}");
+                      "Audio file path = ${recorderService.currentRecording
+                          .path}");
                   _isDirectSendEnabled = false;
                 },
               ),
             if (!_isDirectSendEnabled &&
-                (recorderService.recordingStatus == RecordingStatus.Recording ||
-                    recorderService.recordingStatus == RecordingStatus.Paused))
+                (recorderService.recordingStatus ==
+                    RecordingStatus.Recording ||
+                    recorderService.recordingStatus ==
+                        RecordingStatus.Paused))
               ActivateDirectSendButton(
                 onPress: () async {
                   setState(() {
