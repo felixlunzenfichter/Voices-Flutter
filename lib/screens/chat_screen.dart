@@ -477,7 +477,10 @@ class PlayerInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final playerService = Provider.of<PlayerService>(context);
-    print(playerService.currentStatus);
+    final Duration lengthOfAudio = playerService.audioChunk.length;
+    final double progress =
+        playerService.currentPosition.inMilliseconds.toDouble() /
+            lengthOfAudio.inMilliseconds.toDouble();
     return Container(
       color: Colors.yellow,
       height: 70,
@@ -495,20 +498,10 @@ class PlayerInfo extends StatelessWidget {
                 await playerService.play();
               },
             ),
-          SizedBox(
-            width: 200,
-            child: Consumer<PlayerService>(
-              builder: (context, playerService, child) {
-                final Duration lengthOfAudio = playerService.audioChunk.length;
-                final double progress =
-                    playerService.currentPosition.inMilliseconds.toDouble() /
-                        lengthOfAudio.inMilliseconds.toDouble();
-
-                return LinearProgressIndicator(
-                  backgroundColor: Colors.grey,
-                  value: progress,
-                );
-              },
+          Expanded(
+            child: LinearProgressIndicator(
+              backgroundColor: Colors.grey,
+              value: progress,
             ),
           ),
           if (playerService.currentStatus == PlayerStatus.playing ||
@@ -528,8 +521,8 @@ class PlayerInfo extends StatelessWidget {
             },
             text: "${playerService.currentSpeed}x",
           ),
-          Text("${playerService.currentPosition.inSeconds}s of"),
-          Text("  ${playerService.audioChunk.length.inSeconds}s"),
+          Text(
+              "${playerService.currentPosition.inSeconds}s of ${playerService.audioChunk.length.inSeconds}s"),
         ],
       ),
     );
