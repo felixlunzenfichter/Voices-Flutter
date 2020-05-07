@@ -30,13 +30,21 @@ class SpeechToTextService extends ChangeNotifier {
   Language selectedLang = languages.first;
 
   void activateSpeechRecognizer() async {
-    print('_MyAppState.activateSpeechRecognizer... ');
     _speech = new SpeechRecognition();
-    _speech.setAvailabilityHandler(onSpeechAvailability);
-    _speech.setCurrentLocaleHandler(onCurrentLocale);
-    _speech.setRecognitionStartedHandler(onRecognitionStarted);
-    _speech.setRecognitionResultHandler(onRecognitionResult);
-    _speech.setRecognitionCompleteHandler(onRecognitionComplete);
+    _speech.setAvailabilityHandler((bool result) async {
+      _speechRecognitionAvailable = result;
+    });
+    _speech.setCurrentLocaleHandler((String locale) {
+      selectedLang = languages.firstWhere((l) => l.code == locale);
+    });
+    _speech.setRecognitionStartedHandler(() => _isListening = true);
+    _speech.setRecognitionResultHandler((String text) {
+      transciptionCurrentRecoringSnippet = text;
+      notifyListeners();
+    });
+    _speech.setRecognitionCompleteHandler(() {
+      _isListening = false;
+    });
 
     _speechRecognitionAvailable = await _speech.activate();
   }
@@ -48,12 +56,9 @@ class SpeechToTextService extends ChangeNotifier {
   // Start new Recording or pick up where we left off.
   void start() async {
     var result = _speech.listen(locale: selectedLang.code);
-    print('_MyAppState.start => result $result');
     fullTranscription =
         fullTranscription + " " + transciptionCurrentRecoringSnippet;
     transciptionCurrentRecoringSnippet = '';
-    notifyListeners();
-    // todo: notify needed? Because state of _speech changed.
   }
 
   // Stop recording
@@ -66,26 +71,6 @@ class SpeechToTextService extends ChangeNotifier {
   // Pause recording.
   void pause() async {
     _isListening = await _speech.stop();
-  }
-
-  void onSpeechAvailability(bool result) async {
-    _speechRecognitionAvailable = result;
-  }
-
-  void onCurrentLocale(String locale) {
-    print('_MyAppState.onCurrentLocale... $locale');
-    selectedLang = languages.firstWhere((l) => l.code == locale);
-  }
-
-  void onRecognitionStarted() => _isListening = true;
-
-  void onRecognitionResult(String text) {
-    transciptionCurrentRecoringSnippet = text;
-    notifyListeners();
-  }
-
-  void onRecognitionComplete() {
-    _isListening = false;
   }
 
   void setLanguage() {}
