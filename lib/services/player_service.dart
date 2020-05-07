@@ -18,7 +18,7 @@ class PlayerService with ChangeNotifier {
   //if we change the speed of the player it starts playing shortly and we want to ignore that.
   bool _shouldIgnorePlaying = false;
 
-  //audioChunks is the list of chunks that will be played in order
+  //pass in audioChunk to be played
   initializePlayer({@required AudioChunk audioChunk}) async {
     this.audioChunk = audioChunk;
     _positionStreamSubscription =
@@ -51,25 +51,25 @@ class PlayerService with ChangeNotifier {
     _player.dispose();
   }
 
-  play() {
+  play() async {
     if (currentSpeed == 1) {
-      _player.play();
+      await _player.play();
     } else {
-      //_player.setSpeed automatically plays the audio
-      _player.setSpeed(currentSpeed);
+      //_player.setSpeed is the only way to play a stopped audio in the right speed
+      await _player.setSpeed(currentSpeed);
     }
   }
 
-  pause() {
-    _player.pause();
+  pause() async {
+    await _player.pause();
   }
 
-  stop() {
-    _player.stop();
+  stop() async {
+    await _player.stop();
   }
 
-  jumpToPosition({@required Duration position}) {
-    _player.seek(position);
+  jumpToPosition({@required Duration position}) async {
+    await _player.seek(position);
   }
 
   setSpeed({@required double speed}) async {
