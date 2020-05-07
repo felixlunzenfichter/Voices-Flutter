@@ -478,8 +478,16 @@ class RecordingInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
     if (recorderService.currentStatus == RecordingStatus.Recording) {
+      return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+                "Is recording: ${recorderService.currentRecording?.duration?.inSeconds.toString()}s"),
+            CupertinoActivityIndicator()
+          ]);
+    } else if (recorderService.currentStatus == RecordingStatus.Paused) {
       return Text(
-          "Is recording: ${recorderService.currentRecording?.duration?.inSeconds.toString()}s");
+          "Is paused: ${recorderService.currentRecording?.duration?.inSeconds.toString()}s");
     } else {
       return Container();
     }
