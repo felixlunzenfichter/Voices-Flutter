@@ -172,6 +172,7 @@ class MessageSendingSection extends StatefulWidget {
 }
 
 class _MessageSendingSectionState extends State<MessageSendingSection> {
+  final TextEditingController _messageTextController = TextEditingController();
   String _messageText = "";
 
   @override
@@ -192,31 +193,9 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 10.0),
-                child: CupertinoTextField(
-                  textCapitalization: TextCapitalization.sentences,
-                  autocorrect: false,
-                  maxLength: 200,
-                  expands: true,
-                  maxLines: null,
-                  minLines: null,
-                  placeholder: "Enter message",
-                  padding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-                  decoration: BoxDecoration(
-                    color: Colors.orangeAccent,
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(25),
-                    ),
-                  ),
-                  onChanged: (newMessage) {
-                    setState(() {
-                      _messageText = newMessage;
-                    });
-                  },
-                ),
-              ),
-            ),
+                child: SendTextField(
+                    controller: _messageTextController,
+                    onTextChanged: _onTextChanged)),
             if (_messageText != "")
               SendTextButton(
                 onPress: () async {
@@ -232,9 +211,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                           listen: false);
                   cloudFirestoreService.addMessage(
                       chatId: screenInfo.chatId, message: message);
-                  setState(() {
-                    _messageText = "";
-                  });
+                  //clear text field
+                  _messageTextController.text = "";
                 },
               ),
             if (recorderService.currentStatus == RecordingStatus.Unset ||
@@ -272,24 +250,53 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   final playerService =
                       Provider.of<PlayerService>(context, listen: false);
                   playerService.initializePlayer(
-                      //todo audiochunk is the object used to pass information from recording to player
-                      //merge with voice message?
+                      //audiochunk is the object used to pass information from recording to player
                       audioChunk: AudioChunk(
                           path: recorderService.currentRecording.path,
                           length: recorderService.currentRecording.duration));
                 },
               ),
-            if (!recorderService.isDirectSendActivated &&
-                (recorderService.currentStatus == RecordingStatus.Recording ||
-                    recorderService.currentStatus == RecordingStatus.Paused))
-              ActivateDirectSendButton(
-                onPress: () async {
-                  recorderService.activateDirectSend();
-                },
-              ),
           ],
         ),
       ],
+    );
+  }
+
+  _onTextChanged(String newText) {
+    setState(() {
+      _messageText = newText;
+    });
+  }
+}
+
+class SendTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final Function onTextChanged;
+
+  SendTextField({@required this.controller, @required this.onTextChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 10.0),
+      child: CupertinoTextField(
+        textCapitalization: TextCapitalization.sentences,
+        autocorrect: false,
+        maxLength: 200,
+        expands: true,
+        maxLines: null,
+        minLines: null,
+        placeholder: "Enter message",
+        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+        decoration: BoxDecoration(
+          color: Colors.orangeAccent,
+          borderRadius: BorderRadius.all(
+            Radius.circular(25),
+          ),
+        ),
+        onChanged: onTextChanged,
+        controller: controller,
+      ),
     );
   }
 }
@@ -470,44 +477,11 @@ class RecordingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
-    switch (recorderService.currentStatus) {
-      case RecordingStatus.Unset:
-        {
-          return Text("Ready to record");
-        }
-        break;
-      case RecordingStatus.Initialized:
-        {
-          return Text("Recorder is initialized");
-        }
-        break;
-      case RecordingStatus.Recording:
-        {
-          return Text(
-              "Is recording: ${recorderService.currentRecording?.duration?.inSeconds.toString()}s");
-        }
-        break;
-
-      case RecordingStatus.Paused:
-        {
-          return Text(
-              "Is paused: ${recorderService.currentRecording?.duration?.inSeconds.toString()}s");
-        }
-        break;
-
-      case RecordingStatus.Stopped:
-        {
-          return Text(
-              "Recording saved under ${recorderService.currentRecording?.path}");
-        }
-        break;
-
-      default:
-        {
-          return Text(
-              "recordingStatus = ${recorderService.currentStatus} is unknown");
-        }
-        break;
+    if (recorderService.currentStatus == RecordingStatus.Recording) {
+      return Text(
+          "Is recording: ${recorderService.currentRecording?.duration?.inSeconds.toString()}s");
+    } else {
+      return Container();
     }
   }
 }
