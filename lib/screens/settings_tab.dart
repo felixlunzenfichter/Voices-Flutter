@@ -16,30 +16,34 @@ class _SettingsTabState extends State<SettingsTab> {
   @override
   Widget build(BuildContext context) {
     final loggedInUser = Provider.of<User>(context);
-    return Container(
-        color: Colors.yellow,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ProfilePicture(
-              imageUrl: loggedInUser.imageUrl,
-              radius: 60,
-            ),
-            Text(loggedInUser.username),
-            CupertinoButton(
-                child: Text("Sign Out"),
-                onPressed: () async {
-                  final authService =
-                      Provider.of<AuthService>(context, listen: false);
-                  authService.signOut();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        ProfilePicture(
+          imageUrl: loggedInUser.imageUrl,
+          radius: 60,
+        ),
+        Material(
+          //material is needed to remove the underline under the text
+          child: Text(
+            loggedInUser.username,
+            textAlign: TextAlign.center,
+          ),
+        ),
+        CupertinoButton(
+            child: Text("Sign Out"),
+            onPressed: () async {
+              final authService =
+                  Provider.of<AuthService>(context, listen: false);
+              authService.signOut();
 
-                  Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-                    CupertinoPageRoute(builder: (context) => LoginScreen()),
-                    (Route<dynamic> route) => false,
-                  );
-                }),
-          ],
-        ));
+              Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                CupertinoPageRoute(builder: (context) => LoginScreen()),
+                (Route<dynamic> route) => false,
+              );
+            }),
+      ],
+    );
   }
 }

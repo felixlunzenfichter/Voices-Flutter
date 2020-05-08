@@ -13,14 +13,16 @@ class ProfilePicture extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
-      imageUrl,
-      loadingBuilder: (context, child, progress) {
-        return progress == null ? child : CupertinoActivityIndicator();
-      },
-      width: 2 * radius,
-      height: 2 * radius,
-      fit: BoxFit.cover,
+    return ClipOval(
+      child: Image.network(
+        imageUrl,
+        loadingBuilder: (context, child, progress) {
+          return progress == null ? child : CupertinoActivityIndicator();
+        },
+        width: 2 * radius,
+        height: 2 * radius,
+        fit: BoxFit.cover,
+      ),
     );
   }
 }
