@@ -9,6 +9,7 @@ import 'create_profile_screen.dart';
 import 'package:voices/screens/registration/enter_code_screen.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/shared_widgets/info_dialog.dart';
+import 'package:country_code_picker/country_code_picker.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -17,7 +18,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _showSpinner = false;
-  String _phoneNumber = '';
+  String _enteredNumber = '';
+  String _selectedDialCode = "+41";
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +27,6 @@ class _LoginScreenState extends State<LoginScreen> {
       inAsyncCall: _showSpinner,
       progressIndicator: CupertinoActivityIndicator(),
       child: Scaffold(
-        appBar: AppBar(
-          title: Text('Login with phone number'),
-        ),
         backgroundColor: Colors.white,
         body: SafeArea(
           child: Column(
@@ -42,12 +41,23 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 height: 20.0,
               ),
-              CupertinoTextField(
-                placeholder: 'Enter your phone number with Country code',
-                keyboardType: TextInputType.number,
-                onChanged: (newNumber) {
-                  _phoneNumber = newNumber.trim();
-                },
+              Row(
+                children: <Widget>[
+                  CountryCodePicker(
+                    onChanged: _onCountryChange,
+                    initialSelection: '+41',
+                    alignLeft: false,
+                  ),
+                  Expanded(
+                    child: CupertinoTextField(
+                      placeholder: 'Enter your phone number',
+                      keyboardType: TextInputType.number,
+                      onChanged: (newNumber) {
+                        _enteredNumber = newNumber.trim();
+                      },
+                    ),
+                  ),
+                ],
               ),
               CupertinoButton(
                   child: Text('Verify'), onPressed: _verifyPhoneNumber),
@@ -56,6 +66,10 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  void _onCountryChange(CountryCode countryCode) {
+    _selectedDialCode = countryCode.dialCode;
   }
 
   _verifyPhoneNumber() async {
@@ -96,8 +110,9 @@ class _LoginScreenState extends State<LoginScreen> {
           .push(CupertinoPageRoute(builder: (context) => EnterCodeScreen()));
     };
     final authService = Provider.of<AuthService>(context, listen: false);
+    final phoneNumber = _enteredNumber + _selectedDialCode;
     await authService.verifyPhoneNumberAutomaticallyOrSendCode(
-        phoneNumber: _phoneNumber,
+        phoneNumber: phoneNumber,
         whatTodoWhenNewUserVerified: whatTodoWhenNewUserVerified,
         whatTodoWhenExistingUserVerified: whatTodoWhenExistingUserVerified,
         whatTodoWhenVerificationFailed: whatTodoWhenVerificationFailed,
