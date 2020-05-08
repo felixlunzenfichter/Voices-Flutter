@@ -4,8 +4,8 @@ import 'package:voices/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
-import 'package:voices/shared widgets/custom_card.dart';
-import 'package:voices/shared widgets/profile_picture.dart';
+import 'package:voices/shared_widgets/custom_card.dart';
+import 'package:voices/shared_widgets/profile_picture.dart';
 import 'chat_screen.dart';
 
 class SearchUsersScreen extends StatefulWidget {

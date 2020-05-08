@@ -37,7 +37,6 @@ dependencies:
   speech_recognition: ^0.3.0
 
   path_provider: ^1.6.5
-  flutter_sequence_animation: ^3.0.0
   flutter_ffmpeg: ^0.2.10
   audioplayers: ^0.15.1
 

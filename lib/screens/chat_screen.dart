@@ -8,7 +8,7 @@ import 'package:voices/models/text_message.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/services/speech_to_text_service.dart';
-import 'package:voices/shared%20widgets/time_stamp_text.dart';
+import 'package:voices/shared_widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/player_service.dart';
 

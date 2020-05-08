@@ -4,7 +4,7 @@ import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/models/user.dart';
-import 'package:voices/shared%20widgets/info_dialog.dart';
+import 'package:voices/shared_widgets/info_dialog.dart';
 import 'package:voices/screens/navigation_screen.dart';
 import 'create_profile_screen.dart';
 

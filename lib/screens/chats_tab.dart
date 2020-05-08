@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/models/chat.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
-import 'package:voices/shared%20widgets/profile_picture.dart';
+import 'package:voices/shared_widgets/profile_picture.dart';
 import 'chat_screen.dart';
 import 'search_users_screen.dart';
-import 'package:voices/shared widgets/custom_card.dart';
+import 'package:voices/shared_widgets/custom_card.dart';
 
 class ChatsTab extends StatefulWidget {
   @override

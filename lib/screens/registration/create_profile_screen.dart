@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:voices/constants.dart';
 import 'package:voices/models/user.dart';
 import 'package:flutter/material.dart';
@@ -6,11 +7,13 @@ import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/screens/registration/ask_for_permissions_screen.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
+import 'package:voices/services/permission_service.dart';
 import 'package:voices/services/storage_service.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:voices/shared widgets/profile_picture.dart';
+import 'package:voices/shared_widgets/profile_picture.dart';
+import 'package:voices/screens/navigation_screen.dart';
 
 class CreateProfileScreen extends StatefulWidget {
   final User user;
@@ -172,10 +175,24 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     setState(() {
       _showSpinner = false;
     });
-    Navigator.of(context).push(
-      CupertinoPageRoute(
-        builder: (context) => AskForPermissionsScreen(),
-      ),
-    );
+    final permissionService =
+        Provider.of<PermissionService>(context, listen: false);
+    if (permissionService.microphonePermissionStatus !=
+            PermissionStatus.granted ||
+        permissionService.speechRecognitionPermissionStatus !=
+            PermissionStatus.granted) {
+      Navigator.of(context).push(
+        CupertinoPageRoute(
+          builder: (context) => AskForPermissionsScreen(),
+        ),
+      );
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        CupertinoPageRoute(
+          builder: (context) => NavigationScreen(),
+        ),
+        (Route<dynamic> route) => false,
+      );
+    }
   }
 }

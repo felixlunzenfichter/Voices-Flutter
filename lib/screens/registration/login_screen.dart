@@ -8,7 +8,7 @@ import 'create_profile_screen.dart';
 
 import 'package:voices/screens/registration/enter_code_screen.dart';
 import 'package:voices/services/auth_service.dart';
-import 'package:voices/shared%20widgets/info_dialog.dart';
+import 'package:voices/shared_widgets/info_dialog.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
