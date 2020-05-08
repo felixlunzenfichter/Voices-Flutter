@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 20.0,
               ),
               CupertinoTextField(
-                placeholder: 'Enter your phone number',
+                placeholder: 'Enter your phone number with Country code',
                 keyboardType: TextInputType.number,
                 onChanged: (newNumber) {
                   _phoneNumber = newNumber.trim();

@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:voices/models/user.dart';
 import 'package:voices/services/player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/permission_service.dart';
@@ -21,16 +23,34 @@ void main() async {
   return runApp(Voices());
 }
 
-class Voices extends StatelessWidget {
+class Voices extends StatefulWidget {
+  @override
+  _VoicesState createState() => _VoicesState();
+}
+
+class _VoicesState extends State<Voices> {
+  final authService = AuthService();
+  final cloudFirestoreService = CloudFirestoreService();
+  Stream<User> loggedInUserStream;
+
+  @override
+  void initState() {
+    super.initState();
+    loggedInUserStream = _getLoggedInUserStream().distinct();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<AuthService>(
-          create: (_) => AuthService(),
+        Provider<AuthService>.value(
+          value: authService,
         ),
-        Provider<CloudFirestoreService>(
-          create: (_) => CloudFirestoreService(),
+        Provider<CloudFirestoreService>.value(
+          value: cloudFirestoreService,
+        ),
+        StreamProvider.value(
+          value: loggedInUserStream,
         ),
         Provider<StorageService>(
           create: (_) => StorageService(),
@@ -68,5 +88,19 @@ class Voices extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Stream<User> _getLoggedInUserStream() async* {
+    Stream<FirebaseUser> firebaseUserStream = authService.onAuthStateChanged();
+    // Wait until a new firebase user is available
+    await for (var firebaseUser in firebaseUserStream) {
+      if (firebaseUser == null) {
+        yield null;
+      } else {
+        User user =
+            await cloudFirestoreService.getUserWithUid(uid: firebaseUser.uid);
+        yield user; // Add the new user to the user stream
+      }
+    }
   }
 }

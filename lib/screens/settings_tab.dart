@@ -18,32 +18,28 @@ class _SettingsTabState extends State<SettingsTab> {
     final loggedInUser = Provider.of<User>(context);
     return Container(
         color: Colors.yellow,
-        child: loggedInUser == null
-            ? Container()
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  ProfilePicture(
-                    imageUrl: loggedInUser.imageUrl,
-                    radius: 60,
-                  ),
-                  Text(loggedInUser.username),
-                  CupertinoButton(
-                      child: Text("Sign Out"),
-                      onPressed: () async {
-                        final authService =
-                            Provider.of<AuthService>(context, listen: false);
-                        await authService.signOut();
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            ProfilePicture(
+              imageUrl: loggedInUser.imageUrl,
+              radius: 60,
+            ),
+            Text(loggedInUser.username),
+            CupertinoButton(
+                child: Text("Sign Out"),
+                onPressed: () async {
+                  final authService =
+                      Provider.of<AuthService>(context, listen: false);
+                  authService.signOut();
 
-                        Navigator.of(context, rootNavigator: true)
-                            .pushAndRemoveUntil(
-                          CupertinoPageRoute(
-                              builder: (context) => LoginScreen()),
-                          (Route<dynamic> route) => false,
-                        );
-                      }),
-                ],
-              ));
+                  Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                    CupertinoPageRoute(builder: (context) => LoginScreen()),
+                    (Route<dynamic> route) => false,
+                  );
+                }),
+          ],
+        ));
   }
 }

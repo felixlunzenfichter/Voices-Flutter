@@ -9,10 +9,6 @@ import 'package:voices/shared widgets/profile_picture.dart';
 import 'chat_screen.dart';
 
 class SearchUsersScreen extends StatefulWidget {
-  final User loggedInUser;
-
-  SearchUsersScreen({@required this.loggedInUser});
-
   @override
   _SearchUsersScreenState createState() => _SearchUsersScreenState();
 }
@@ -31,6 +27,7 @@ class _SearchUsersScreenState extends State<SearchUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loggedInUser = Provider.of<User>(context, listen: false);
     return ModalProgressHUD(
       inAsyncCall: _showSpinner,
       progressIndicator: CupertinoActivityIndicator(),
@@ -52,7 +49,7 @@ class _SearchUsersScreenState extends State<SearchUsersScreen> {
             }
 
             List<User> allUsers = List.from(snapshot.data);
-            allUsers.removeWhere((user) => user.uid == widget.loggedInUser.uid);
+            allUsers.removeWhere((user) => user.uid == loggedInUser.uid);
 
             if (allUsers.isEmpty) {
               return Center(
@@ -82,10 +79,11 @@ class _SearchUsersScreenState extends State<SearchUsersScreen> {
     setState(() {
       _showSpinner = true;
     });
+    final loggedInUser = Provider.of<User>(context, listen: false);
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
     String chatId = await cloudFirestoreService.getChatWithUsers(
-        uid1: widget.loggedInUser.uid, uid2: user.uid);
+        uid1: loggedInUser.uid, uid2: user.uid);
     setState(() {
       _showSpinner = false;
     });
@@ -94,7 +92,6 @@ class _SearchUsersScreenState extends State<SearchUsersScreen> {
         builder: (context) {
           return ChatScreen(
             chatId: chatId,
-            loggedInUser: widget.loggedInUser,
             otherUser: user,
           );
         },
