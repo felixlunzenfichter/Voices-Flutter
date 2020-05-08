@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/screens/registration/login_screen.dart';
 import 'package:voices/services/player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/permission_service.dart';
@@ -11,9 +10,7 @@ import 'services/cloud_firestore_service.dart';
 import 'services/storage_service.dart';
 import 'services/speech_to_text_service.dart';
 import 'services/file_converter_service.dart';
-
-///commented out for development purposes
-//import 'screens/navigation_screen.dart';
+import 'screens/navigation_screen.dart';
 
 void main() async {
   // This app is designed only to work vertically, so we limit
@@ -67,9 +64,7 @@ class Voices extends StatelessWidget {
             brightness: Brightness.light,
             scaffoldBackgroundColor: Colors.white,
           ),
-          home: LoginScreen(),
-
-          ///LoginScreen instead of NavigationScreen for development purposes
+          home: NavigationScreen(),
         ),
       ),
     );

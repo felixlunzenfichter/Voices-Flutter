@@ -174,12 +174,8 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     });
     Navigator.of(context).push(
       CupertinoPageRoute(
-        builder: (context) => AskForPermissionsScreen(
-          user: newUser,
-        ),
+        builder: (context) => AskForPermissionsScreen(),
       ),
-
-      ///AskForPermissionsScreen takes argument for development purposes
     );
   }
 }

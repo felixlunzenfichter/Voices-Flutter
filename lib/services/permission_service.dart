@@ -1,6 +1,9 @@
 import 'package:permission_handler/permission_handler.dart';
 
 class PermissionService {
+  bool hasMicrophonePermission = false;
+  bool hasSpeechRecognitionPermission = false;
+
   askForMicrophonePermission() async {
     PermissionStatus status = await Permission.microphone.request();
     switch (status) {

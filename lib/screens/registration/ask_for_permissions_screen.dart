@@ -1,15 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/models/user.dart';
 import 'package:voices/services/permission_service.dart';
 import 'package:voices/screens/navigation_screen.dart';
 
 class AskForPermissionsScreen extends StatelessWidget {
-  final User user;
-
-  AskForPermissionsScreen({@required this.user});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,12 +26,8 @@ class AskForPermissionsScreen extends StatelessWidget {
 
               Navigator.of(context).pushAndRemoveUntil(
                 CupertinoPageRoute(
-                  builder: (context) => NavigationScreen(
-                    loggedInUser: user,
-                  ),
+                  builder: (context) => NavigationScreen(),
                 ),
-
-                ///NavigationScreen takes argument for development purposes
                 (Route<dynamic> route) => false,
               );
             },
