@@ -33,7 +33,7 @@ class _SettingsTabState extends State<SettingsTab> {
         ),
         CupertinoButton(
             child: Text("Sign Out"),
-            onPressed: () async {
+            onPressed: () {
               final authService =
                   Provider.of<AuthService>(context, listen: false);
               authService.signOut();

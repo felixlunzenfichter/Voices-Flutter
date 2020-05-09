@@ -13,7 +13,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:voices/shared_widgets/profile_picture.dart';
-import 'package:voices/screens/navigation_screen.dart';
+import 'package:voices/screens/login_or_tabs_screen.dart';
 
 class CreateProfileScreen extends StatefulWidget {
   final User user;
@@ -189,7 +189,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     } else {
       Navigator.of(context).pushAndRemoveUntil(
         CupertinoPageRoute(
-          builder: (context) => NavigationScreen(),
+          builder: (context) => LoginOrTabsScreen(),
         ),
         (Route<dynamic> route) => false,
       );

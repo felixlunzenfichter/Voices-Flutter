@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/services/permission_service.dart';
-import 'package:voices/screens/navigation_screen.dart';
+import 'package:voices/screens/login_or_tabs_screen.dart';
 
 class AskForPermissionsScreen extends StatelessWidget {
   @override
@@ -59,7 +59,7 @@ class AskForPermissionsScreen extends StatelessWidget {
                       PermissionStatus.granted) {
                 Navigator.of(context).pushAndRemoveUntil(
                   CupertinoPageRoute(
-                    builder: (context) => NavigationScreen(),
+                    builder: (context) => LoginOrTabsScreen(),
                   ),
                   (Route<dynamic> route) => false,
                 );

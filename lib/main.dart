@@ -12,7 +12,7 @@ import 'services/cloud_firestore_service.dart';
 import 'services/storage_service.dart';
 import 'services/speech_to_text_service.dart';
 import 'services/file_converter_service.dart';
-import 'screens/navigation_screen.dart';
+import 'screens/login_or_tabs_screen.dart';
 
 void main() async {
   // This app is designed only to work vertically, so we limit
@@ -51,6 +51,10 @@ class _VoicesState extends State<Voices> {
         ),
         StreamProvider.value(
           value: loggedInUserStream,
+          catchError: (context, error) {
+            print("error = ${error.toString()}");
+            return null;
+          },
         ),
         Provider<StorageService>(
           create: (_) => StorageService(),
@@ -84,7 +88,7 @@ class _VoicesState extends State<Voices> {
             brightness: Brightness.light,
             scaffoldBackgroundColor: Colors.white,
           ),
-          home: NavigationScreen(),
+          home: LoginOrTabsScreen(),
         ),
       ),
     );

@@ -4,12 +4,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
+import 'package:voices/screens/tabs_screen.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/models/user.dart';
-import 'package:voices/screens/navigation_screen.dart';
 import 'create_profile_screen.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:flare_flutter/flare_actor.dart';
+import 'package:voices/services/cloud_firestore_service.dart';
 
 class EnterCodeScreen extends StatefulWidget {
   final String phoneNumber;
@@ -52,7 +53,6 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
         backgroundColor: Colors.white,
         body: ListView(
           children: <Widget>[
-            SizedBox(height: 30),
             Container(
               height: MediaQuery.of(context).size.height / 3,
               child: FlareActor(
@@ -106,9 +106,13 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
                   borderRadius: BorderRadius.circular(5),
                   fieldHeight: 50,
                   fieldWidth: 40,
-                  selectedColor: Colors.red.shade100,
-                  activeFillColor: Colors.white,
+                  activeColor: Colors.red,
+                  selectedColor: Colors.red,
                   inactiveColor: Colors.red,
+                  disabledColor: Colors.red,
+                  activeFillColor: Colors.white,
+                  selectedFillColor: Colors.red.shade100,
+                  inactiveFillColor: Colors.red.shade300,
                 ),
                 animationDuration: Duration(milliseconds: 300),
                 backgroundColor: Colors.white,
@@ -159,9 +163,10 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
       _showSpinner = true;
     });
     final Function whatTodoWhenCodeCorrectForNewUser = (User newUser) async {
-      setState(() {
-        _showSpinner = false;
-      });
+      final cloudFirestoreService =
+          Provider.of<CloudFirestoreService>(context, listen: false);
+      //we have to upload the user here so we have a user in the users collection even if he doesn't complete the registration process
+      cloudFirestoreService.uploadUser(user: newUser);
       Navigator.of(context).pushAndRemoveUntil(
         CupertinoPageRoute(
             builder: (context) => CreateProfileScreen(user: newUser)),
@@ -170,11 +175,8 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
     };
     final Function whatTodoWhenCodeCorrectForExistingUser =
         (User existingUser) async {
-      setState(() {
-        _showSpinner = false;
-      });
       Navigator.of(context).pushAndRemoveUntil(
-        CupertinoPageRoute(builder: (context) => NavigationScreen()),
+        CupertinoPageRoute(builder: (context) => TabsScreen()),
         (Route<dynamic> route) => false,
       );
     };

@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'package:voices/screens/navigation_screen.dart';
+import 'package:voices/screens/tabs_screen.dart';
 import 'create_profile_screen.dart';
 
 import 'package:voices/screens/registration/enter_code_screen.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/shared_widgets/info_dialog.dart';
 import 'package:country_code_picker/country_code_picker.dart';
+import 'package:voices/services/cloud_firestore_service.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -78,6 +79,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     final Function whatTodoWhenNewUserVerified = (User newUser) async {
+      final cloudFirestoreService =
+          Provider.of<CloudFirestoreService>(context, listen: false);
+      //we have to upload the user here so we have a user in the users collection even if he doesn't complete the registration process
+      cloudFirestoreService.uploadUser(user: newUser);
       Navigator.of(context).pushAndRemoveUntil(
         CupertinoPageRoute(
             builder: (context) => CreateProfileScreen(user: newUser)),
@@ -88,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final Function whatTodoWhenExistingUserVerified =
         (User existingUser) async {
       Navigator.of(context).pushAndRemoveUntil(
-        CupertinoPageRoute(builder: (context) => NavigationScreen()),
+        CupertinoPageRoute(builder: (context) => TabsScreen()),
         (Route<dynamic> route) => false,
       );
     };
