@@ -106,11 +106,13 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _showSpinner = false;
       });
-      Navigator.of(context)
-          .push(CupertinoPageRoute(builder: (context) => EnterCodeScreen()));
+      Navigator.of(context).push(CupertinoPageRoute(
+          builder: (context) => EnterCodeScreen(
+                phoneNumber: _selectedDialCode + _enteredNumber,
+              )));
     };
     final authService = Provider.of<AuthService>(context, listen: false);
-    final phoneNumber = _enteredNumber + _selectedDialCode;
+    final phoneNumber = _selectedDialCode + _enteredNumber;
     await authService.verifyPhoneNumberAutomaticallyOrSendCode(
         phoneNumber: phoneNumber,
         whatTodoWhenNewUserVerified: whatTodoWhenNewUserVerified,

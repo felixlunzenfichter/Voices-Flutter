@@ -21,6 +21,7 @@ class InfoDialog extends StatelessWidget {
               Text(
                 title,
                 textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 30),
               ),
               SizedBox(
                 height: 15,
@@ -35,10 +36,9 @@ class InfoDialog extends StatelessWidget {
               CupertinoButton(
                 padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
                 child: Text(
-                  "Ok",
+                  "OK",
                   style: TextStyle(
                     fontSize: 20,
-                    color: Colors.green,
                   ),
                 ),
                 onPressed: () {
@@ -49,7 +49,6 @@ class InfoDialog extends StatelessWidget {
           ),
         ),
       ),
-      backgroundColor: Colors.yellow,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(20))),
     );

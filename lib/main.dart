@@ -36,7 +36,7 @@ class _VoicesState extends State<Voices> {
   @override
   void initState() {
     super.initState();
-    loggedInUserStream = _getLoggedInUserStream().distinct();
+    _setLoggedInUserStream();
   }
 
   @override
@@ -90,16 +90,19 @@ class _VoicesState extends State<Voices> {
     );
   }
 
-  Stream<User> _getLoggedInUserStream() async* {
+  _setLoggedInUserStream() async {
     Stream<FirebaseUser> firebaseUserStream = authService.onAuthStateChanged();
-    // Wait until a new firebase user is available
+    // Wait for new sign in or sign out
     await for (var firebaseUser in firebaseUserStream) {
       if (firebaseUser == null) {
-        yield null;
+        setState(() {
+          loggedInUserStream = Stream.empty();
+        });
       } else {
-        User user =
-            await cloudFirestoreService.getUserWithUid(uid: firebaseUser.uid);
-        yield user; // Add the new user to the user stream
+        setState(() {
+          loggedInUserStream =
+              cloudFirestoreService.getUserStream(uid: firebaseUser.uid);
+        });
       }
     }
   }
