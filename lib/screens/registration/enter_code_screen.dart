@@ -49,7 +49,7 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
           backgroundColor: Colors.white,
           elevation: 0,
         ),
-        backgroundColor: Colors.red.shade50,
+        backgroundColor: Colors.white,
         body: ListView(
           children: <Widget>[
             SizedBox(height: 30),
@@ -106,10 +106,12 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
                   borderRadius: BorderRadius.circular(5),
                   fieldHeight: 50,
                   fieldWidth: 40,
+                  selectedColor: Colors.red.shade100,
                   activeFillColor: Colors.white,
+                  inactiveColor: Colors.red,
                 ),
                 animationDuration: Duration(milliseconds: 300),
-                backgroundColor: Colors.red.shade50,
+                backgroundColor: Colors.white,
                 enableActiveFill: true,
                 errorAnimationController: _errorController,
                 controller: _textEditingController,
