@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/screens/tabs_screen.dart';
+import 'package:voices/screens/tabs_or_permissions_screen.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/models/user.dart';
 import 'create_profile_screen.dart';
@@ -176,7 +176,7 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
     final Function whatTodoWhenCodeCorrectForExistingUser =
         (User existingUser) async {
       Navigator.of(context).pushAndRemoveUntil(
-        CupertinoPageRoute(builder: (context) => TabsScreen()),
+        CupertinoPageRoute(builder: (context) => TabsOrPermissionsScreen()),
         (Route<dynamic> route) => false,
       );
     };

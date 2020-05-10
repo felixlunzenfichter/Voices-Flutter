@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'package:voices/screens/tabs_screen.dart';
+import 'package:voices/screens/tabs_or_permissions_screen.dart';
+import 'package:voices/shared_widgets/next_button.dart';
 import 'create_profile_screen.dart';
 
 import 'package:voices/screens/registration/enter_code_screen.dart';
@@ -31,37 +32,44 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: Colors.white,
         body: SafeArea(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Container(
-                height: 200.0,
-                width: MediaQuery.of(context).size.width,
-                color: Colors.white,
-                child: Image.asset('assets/logo.png'),
-              ),
-              SizedBox(
-                height: 20.0,
-              ),
-              Row(
-                children: <Widget>[
-                  CountryCodePicker(
-                    onChanged: _onCountryChange,
-                    initialSelection: '+41',
-                    alignLeft: false,
-                  ),
-                  Expanded(
-                    child: CupertinoTextField(
-                      placeholder: 'Enter your phone number',
-                      keyboardType: TextInputType.number,
-                      onChanged: (newNumber) {
-                        _enteredNumber = newNumber.trim();
-                      },
+              Expanded(
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      height: 200.0,
+                      width: MediaQuery.of(context).size.width,
+                      color: Colors.white,
+                      child: Image.asset('assets/logo.png'),
                     ),
-                  ),
-                ],
+                    SizedBox(
+                      height: 20.0,
+                    ),
+                    Row(
+                      children: <Widget>[
+                        CountryCodePicker(
+                          onChanged: _onCountryChange,
+                          initialSelection: '+41',
+                          alignLeft: false,
+                        ),
+                        Expanded(
+                          child: CupertinoTextField(
+                            placeholder: 'Enter your phone number',
+                            keyboardType: TextInputType.number,
+                            onChanged: (newNumber) {
+                              _enteredNumber = newNumber.trim();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              CupertinoButton(
-                  child: Text('Verify'), onPressed: _verifyPhoneNumber),
+              NextButton(
+                text: "Verify",
+                onPressed: _verifyPhoneNumber,
+              ),
             ],
           ),
         ),
@@ -93,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final Function whatTodoWhenExistingUserVerified =
         (User existingUser) async {
       Navigator.of(context).pushAndRemoveUntil(
-        CupertinoPageRoute(builder: (context) => TabsScreen()),
+        CupertinoPageRoute(builder: (context) => TabsOrPermissionsScreen()),
         (Route<dynamic> route) => false,
       );
     };

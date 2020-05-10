@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
+import 'package:voices/screens/login_or_tabs_screen.dart';
 import 'package:voices/services/player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/permission_service.dart';
@@ -12,7 +13,6 @@ import 'services/cloud_firestore_service.dart';
 import 'services/storage_service.dart';
 import 'services/speech_to_text_service.dart';
 import 'services/file_converter_service.dart';
-import 'screens/login_or_tabs_screen.dart';
 
 void main() async {
   // This app is designed only to work vertically, so we limit

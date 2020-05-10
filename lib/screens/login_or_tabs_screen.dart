@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:voices/screens/tabs_screen.dart';
+import 'package:voices/screens/tabs_or_permissions_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/screens/registration/login_screen.dart';
 import 'package:voices/services/auth_service.dart';
@@ -25,7 +25,7 @@ class _LoginOrTabsScreenState extends State<LoginOrTabsScreen> {
     if (loggedInUser == null) {
       return LoginScreen();
     } else {
-      return TabsScreen();
+      return TabsOrPermissionsScreen();
     }
   }
 
