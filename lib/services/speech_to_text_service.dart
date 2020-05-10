@@ -21,10 +21,17 @@ class SpeechToTextService extends ChangeNotifier {
 
   //todo use those
   bool _speechRecognitionAvailable = false;
+  int i = 0;
+
+  // Set to true when we are currently recording.
   bool _isListening = false;
 
-  String transciptionCurrentRecoringSnippet = ' snip';
-  String fullTranscription = 'nottin';
+  // Stopping the recorder can take time. Therefore we use this boolean
+  // to postpone starting the recorder upon completing the stop.
+  bool _shouldPlayOnComplete = false;
+
+  String transciptionCurrentRecoringSnippet = '';
+  String fullTranscription = '';
 
   //String _currentLocale = 'en_US';
   Language selectedLang = languages.first;
@@ -37,13 +44,34 @@ class SpeechToTextService extends ChangeNotifier {
     _speech.setCurrentLocaleHandler((String locale) {
       selectedLang = languages.firstWhere((l) => l.code == locale);
     });
-    _speech.setRecognitionStartedHandler(() => _isListening = true);
+    _speech.setRecognitionStartedHandler(() => {});
     _speech.setRecognitionResultHandler((String text) {
       transciptionCurrentRecoringSnippet = text;
       notifyListeners();
     });
-    _speech.setRecognitionCompleteHandler(() {
-      _isListening = false;
+    _speech.setRecognitionCompleteHandler(() async {
+      if (_shouldPlayOnComplete) {
+        // Don't Play upon next completion.
+        _shouldPlayOnComplete = false;
+
+        // Save transcript.
+        fullTranscription =
+        "$fullTranscription  $transciptionCurrentRecoringSnippet";
+        transciptionCurrentRecoringSnippet = '';
+
+        // Start listening.
+        _speech.listen(locale: selectedLang.code);
+      } else {
+        // We are done listening.
+        _isListening = false;
+
+//        _speech.cancel();
+
+        // Save transcript.
+        fullTranscription =
+        "$fullTranscription  $transciptionCurrentRecoringSnippet";
+        transciptionCurrentRecoringSnippet = '';
+      }
     });
 
     _speechRecognitionAvailable = await _speech.activate();
@@ -55,22 +83,28 @@ class SpeechToTextService extends ChangeNotifier {
 
   // Start new Recording or pick up where we left off.
   void start() async {
-    var result = _speech.listen(locale: selectedLang.code);
-    fullTranscription =
-        fullTranscription + " " + transciptionCurrentRecoringSnippet;
-    transciptionCurrentRecoringSnippet = '';
+    if (!_isListening) {
+      // Start listening.
+      _isListening = true;
+      i += 1;
+      print("start $i");
+      _speech.listen(locale: selectedLang.code);
+    } else {
+      // Postpone start listening to onComplete.
+      _shouldPlayOnComplete = true;
+    }
   }
 
   // Stop recording
   void stop() async {
-    _isListening = await _speech.cancel();
+    await _speech.stop();
     fullTranscription = '';
     transciptionCurrentRecoringSnippet = '';
   }
 
   // Pause recording.
   void pause() async {
-    _isListening = await _speech.stop();
+    await _speech.stop();
   }
 
   void setLanguage() {}
