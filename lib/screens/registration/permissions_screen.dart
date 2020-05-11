@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:voices/screens/registration/create_profile_screen.dart';
+import 'package:voices/screens/tabs_screen.dart';
 import 'package:voices/services/permission_service.dart';
 import 'package:voices/shared_widgets/next_button.dart';
 import 'package:voices/shared_widgets/info_dialog.dart';
@@ -85,6 +87,26 @@ class PermissionsScreen extends StatelessWidget {
                     ),
                   );
                   return;
+                }
+
+                //the user can only use the app if he has granted all permissions
+                if (permissionService.areAllPermissionsGranted()) {
+                  //user can move on
+                  if (moveOnToNextRegistrationScreenAfter) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      CupertinoPageRoute(
+                        builder: (context) => CreateProfileScreen(),
+                      ),
+                      (Route<dynamic> route) => false,
+                    );
+                  } else {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      CupertinoPageRoute(
+                        builder: (context) => TabsScreen(),
+                      ),
+                      (Route<dynamic> route) => false,
+                    );
+                  }
                 }
               },
             ),

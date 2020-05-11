@@ -67,6 +67,18 @@ class PermissionService {
     return permanentlyDeniedPermissions;
   }
 
+  bool areAllPermissionsGranted() {
+    if (microphonePermissionStatus == PermissionStatus.granted &&
+        speechRecognitionPermissionStatus == PermissionStatus.granted &&
+        contactsPermissionStatus == PermissionStatus.granted &&
+        cameraPermissionStatus == PermissionStatus.granted &&
+        photosPermissionStatus == PermissionStatus.granted) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   _initializeAllPermissions() async {
     microphonePermissionStatus = await Permission.microphone.status;
     speechRecognitionPermissionStatus = await Permission.speech.status;
