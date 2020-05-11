@@ -2,9 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:contacts_service/contacts_service.dart';
 
 class ContactService {
-  Future<List<Contact>> getAllContacts() async {
-    List<Contact> contacts = (await ContactsService.getContacts()).toList();
-    return contacts;
+  List<Contact> contacts;
+
+  getAllContacts() async {
+    contacts = (await ContactsService.getContacts()).toList();
   }
 
   openNativeDialogToAddContact() async {
