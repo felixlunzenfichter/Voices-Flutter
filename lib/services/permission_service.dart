@@ -4,10 +4,12 @@ class PermissionService {
   PermissionStatus microphonePermissionStatus = PermissionStatus.undetermined;
   PermissionStatus speechRecognitionPermissionStatus =
       PermissionStatus.undetermined;
+  PermissionStatus contactsPermissionStatus = PermissionStatus.undetermined;
+  PermissionStatus cameraPermissionStatus = PermissionStatus.undetermined;
+  PermissionStatus photosPermissionStatus = PermissionStatus.undetermined;
 
   PermissionService() {
-    _initializeMicrophonePermission();
-    _initializeSpeechRecognitionPermission();
+    _initializeAllPermissions();
   }
 
   askForMicrophonePermission() async {
@@ -18,11 +20,23 @@ class PermissionService {
     speechRecognitionPermissionStatus = await Permission.speech.request();
   }
 
-  _initializeMicrophonePermission() async {
-    microphonePermissionStatus = await Permission.microphone.status;
+  askForContactsPermission() async {
+    contactsPermissionStatus = await Permission.contacts.request();
   }
 
-  _initializeSpeechRecognitionPermission() async {
+  askForCameraPermission() async {
+    cameraPermissionStatus = await Permission.camera.request();
+  }
+
+  askForPhotosPermission() async {
+    photosPermissionStatus = await Permission.photos.request();
+  }
+
+  _initializeAllPermissions() async {
+    microphonePermissionStatus = await Permission.microphone.status;
     speechRecognitionPermissionStatus = await Permission.speech.status;
+    contactsPermissionStatus = await Permission.contacts.status;
+    cameraPermissionStatus = await Permission.camera.status;
+    photosPermissionStatus = await Permission.photos.status;
   }
 }
