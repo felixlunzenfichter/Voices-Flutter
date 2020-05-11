@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class PermissionService {
@@ -12,24 +13,58 @@ class PermissionService {
     _initializeAllPermissions();
   }
 
-  askForMicrophonePermission() async {
+  askForAllPermissions() async {
     microphonePermissionStatus = await Permission.microphone.request();
-  }
-
-  askForSpeechRecognitionPermission() async {
     speechRecognitionPermissionStatus = await Permission.speech.request();
-  }
-
-  askForContactsPermission() async {
     contactsPermissionStatus = await Permission.contacts.request();
-  }
-
-  askForCameraPermission() async {
     cameraPermissionStatus = await Permission.camera.request();
+    photosPermissionStatus = await Permission.photos.request();
   }
 
-  askForPhotosPermission() async {
-    photosPermissionStatus = await Permission.photos.request();
+  List<OurPermission> getDeniedPermissions() {
+    List<OurPermission> deniedPermissions = [];
+    if (microphonePermissionStatus == PermissionStatus.denied) {
+      deniedPermissions.add(OurPermission(type: PermissionType.microphone));
+    }
+    if (speechRecognitionPermissionStatus == PermissionStatus.denied) {
+      deniedPermissions.add(OurPermission(type: PermissionType.speech));
+    }
+    if (contactsPermissionStatus == PermissionStatus.denied) {
+      deniedPermissions.add(OurPermission(type: PermissionType.contacts));
+    }
+    if (cameraPermissionStatus == PermissionStatus.denied) {
+      deniedPermissions.add(OurPermission(type: PermissionType.camera));
+    }
+    if (photosPermissionStatus == PermissionStatus.denied) {
+      deniedPermissions.add(OurPermission(type: PermissionType.photos));
+    }
+    return deniedPermissions;
+  }
+
+  List<OurPermission> getPermanentlyDeniedPermissions() {
+    List<OurPermission> permanentlyDeniedPermissions = [];
+    if (microphonePermissionStatus == PermissionStatus.permanentlyDenied) {
+      permanentlyDeniedPermissions
+          .add(OurPermission(type: PermissionType.microphone));
+    }
+    if (speechRecognitionPermissionStatus ==
+        PermissionStatus.permanentlyDenied) {
+      permanentlyDeniedPermissions
+          .add(OurPermission(type: PermissionType.speech));
+    }
+    if (contactsPermissionStatus == PermissionStatus.permanentlyDenied) {
+      permanentlyDeniedPermissions
+          .add(OurPermission(type: PermissionType.contacts));
+    }
+    if (cameraPermissionStatus == PermissionStatus.permanentlyDenied) {
+      permanentlyDeniedPermissions
+          .add(OurPermission(type: PermissionType.camera));
+    }
+    if (photosPermissionStatus == PermissionStatus.permanentlyDenied) {
+      permanentlyDeniedPermissions
+          .add(OurPermission(type: PermissionType.photos));
+    }
+    return permanentlyDeniedPermissions;
   }
 
   _initializeAllPermissions() async {
@@ -40,3 +75,29 @@ class PermissionService {
     photosPermissionStatus = await Permission.photos.status;
   }
 }
+
+class OurPermission {
+  PermissionType type;
+
+  OurPermission({@required this.type});
+
+  @override
+  String toString() {
+    switch (type) {
+      case PermissionType.microphone:
+        return "microphone usage";
+      case PermissionType.speech:
+        return "speech recognition";
+      case PermissionType.contacts:
+        return "contacts access";
+      case PermissionType.camera:
+        return "camera access";
+      case PermissionType.photos:
+        return "photos access";
+      default:
+        return "unknown permission";
+    }
+  }
+}
+
+enum PermissionType { microphone, speech, contacts, camera, photos }
