@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/screens/registration/login_screen.dart';
+import 'package:voices/models/user.dart';
+import 'package:voices/screens/login_or_tabs_screen.dart';
 import 'package:voices/services/player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/permission_service.dart';
@@ -11,9 +13,6 @@ import 'services/cloud_firestore_service.dart';
 import 'services/storage_service.dart';
 import 'services/speech_to_text_service.dart';
 import 'services/file_converter_service.dart';
-
-///commented out for development purposes
-//import 'screens/navigation_screen.dart';
 
 void main() async {
   // This app is designed only to work vertically, so we limit
@@ -24,16 +23,38 @@ void main() async {
   return runApp(Voices());
 }
 
-class Voices extends StatelessWidget {
+class Voices extends StatefulWidget {
+  @override
+  _VoicesState createState() => _VoicesState();
+}
+
+class _VoicesState extends State<Voices> {
+  final authService = AuthService();
+  final cloudFirestoreService = CloudFirestoreService();
+  Stream<User> loggedInUserStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _setLoggedInUserStream();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<AuthService>(
-          create: (_) => AuthService(),
+        Provider<AuthService>.value(
+          value: authService,
         ),
-        Provider<CloudFirestoreService>(
-          create: (_) => CloudFirestoreService(),
+        Provider<CloudFirestoreService>.value(
+          value: cloudFirestoreService,
+        ),
+        StreamProvider.value(
+          value: loggedInUserStream,
+          catchError: (context, error) {
+            print("error = ${error.toString()}");
+            return null;
+          },
         ),
         Provider<StorageService>(
           create: (_) => StorageService(),
@@ -67,11 +88,26 @@ class Voices extends StatelessWidget {
             brightness: Brightness.light,
             scaffoldBackgroundColor: Colors.white,
           ),
-          home: LoginScreen(),
-
-          ///LoginScreen instead of NavigationScreen for development purposes
+          home: LoginOrTabsScreen(),
         ),
       ),
     );
+  }
+
+  _setLoggedInUserStream() async {
+    Stream<FirebaseUser> firebaseUserStream = authService.onAuthStateChanged();
+    // Wait for new sign in or sign out
+    await for (var firebaseUser in firebaseUserStream) {
+      if (firebaseUser == null) {
+        setState(() {
+          loggedInUserStream = Stream.empty();
+        });
+      } else {
+        setState(() {
+          loggedInUserStream =
+              cloudFirestoreService.getUserStream(uid: firebaseUser.uid);
+        });
+      }
+    }
   }
 }

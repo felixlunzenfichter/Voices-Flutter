@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/models/chat.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
-import 'package:voices/shared%20widgets/profile_picture.dart';
+import 'package:voices/shared_widgets/profile_picture.dart';
 import 'chat_screen.dart';
 import 'search_users_screen.dart';
-import 'package:voices/shared widgets/custom_card.dart';
+import 'package:voices/shared_widgets/custom_card.dart';
 
 class ChatsTab extends StatefulWidget {
   @override
@@ -29,8 +29,6 @@ class _ChatsTabState extends State<ChatsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final loggedInUser = Provider.of<User>(context, listen: false);
-
     return Scaffold(
       appBar: AppBar(
         title: Text("Chats"),
@@ -44,7 +42,7 @@ class _ChatsTabState extends State<ChatsTab> {
               Navigator.of(context, rootNavigator: true).push(
                 CupertinoPageRoute<void>(
                   builder: (context) {
-                    return SearchUsersScreen(loggedInUser: loggedInUser);
+                    return SearchUsersScreen();
                   },
                 ),
               );
@@ -114,8 +112,6 @@ class _ChatItemState extends State<ChatItem> {
 
   @override
   Widget build(BuildContext context) {
-    final loggedInUser = Provider.of<User>(context);
-
     return FutureBuilder(
       future: otherUserFuture,
       builder: (context, snapshot) {
@@ -177,7 +173,6 @@ class _ChatItemState extends State<ChatItem> {
                 builder: (context) {
                   return ChatScreen(
                     chatId: widget.chat.chatId,
-                    loggedInUser: loggedInUser,
                     otherUser: otherUser,
                   );
                 },
