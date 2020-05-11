@@ -46,13 +46,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 20.0,
                     ),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         CountryCodePicker(
                           onChanged: _onCountryChange,
                           initialSelection: '+41',
                           alignLeft: false,
                         ),
-                        Expanded(
+                        SizedBox(
+                          width: 150,
                           child: CupertinoTextField(
                             placeholder: 'Enter your phone number',
                             keyboardType: TextInputType.number,
@@ -69,6 +71,9 @@ class _LoginScreenState extends State<LoginScreen> {
               NextButton(
                 text: "Verify",
                 onPressed: _verifyPhoneNumber,
+              ),
+              SizedBox(
+                height: 30,
               ),
             ],
           ),

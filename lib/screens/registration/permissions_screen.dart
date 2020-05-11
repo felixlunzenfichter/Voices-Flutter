@@ -114,7 +114,10 @@ class PermissionsScreen extends StatelessWidget {
                   );
                 }
               },
-            )
+            ),
+            SizedBox(
+              height: 30,
+            ),
           ],
         ),
       ),

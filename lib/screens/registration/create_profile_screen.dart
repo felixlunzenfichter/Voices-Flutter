@@ -43,73 +43,90 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
           elevation: 0,
         ),
         body: SafeArea(
-          child: Column(
-            children: <Widget>[
-              Expanded(
-                child: Column(
-                  children: <Widget>[
-                    GestureDetector(
-                      onTap: _changeProfilePic,
-                      child: Center(
-                        heightFactor: 1.2,
-                        child: _profilePic == null
-                            ? Stack(
-                                alignment: AlignmentDirectional.center,
-                                children: <Widget>[
-                                  Opacity(
-                                    opacity: 0.4,
-                                    child: ProfilePicture(
-                                        imageUrl: kDefaultProfilePicUrl,
-                                        radius: 60),
-                                  ),
-                                  Icon(
-                                    CupertinoIcons.photo_camera_solid,
-                                    size: 50,
-                                  )
-                                ],
-                              )
-                            : Stack(
-                                alignment: AlignmentDirectional.center,
-                                children: <Widget>[
-                                  Opacity(
-                                    opacity: 0.4,
-                                    child: CircleAvatar(
-                                      backgroundColor: Colors.grey,
-                                      backgroundImage: FileImage(_profilePic),
-                                      radius: 60,
-                                    ),
-                                  ),
-                                  Icon(
-                                    CupertinoIcons.photo_camera_solid,
-                                    size: 50,
-                                  )
-                                ],
+          child: LayoutBuilder(builder:
+              (BuildContext context, BoxConstraints viewportConstraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: viewportConstraints.maxHeight,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: <Widget>[
+                      Expanded(
+                        child: Column(
+                          children: <Widget>[
+                            GestureDetector(
+                              onTap: _changeProfilePic,
+                              child: Center(
+                                heightFactor: 1.2,
+                                child: _profilePic == null
+                                    ? Stack(
+                                        alignment: AlignmentDirectional.center,
+                                        children: <Widget>[
+                                          Opacity(
+                                            opacity: 0.4,
+                                            child: ProfilePicture(
+                                                imageUrl: kDefaultProfilePicUrl,
+                                                radius: 60),
+                                          ),
+                                          Icon(
+                                            CupertinoIcons.photo_camera_solid,
+                                            size: 50,
+                                          )
+                                        ],
+                                      )
+                                    : Stack(
+                                        alignment: AlignmentDirectional.center,
+                                        children: <Widget>[
+                                          Opacity(
+                                            opacity: 0.4,
+                                            child: CircleAvatar(
+                                              backgroundColor: Colors.grey,
+                                              backgroundImage:
+                                                  FileImage(_profilePic),
+                                              radius: 60,
+                                            ),
+                                          ),
+                                          Icon(
+                                            CupertinoIcons.photo_camera_solid,
+                                            size: 50,
+                                          )
+                                        ],
+                                      ),
                               ),
+                            ),
+                            SizedBox(
+                              height: 30,
+                            ),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 2 / 3,
+                              child: CupertinoTextField(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 30, vertical: 10),
+                                placeholder: 'Enter your unique username',
+                                onChanged: (newUsername) {
+                                  _username = newUsername;
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      height: 30,
-                    ),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 2 / 3,
-                      child: CupertinoTextField(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                        placeholder: 'Enter your unique username',
-                        onChanged: (newUsername) {
-                          _username = newUsername;
-                        },
+                      NextButton(
+                        text: "Save",
+                        onPressed: _uploadUser,
                       ),
-                    ),
-                  ],
+                      SizedBox(
+                        height: 30,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              NextButton(
-                text: "Save",
-                onPressed: _uploadUser,
-              ),
-            ],
-          ),
+            );
+          }),
         ),
       ),
     );
