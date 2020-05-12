@@ -8,6 +8,10 @@ class ContactService {
     contacts = (await ContactsService.getContacts()).toList();
   }
 
+  Future<Contact> getFirstContactWithQuery({@required String query}) async {
+    return (await ContactsService.getContacts(query: query)).first;
+  }
+
   openNativeDialogToAddContact() async {
     // Throws a error if the Form could not be open or the Operation is canceled by the User
     await ContactsService.openContactForm();

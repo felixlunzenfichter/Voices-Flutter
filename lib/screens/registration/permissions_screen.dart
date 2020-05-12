@@ -22,7 +22,7 @@ class PermissionsScreen extends StatelessWidget {
             Expanded(
               child: Center(
                 child: Text(
-                  "Please allow Voices to access your microphone and recognize your voice",
+                  "Please allow Voices to access your microphone, recognize your voice, access your contacts and your camera/photos",
                   style: TextStyle(fontSize: 20),
                   textAlign: TextAlign.center,
                 ),

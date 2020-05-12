@@ -22,6 +22,7 @@ class _LoginOrTabsScreenState extends State<LoginOrTabsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print("loggedInUser = $loggedInUser");
     if (loggedInUser == null) {
       return LoginScreen();
     } else {
@@ -32,6 +33,8 @@ class _LoginOrTabsScreenState extends State<LoginOrTabsScreen> {
   _setLoggedInUser() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     var firebaseUser = await authService.getCurrentUser();
+    print(
+        "the loggedInUser = $firebaseUser has phone number = ${firebaseUser?.phoneNumber}");
     if (firebaseUser != null) {
       setState(() {
         loggedInUser = firebaseUser;
