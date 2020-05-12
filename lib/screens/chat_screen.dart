@@ -188,7 +188,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
           PlayerInfo(),
         Text(speechToText.fullTranscription +
             " " +
-            speechToText.transciptionCurrentRecoringSnippet),
+            speechToText.transcriptionCurrentRecordingSnippet),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[

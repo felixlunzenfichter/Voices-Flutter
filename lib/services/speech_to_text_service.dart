@@ -20,7 +20,7 @@ class SpeechToTextService extends ChangeNotifier {
   bool _shouldPlayOnComplete = false;
 
   // Transcript since the las time we pressed start.
-  String transciptionCurrentRecoringSnippet = '';
+  String transcriptionCurrentRecordingSnippet = '';
 
   // Transcript of the whole voice message.
   String fullTranscription = '';
@@ -41,7 +41,7 @@ class SpeechToTextService extends ChangeNotifier {
     });
     _speech.setRecognitionStartedHandler(() => {});
     _speech.setRecognitionResultHandler((String text) {
-      transciptionCurrentRecoringSnippet = text;
+      transcriptionCurrentRecordingSnippet = text;
       notifyListeners();
     });
 
@@ -73,8 +73,8 @@ class SpeechToTextService extends ChangeNotifier {
   // Save transcript.
   saveTranscipt() {
     fullTranscription =
-    "$fullTranscription$transciptionCurrentRecoringSnippet\n";
-    transciptionCurrentRecoringSnippet = '';
+    "$fullTranscription$transcriptionCurrentRecordingSnippet\n";
+    transcriptionCurrentRecordingSnippet = '';
   }
 
   // Start new Recording or pick up where we left off.
@@ -100,7 +100,7 @@ class SpeechToTextService extends ChangeNotifier {
   void stop() async {
     await _speech.stop();
     fullTranscription = '';
-    transciptionCurrentRecoringSnippet = '';
+    transcriptionCurrentRecordingSnippet = '';
   }
 
   // Pause recording.
@@ -108,7 +108,9 @@ class SpeechToTextService extends ChangeNotifier {
     if (pausesToSkip > 0) {
       pausesToSkip--;
     } else {
-      await _speech.stop();
+      if (transcriptionCurrentRecordingSnippet != '') {
+        await _speech.stop();
+      }
     }
   }
 
