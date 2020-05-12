@@ -25,50 +25,24 @@ class PermissionService {
     photosPermissionStatus = await Permission.photos.request();
   }
 
-  List<OurPermission> getDeniedPermissions() {
-    List<OurPermission> deniedPermissions = [];
-    if (microphonePermissionStatus == PermissionStatus.denied) {
-      deniedPermissions.add(OurPermission(type: PermissionType.microphone));
+  List<OurPermission> getNotGrantedPermissions() {
+    List<OurPermission> notGrantedPermissions = [];
+    if (microphonePermissionStatus != PermissionStatus.granted) {
+      notGrantedPermissions.add(OurPermission(type: PermissionType.microphone));
     }
-    if (speechRecognitionPermissionStatus == PermissionStatus.denied) {
-      deniedPermissions.add(OurPermission(type: PermissionType.speech));
+    if (speechRecognitionPermissionStatus != PermissionStatus.granted) {
+      notGrantedPermissions.add(OurPermission(type: PermissionType.speech));
     }
-    if (contactsPermissionStatus == PermissionStatus.denied) {
-      deniedPermissions.add(OurPermission(type: PermissionType.contacts));
+    if (contactsPermissionStatus != PermissionStatus.granted) {
+      notGrantedPermissions.add(OurPermission(type: PermissionType.contacts));
     }
-    if (cameraPermissionStatus == PermissionStatus.denied) {
-      deniedPermissions.add(OurPermission(type: PermissionType.camera));
+    if (cameraPermissionStatus != PermissionStatus.granted) {
+      notGrantedPermissions.add(OurPermission(type: PermissionType.camera));
     }
-    if (photosPermissionStatus == PermissionStatus.denied) {
-      deniedPermissions.add(OurPermission(type: PermissionType.photos));
+    if (photosPermissionStatus != PermissionStatus.granted) {
+      notGrantedPermissions.add(OurPermission(type: PermissionType.photos));
     }
-    return deniedPermissions;
-  }
-
-  List<OurPermission> getPermanentlyDeniedPermissions() {
-    List<OurPermission> permanentlyDeniedPermissions = [];
-    if (microphonePermissionStatus == PermissionStatus.permanentlyDenied) {
-      permanentlyDeniedPermissions
-          .add(OurPermission(type: PermissionType.microphone));
-    }
-    if (speechRecognitionPermissionStatus ==
-        PermissionStatus.permanentlyDenied) {
-      permanentlyDeniedPermissions
-          .add(OurPermission(type: PermissionType.speech));
-    }
-    if (contactsPermissionStatus == PermissionStatus.permanentlyDenied) {
-      permanentlyDeniedPermissions
-          .add(OurPermission(type: PermissionType.contacts));
-    }
-    if (cameraPermissionStatus == PermissionStatus.permanentlyDenied) {
-      permanentlyDeniedPermissions
-          .add(OurPermission(type: PermissionType.camera));
-    }
-    if (photosPermissionStatus == PermissionStatus.permanentlyDenied) {
-      permanentlyDeniedPermissions
-          .add(OurPermission(type: PermissionType.photos));
-    }
-    return permanentlyDeniedPermissions;
+    return notGrantedPermissions;
   }
 
   bool areAllPermissionsGranted() {

@@ -33,10 +33,7 @@ class _SettingsTabState extends State<SettingsTab> {
         CupertinoButton(
             child: Text("Sign Out"),
             onPressed: () {
-              final authService =
-                  Provider.of<AuthService>(context, listen: false);
               authService.signOut();
-
               Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
                 CupertinoPageRoute(builder: (context) => LoginScreen()),
                 (Route<dynamic> route) => false,

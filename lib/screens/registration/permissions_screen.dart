@@ -16,7 +16,6 @@ class PermissionsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final permissionService =
         Provider.of<PermissionService>(context, listen: false);
-    print(permissionService.getDeniedPermissions());
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -36,45 +35,29 @@ class PermissionsScreen extends StatelessWidget {
               onPressed: () async {
                 await permissionService.askForAllPermissions();
 
-                //check if the user denied some permissions and if so tell him to press access again
-                if (permissionService.getDeniedPermissions().isNotEmpty) {
-                  showInfoDialog(
-                    context: context,
-                    dialog: InfoDialog(
-                      title: "You need to click ok on all popups",
-                      text: "Please click Allow again",
-                    ),
-                  );
-                  return;
-                }
-
-                List<OurPermission> permanentlyDeniedPermissions =
-                    permissionService.getPermanentlyDeniedPermissions();
-                if (permanentlyDeniedPermissions.isNotEmpty) {
+                List<OurPermission> notGrantedPermissions =
+                    permissionService.getNotGrantedPermissions();
+                if (notGrantedPermissions.isNotEmpty) {
                   String text = "Please allow ";
-                  if (permanentlyDeniedPermissions.length == 1) {
-                    text += permanentlyDeniedPermissions[0].toString();
+                  if (notGrantedPermissions.length == 1) {
+                    text += notGrantedPermissions[0].toString();
                     text += " in your settings";
-                  } else if (permanentlyDeniedPermissions.length == 2) {
-                    text += permanentlyDeniedPermissions[0].toString();
+                  } else if (notGrantedPermissions.length == 2) {
+                    text += notGrantedPermissions[0].toString();
                     text += " and ";
-                    text += permanentlyDeniedPermissions[1].toString();
+                    text += notGrantedPermissions[1].toString();
                     text += " in your settings";
                   } else {
-                    for (int i = 0;
-                        i < permanentlyDeniedPermissions.length;
-                        i++) {
+                    for (int i = 0; i < notGrantedPermissions.length; i++) {
                       if (i == 0) {
                         //first element
-                        text += permanentlyDeniedPermissions[i].toString();
-                      } else if (i != permanentlyDeniedPermissions.length - 1) {
+                        text += notGrantedPermissions[i].toString();
+                      } else if (i != notGrantedPermissions.length - 1) {
                         //not last element
-                        text +=
-                            ", " + permanentlyDeniedPermissions[i].toString();
+                        text += ", " + notGrantedPermissions[i].toString();
                       } else {
                         //last element
-                        text += " and " +
-                            permanentlyDeniedPermissions[i].toString();
+                        text += " and " + notGrantedPermissions[i].toString();
                         text += " in your settings";
                       }
                     }
@@ -83,7 +66,7 @@ class PermissionsScreen extends StatelessWidget {
                   showInfoDialog(
                     context: context,
                     dialog: InfoDialog(
-                      title: "Please enable in settings",
+                      title: "Ungranted permission",
                       text: text,
                     ),
                   );
