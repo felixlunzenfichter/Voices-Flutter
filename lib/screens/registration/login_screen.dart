@@ -4,7 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:voices/screens/registration/permissions_screen.dart';
-import 'package:voices/screens/tabs_or_permissions_screen.dart';
+import 'package:voices/screens/tabs_screen.dart';
+import 'package:voices/services/permission_service.dart';
 import 'package:voices/shared_widgets/next_button.dart';
 
 import 'package:voices/screens/registration/enter_code_screen.dart';
@@ -107,10 +108,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final Function whatTodoWhenExistingUserVerified =
         (User existingUser) async {
-      Navigator.of(context).pushAndRemoveUntil(
-        CupertinoPageRoute(builder: (context) => TabsOrPermissionsScreen()),
-        (Route<dynamic> route) => false,
-      );
+      final permissionService =
+          Provider.of<PermissionService>(context, listen: false);
+      if (permissionService.areAllPermissionsGranted()) {
+        Navigator.of(context).pushAndRemoveUntil(
+          CupertinoPageRoute(builder: (context) => TabsScreen()),
+          (Route<dynamic> route) => false,
+        );
+      } else {
+        Navigator.of(context).pushAndRemoveUntil(
+          CupertinoPageRoute(builder: (context) => PermissionsScreen()),
+          (Route<dynamic> route) => false,
+        );
+      }
     };
 
     final Function whatTodoWhenVerificationFailed = (String errorMessage) {

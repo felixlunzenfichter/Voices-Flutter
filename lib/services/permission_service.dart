@@ -9,8 +9,12 @@ class PermissionService {
   PermissionStatus cameraPermissionStatus = PermissionStatus.undetermined;
   PermissionStatus photosPermissionStatus = PermissionStatus.undetermined;
 
-  PermissionService() {
-    _initializeAllPermissions();
+  initializeAllPermissions() async {
+    microphonePermissionStatus = await Permission.microphone.status;
+    speechRecognitionPermissionStatus = await Permission.speech.status;
+    contactsPermissionStatus = await Permission.contacts.status;
+    cameraPermissionStatus = await Permission.camera.status;
+    photosPermissionStatus = await Permission.photos.status;
   }
 
   askForAllPermissions() async {
@@ -77,14 +81,6 @@ class PermissionService {
     } else {
       return false;
     }
-  }
-
-  _initializeAllPermissions() async {
-    microphonePermissionStatus = await Permission.microphone.status;
-    speechRecognitionPermissionStatus = await Permission.speech.status;
-    contactsPermissionStatus = await Permission.contacts.status;
-    cameraPermissionStatus = await Permission.camera.status;
-    photosPermissionStatus = await Permission.photos.status;
   }
 }
 

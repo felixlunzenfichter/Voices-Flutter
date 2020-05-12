@@ -8,7 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/screens/loading_screen.dart';
 import 'package:voices/screens/registration/login_screen.dart';
-import 'package:voices/screens/tabs_or_permissions_screen.dart';
+import 'package:voices/screens/registration/permissions_screen.dart';
+import 'package:voices/screens/tabs_screen.dart';
 import 'package:voices/services/player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/permission_service.dart';
@@ -35,19 +36,22 @@ class Voices extends StatefulWidget {
 class _VoicesState extends State<Voices> {
   final authService = AuthService();
   final cloudFirestoreService = CloudFirestoreService();
-  Stream<User> get loggedInUserStream => _loggedInUserStreamController
-      .stream; //the stream of the currently logged in user that is provided to the rest of the app
+  final permissionService = PermissionService();
+  Stream<User> get loggedInUserStream => _loggedInUserStreamController.stream
+      .asBroadcastStream(); //the stream of the currently logged in user that is provided to the rest of the app
   final _loggedInUserStreamController = StreamController<User>();
   Stream<User>
       _fireStoreStream; //the stream of the currently logged in user directly from firestore (that is reset whenever the authentication stream spits out a new value)
   StreamSubscription<User> _fireStoreStreamSubscription;
   bool _isFetching = true;
   bool _isLoggedIn = false;
+  bool _showPermissionScreen = false;
 
   @override
   void initState() {
     super.initState();
     _createLoggedInUserStream();
+    _loadPermissions();
   }
 
   @override
@@ -59,6 +63,20 @@ class _VoicesState extends State<Voices> {
 
   @override
   Widget build(BuildContext context) {
+    print("_isFetching = $_isFetching");
+    print("_isLoggedIn = $_isLoggedIn");
+    print("_showPermissionScreen = $_showPermissionScreen");
+    Widget screenToShow;
+    if (_isFetching) {
+      screenToShow = LoadingScreen();
+    } else if (!_isLoggedIn) {
+      screenToShow = LoginScreen();
+    } else if (_showPermissionScreen) {
+      screenToShow = PermissionsScreen();
+    } else {
+      screenToShow = TabsScreen();
+    }
+
     return MultiProvider(
       providers: [
         Provider<AuthService>.value(
@@ -67,7 +85,7 @@ class _VoicesState extends State<Voices> {
         Provider<CloudFirestoreService>.value(
           value: cloudFirestoreService,
         ),
-        StreamProvider.value(
+        StreamProvider<User>.value(
           value: loggedInUserStream,
           catchError: (context, error) {
             print("error = ${error.toString()}");
@@ -83,8 +101,8 @@ class _VoicesState extends State<Voices> {
         ChangeNotifierProvider<PlayerService>(
           create: (_) => PlayerService(),
         ),
-        Provider<PermissionService>(
-          create: (_) => PermissionService(),
+        Provider<PermissionService>.value(
+          value: permissionService,
         ),
         Provider<FileConverterService>(
           create: (_) => FileConverterService(),
@@ -106,9 +124,7 @@ class _VoicesState extends State<Voices> {
             brightness: Brightness.light,
             scaffoldBackgroundColor: Colors.white,
           ),
-          home: _isFetching
-              ? LoadingScreen()
-              : _isLoggedIn ? TabsOrPermissionsScreen() : LoginScreen(),
+          home: screenToShow,
         ),
       ),
     );
@@ -134,14 +150,28 @@ class _VoicesState extends State<Voices> {
         //listen to the new stream and pass the new values on to the loggedInUserStream
         _fireStoreStreamSubscription = _fireStoreStream.listen((user) {
           _loggedInUserStreamController.sink.add(user);
-          setState(() {
-            _isFetching = false;
-            _isLoggedIn = true;
-          });
         }, onError: (error) {
           print(error);
         }, cancelOnError: false);
+        _waitForFirstUserAsync();
       }
+    }
+  }
+
+  _waitForFirstUserAsync() async {
+    await loggedInUserStream.first;
+    setState(() {
+      _isFetching = false;
+      _isLoggedIn = true;
+    });
+  }
+
+  _loadPermissions() async {
+    await permissionService.initializeAllPermissions();
+    if (!permissionService.areAllPermissionsGranted()) {
+      setState(() {
+        _showPermissionScreen = true;
+      });
     }
   }
 }
