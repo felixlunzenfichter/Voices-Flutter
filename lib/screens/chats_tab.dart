@@ -23,7 +23,6 @@ class _ChatsTabState extends State<ChatsTab> {
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
     final loggedInUser = Provider.of<User>(context, listen: false);
-    print("the loggedInUser is = $loggedInUser");
     chatStream =
         cloudFirestoreService.getChatsStream(loggedInUid: loggedInUser.uid);
   }

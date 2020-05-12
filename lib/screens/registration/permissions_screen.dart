@@ -14,6 +14,9 @@ class PermissionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final permissionService =
+        Provider.of<PermissionService>(context, listen: false);
+    print(permissionService.getDeniedPermissions());
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -31,8 +34,6 @@ class PermissionsScreen extends StatelessWidget {
             NextButton(
               text: "Allow",
               onPressed: () async {
-                final permissionService =
-                    Provider.of<PermissionService>(context, listen: false);
                 await permissionService.askForAllPermissions();
 
                 //check if the user denied some permissions and if so tell him to press access again
