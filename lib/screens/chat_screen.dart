@@ -8,19 +8,16 @@ import 'package:voices/models/text_message.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/services/speech_to_text_service.dart';
-import 'package:voices/shared%20widgets/time_stamp_text.dart';
+import 'package:voices/shared_widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/player_service.dart';
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
-  final User loggedInUser;
   final User otherUser;
 
   ChatScreen({
     @required this.chatId,
-    @required
-        this.loggedInUser, //is needed because this screen can't access it with provider
     @required this.otherUser,
   });
 
@@ -29,7 +26,6 @@ class ChatScreen extends StatelessWidget {
     return Provider<GlobalChatScreenInfo>(
       create: (_) => GlobalChatScreenInfo(
         chatId: chatId,
-        loggedInUser: loggedInUser,
         otherUser: otherUser,
       ),
       child: Scaffold(
@@ -143,8 +139,8 @@ class _ListOfMessagesState extends State<ListOfMessages>
 
   @override
   Widget build(BuildContext context) {
-    GlobalChatScreenInfo screenInfo =
-        Provider.of<GlobalChatScreenInfo>(context, listen: false);
+    final loggedInUser = Provider.of<User>(context, listen: false);
+
     return AnimatedList(
       key: _listKey,
       initialItemCount: _messages.length,
@@ -152,7 +148,7 @@ class _ListOfMessagesState extends State<ListOfMessages>
         TextMessage message = _messages[index];
         return MessageRow(
           message: message,
-          isMe: screenInfo.loggedInUser.uid == message.senderUid,
+          isMe: loggedInUser.uid == message.senderUid,
         );
       },
       reverse: true,
@@ -178,6 +174,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
+    final loggedInUser = Provider.of<User>(context, listen: false);
     final SpeechToTextService speechToText =
         Provider.of<SpeechToTextService>(context);
 
@@ -204,8 +201,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   GlobalChatScreenInfo screenInfo =
                       Provider.of<GlobalChatScreenInfo>(context, listen: false);
                   TextMessage message = TextMessage(
-                      senderUid: screenInfo.loggedInUser.uid,
-                      text: _messageText);
+                      senderUid: loggedInUser.uid, text: _messageText);
                   final cloudFirestoreService =
                       Provider.of<CloudFirestoreService>(context,
                           listen: false);
@@ -652,12 +648,10 @@ class RoundButton extends StatelessWidget {
 
 class GlobalChatScreenInfo {
   final String chatId;
-  final User loggedInUser;
   final User otherUser;
 
   GlobalChatScreenInfo({
     @required this.chatId,
-    @required this.loggedInUser,
     @required this.otherUser,
   });
 }

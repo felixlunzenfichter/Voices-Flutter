@@ -25,7 +25,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.560738508359-mab5c8p94bb9be92e5le3trpveuuom4n</string>
+				<string>com.googleusercontent.apps.282278344158-37t9u0adpl142gom74l8t4u1rl89dkm5</string>
 			</array>
 		</dict>
 	</array>
@@ -39,6 +39,8 @@
 	<string>Voices wants to access your microphone so you can record voice messages</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Voices wants to set your profile picture</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Voices wants to be able to convert your voice into text</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
@@ -62,10 +64,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>NSSpeechRecognitionUsageDescription</key>
-    <string>Voices wants to be able to convert your voice into text</string>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Voices wants to access your microphone so you can record voice messages</string>
-
 </dict>
 </plist>

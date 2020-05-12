@@ -1,16 +1,20 @@
 import 'package:flutter/cupertino.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:voices/constants.dart';
 import 'package:voices/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/screens/registration/ask_for_permissions_screen.dart';
+import 'package:voices/screens/registration/permissions_screen.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
+import 'package:voices/services/permission_service.dart';
 import 'package:voices/services/storage_service.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:voices/shared widgets/profile_picture.dart';
+import 'package:voices/shared_widgets/next_button.dart';
+import 'package:voices/shared_widgets/profile_picture.dart';
+import 'package:voices/screens/login_or_tabs_screen.dart';
 
 class CreateProfileScreen extends StatefulWidget {
   final User user;
@@ -35,58 +39,75 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Create Profile'),
+          backgroundColor: Colors.white,
+          elevation: 0,
         ),
         body: SafeArea(
           child: Column(
             children: <Widget>[
-              GestureDetector(
-                onTap: _changeProfilePic,
-                child: Center(
-                  heightFactor: 1.2,
-                  child: _profilePic == null
-                      ? Stack(
-                          alignment: AlignmentDirectional.center,
-                          children: <Widget>[
-                            Opacity(
-                              opacity: 0.4,
-                              child: ProfilePicture(
-                                  imageUrl: kDefaultProfilePicUrl, radius: 60),
-                            ),
-                            Icon(
-                              CupertinoIcons.photo_camera_solid,
-                              size: 50,
-                            )
-                          ],
-                        )
-                      : Stack(
-                          alignment: AlignmentDirectional.center,
-                          children: <Widget>[
-                            Opacity(
-                              opacity: 0.4,
-                              child: CircleAvatar(
-                                backgroundColor: Colors.grey,
-                                backgroundImage: FileImage(_profilePic),
-                                radius: 60,
+              Expanded(
+                child: Column(
+                  children: <Widget>[
+                    GestureDetector(
+                      onTap: _changeProfilePic,
+                      child: Center(
+                        heightFactor: 1.2,
+                        child: _profilePic == null
+                            ? Stack(
+                                alignment: AlignmentDirectional.center,
+                                children: <Widget>[
+                                  Opacity(
+                                    opacity: 0.4,
+                                    child: ProfilePicture(
+                                        imageUrl: kDefaultProfilePicUrl,
+                                        radius: 60),
+                                  ),
+                                  Icon(
+                                    CupertinoIcons.photo_camera_solid,
+                                    size: 50,
+                                  )
+                                ],
+                              )
+                            : Stack(
+                                alignment: AlignmentDirectional.center,
+                                children: <Widget>[
+                                  Opacity(
+                                    opacity: 0.4,
+                                    child: CircleAvatar(
+                                      backgroundColor: Colors.grey,
+                                      backgroundImage: FileImage(_profilePic),
+                                      radius: 60,
+                                    ),
+                                  ),
+                                  Icon(
+                                    CupertinoIcons.photo_camera_solid,
+                                    size: 50,
+                                  )
+                                ],
                               ),
-                            ),
-                            Icon(
-                              CupertinoIcons.photo_camera_solid,
-                              size: 50,
-                            )
-                          ],
-                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 30,
+                    ),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 2 / 3,
+                      child: CupertinoTextField(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                        placeholder: 'Enter your unique username',
+                        onChanged: (newUsername) {
+                          _username = newUsername;
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              CupertinoTextField(
-                placeholder: 'Enter your unique username',
-                onChanged: (newUsername) {
-                  _username = newUsername;
-                },
-              ),
-              CupertinoButton(
-                child: Text('Save'),
+              NextButton(
+                text: "Save",
                 onPressed: _uploadUser,
-              )
+              ),
             ],
           ),
         ),
@@ -172,14 +193,24 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     setState(() {
       _showSpinner = false;
     });
-    Navigator.of(context).push(
-      CupertinoPageRoute(
-        builder: (context) => AskForPermissionsScreen(
-          user: newUser,
+    final permissionService =
+        Provider.of<PermissionService>(context, listen: false);
+    if (permissionService.microphonePermissionStatus !=
+            PermissionStatus.granted ||
+        permissionService.speechRecognitionPermissionStatus !=
+            PermissionStatus.granted) {
+      Navigator.of(context).push(
+        CupertinoPageRoute(
+          builder: (context) => PermissionsScreen(),
         ),
-      ),
-
-      ///AskForPermissionsScreen takes argument for development purposes
-    );
+      );
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        CupertinoPageRoute(
+          builder: (context) => LoginOrTabsScreen(),
+        ),
+        (Route<dynamic> route) => false,
+      );
+    }
   }
 }
