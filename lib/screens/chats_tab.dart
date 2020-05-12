@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/models/chat.dart';
+import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared_widgets/profile_picture.dart';
 import 'chat_screen.dart';
@@ -22,9 +23,9 @@ class _ChatsTabState extends State<ChatsTab> {
     super.initState();
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
-    final loggedInUser = Provider.of<User>(context, listen: false);
-    chatStream =
-        cloudFirestoreService.getChatsStream(loggedInUid: loggedInUser.uid);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    chatStream = cloudFirestoreService.getChatsStream(
+        loggedInUid: authService.loggedInUser.uid);
   }
 
   @override
@@ -103,9 +104,9 @@ class _ChatItemState extends State<ChatItem> {
     super.initState();
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
-    final loggedInUser = Provider.of<User>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
     String otherUserUid = widget.chat.uidsOfMembers
-        .where((uid) => uid != loggedInUser.uid)
+        .where((uid) => uid != authService.loggedInUser.uid)
         .toList()[0];
     otherUserFuture = cloudFirestoreService.getUserWithUid(uid: otherUserUid);
   }

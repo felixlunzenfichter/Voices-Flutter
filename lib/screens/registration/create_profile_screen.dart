@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/screens/tabs_screen.dart';
+import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/services/storage_service.dart';
 import 'dart:io';
@@ -114,9 +115,9 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
 
   _setMyContact() async {
     final contactService = Provider.of<ContactService>(context, listen: false);
-    final loggedInUser = Provider.of<User>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
     Contact myContact = await contactService.getFirstContactWithQuery(
-        query: loggedInUser.phoneNumber);
+        query: authService.loggedInUser.phoneNumber);
     if (myContact != null) {
       _profilePic = File.fromRawPath(myContact.avatar);
       _username = myContact.displayName;
@@ -196,10 +197,10 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     }
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
-    final loggedInUser = Provider.of<User>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
     User newUser = User(
-        uid: loggedInUser.uid,
-        phoneNumber: loggedInUser.phoneNumber,
+        uid: authService.loggedInUser.uid,
+        phoneNumber: authService.loggedInUser.phoneNumber,
         username: _username,
         imageUrl: imageUrl);
     await cloudFirestoreService.uploadUser(user: newUser);

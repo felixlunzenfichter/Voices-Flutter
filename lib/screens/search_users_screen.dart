@@ -3,6 +3,7 @@ import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:voices/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared_widgets/custom_card.dart';
 import 'package:voices/shared_widgets/profile_picture.dart';
@@ -27,7 +28,7 @@ class _SearchUsersScreenState extends State<SearchUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final loggedInUser = Provider.of<User>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
     return ModalProgressHUD(
       inAsyncCall: _showSpinner,
       progressIndicator: CupertinoActivityIndicator(),
@@ -49,7 +50,8 @@ class _SearchUsersScreenState extends State<SearchUsersScreen> {
             }
 
             List<User> allUsers = List.from(snapshot.data);
-            allUsers.removeWhere((user) => user.uid == loggedInUser.uid);
+            allUsers.removeWhere(
+                (user) => user.uid == authService.loggedInUser.uid);
 
             if (allUsers.isEmpty) {
               return Center(
@@ -79,11 +81,11 @@ class _SearchUsersScreenState extends State<SearchUsersScreen> {
     setState(() {
       _showSpinner = true;
     });
-    final loggedInUser = Provider.of<User>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
     String chatId = await cloudFirestoreService.getChatWithUsers(
-        uid1: loggedInUser.uid, uid2: user.uid);
+        uid1: authService.loggedInUser.uid, uid2: user.uid);
     setState(() {
       _showSpinner = false;
     });
