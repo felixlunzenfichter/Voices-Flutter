@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
-import 'package:voices/screens/login_or_tabs_screen.dart';
+import 'screens/loading_login_or_tabs_screen.dart';
 import 'package:voices/services/player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/permission_service.dart';
@@ -32,6 +32,7 @@ class _VoicesState extends State<Voices> {
   final authService = AuthService();
   final cloudFirestoreService = CloudFirestoreService();
   Stream<User> loggedInUserStream;
+  ValueNotifier<bool> isFetchingNotifier = ValueNotifier<bool>(true);
 
   @override
   void initState() {
@@ -74,6 +75,9 @@ class _VoicesState extends State<Voices> {
         ChangeNotifierProvider<SpeechToTextService>(
           create: (_) => SpeechToTextService(),
         ),
+        ChangeNotifierProvider<ValueNotifier<bool>>.value(
+          value: isFetchingNotifier,
+        ),
       ],
       child: GestureDetector(
         onTap: () {
@@ -88,7 +92,7 @@ class _VoicesState extends State<Voices> {
             brightness: Brightness.light,
             scaffoldBackgroundColor: Colors.white,
           ),
-          home: LoginOrTabsScreen(),
+          home: LoadingLoginOrTabsScreen(),
         ),
       ),
     );
@@ -98,6 +102,7 @@ class _VoicesState extends State<Voices> {
     Stream<FirebaseUser> firebaseUserStream = authService.onAuthStateChanged();
     // Wait for new sign in or sign out
     await for (var firebaseUser in firebaseUserStream) {
+      isFetchingNotifier.value = false;
       if (firebaseUser == null) {
         setState(() {
           loggedInUserStream = Stream.empty();
