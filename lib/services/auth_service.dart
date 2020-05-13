@@ -11,6 +11,8 @@ class AuthService with ChangeNotifier {
   //private properties
   StreamSubscription<User> _fireStoreStreamSubscription;
   final _auth = FirebaseAuth.instance;
+  final _cloudFirestoreService = CloudFirestoreService();
+
   String _verificationId;
 
   AuthService() {
@@ -25,13 +27,15 @@ class AuthService with ChangeNotifier {
       if (firebaseUser == null) {
         //let the rest of the app know that the user logged out
         loggedInUser = null;
-        isFetching = false;
-        notifyListeners();
+        if (isFetching) {
+          //we only notify listeners if isFetching is still true so when we log out and the screens have not navigated away yet it will not throw an error
+          isFetching = false;
+          notifyListeners();
+        }
       } else {
         //get the stream for the new user
-        CloudFirestoreService cloudFirestoreService = CloudFirestoreService();
         Stream<User> fireStoreStream =
-            cloudFirestoreService.getUserStream(uid: firebaseUser.uid);
+            _cloudFirestoreService.getUserStream(uid: firebaseUser.uid);
         _fireStoreStreamSubscription?.cancel();
         //listen to the new stream and update the loggedInUser
         _fireStoreStreamSubscription = fireStoreStream.listen((user) {
