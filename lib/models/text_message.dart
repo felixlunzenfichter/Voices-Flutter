@@ -21,10 +21,10 @@ class TextMessage extends Message {
     this.text = map['text'];
   }
 
-  toMap() {
+  Map<String, dynamic> toMap() {
     return {
       'senderUid': senderUid,
-      'messageType': messageType,
+      'messageType': messageType.toString(),
       'text': text,
     };
   }

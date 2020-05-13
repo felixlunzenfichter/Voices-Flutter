@@ -22,10 +22,10 @@ class ImageMessage extends Message {
     this.downloadUrl = map['downloadUrl'];
   }
 
-  toMap() {
+  Map<String, dynamic> toMap() {
     return {
       'senderUid': senderUid,
-      'messageType': messageType,
+      'messageType': messageType.toString(),
       'downloadUrl': downloadUrl,
     };
   }

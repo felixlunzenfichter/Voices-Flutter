@@ -5,6 +5,7 @@ import 'package:voices/models/user.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/constants.dart';
 import 'package:voices/models/chat.dart';
+import 'package:voices/models/voice_message.dart';
 
 class CloudFirestoreService {
   final _fireStore = Firestore.instance;
@@ -150,17 +151,27 @@ class CloudFirestoreService {
     }
   }
 
-  Future<void> addMessage(
-      {@required String chatId, @required TextMessage message}) async {
+  Future<void> addTextMessage(
+      {@required String chatId, @required TextMessage textMessage}) async {
     try {
-      var messageMap = {
-        'text': message.text,
-        'senderUid': message.senderUid,
-        'timestamp': FieldValue.serverTimestamp()
-      };
+      Map<String, dynamic> messageMap = textMessage.toMap();
+      messageMap
+          .addEntries([MapEntry('timestamp', FieldValue.serverTimestamp())]);
       await _fireStore.collection("chats/$chatId/messages").add(messageMap);
     } catch (e) {
-      print('Could not add message because of error: $e');
+      print('Could not add text message because of error: $e');
+    }
+  }
+
+  Future<void> addVoiceMessage(
+      {@required String chatId, @required VoiceMessage voiceMessage}) async {
+    try {
+      Map<String, dynamic> messageMap = voiceMessage.toMap();
+      messageMap
+          .addEntries([MapEntry('timestamp', FieldValue.serverTimestamp())]);
+      await _fireStore.collection("chats/$chatId/messages").add(messageMap);
+    } catch (e) {
+      print('Could not add voice message because of error: $e');
     }
   }
 

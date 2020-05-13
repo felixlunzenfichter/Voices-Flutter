@@ -30,10 +30,10 @@ class VoiceMessage extends Message {
     this.length = Duration(milliseconds: map['length']);
   }
 
-  toMap() {
+  Map<String, dynamic> toMap() {
     return {
       'senderUid': senderUid,
-      'messageType': messageType,
+      'messageType': messageType.toString(),
       'downloadUrl': downloadUrl,
       'transcript': transcript,
       'length': length.inMilliseconds,

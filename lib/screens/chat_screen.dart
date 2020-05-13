@@ -207,8 +207,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   final cloudFirestoreService =
                       Provider.of<CloudFirestoreService>(context,
                           listen: false);
-                  cloudFirestoreService.addMessage(
-                      chatId: screenInfo.chatId, message: message);
+                  cloudFirestoreService.addTextMessage(
+                      chatId: screenInfo.chatId, textMessage: message);
                   //clear text field
                   _messageTextController.text = "";
                 },
