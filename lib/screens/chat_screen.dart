@@ -717,31 +717,36 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      borderRadius: isMe
-          ? BorderRadius.only(
-              topLeft: Radius.circular(15),
-              bottomLeft: Radius.circular(15),
-              bottomRight: Radius.circular(15))
-          : BorderRadius.only(
-              topRight: Radius.circular(15),
-              bottomLeft: Radius.circular(15),
-              bottomRight: Radius.circular(15)),
-      elevation: 0.0,
-      color: isMe ? Colors.yellow : Colors.teal,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-        child: Wrap(
-          direction: Axis.horizontal,
-          alignment: WrapAlignment.end,
-          crossAxisAlignment: WrapCrossAlignment.end,
-          children: <Widget>[
-            child,
-            SizedBox(
-              width: 10,
-            ),
-            TimeStampText(timestamp: timestamp)
-          ],
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 6 / 7,
+      ),
+      child: Material(
+        borderRadius: isMe
+            ? BorderRadius.only(
+                topLeft: Radius.circular(15),
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15))
+            : BorderRadius.only(
+                topRight: Radius.circular(15),
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15)),
+        elevation: 0.0,
+        color: isMe ? Colors.yellow : Colors.teal,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+          child: Wrap(
+            direction: Axis.horizontal,
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.end,
+            children: <Widget>[
+              child,
+              SizedBox(
+                width: 10,
+              ),
+              TimeStampText(timestamp: timestamp)
+            ],
+          ),
         ),
       ),
     );
