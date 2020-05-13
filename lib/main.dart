@@ -1,10 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/models/user.dart';
-import 'package:voices/screens/login_or_tabs_screen.dart';
+import 'package:voices/screens/loading_screen.dart';
+import 'package:voices/screens/registration/login_screen.dart';
+import 'package:voices/screens/registration/permissions_screen.dart';
+import 'package:voices/screens/tabs_screen.dart';
 import 'package:voices/services/player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/permission_service.dart';
@@ -32,30 +33,35 @@ class Voices extends StatefulWidget {
 class _VoicesState extends State<Voices> {
   final authService = AuthService();
   final cloudFirestoreService = CloudFirestoreService();
-  Stream<User> loggedInUserStream;
+  final permissionService = PermissionService();
+  bool _showPermissionScreen = false;
 
   @override
   void initState() {
     super.initState();
-    _setLoggedInUserStream();
+    _loadPermissions();
   }
 
   @override
   Widget build(BuildContext context) {
+    Widget screenToShow;
+    if (authService.isFetching) {
+      screenToShow = LoadingScreen();
+    } else if (authService.loggedInUser == null) {
+      screenToShow = LoginScreen();
+    } else if (_showPermissionScreen) {
+      screenToShow = PermissionsScreen();
+    } else {
+      screenToShow = TabsScreen();
+    }
+
     return MultiProvider(
       providers: [
-        Provider<AuthService>.value(
+        ChangeNotifierProvider<AuthService>.value(
           value: authService,
         ),
         Provider<CloudFirestoreService>.value(
           value: cloudFirestoreService,
-        ),
-        StreamProvider.value(
-          value: loggedInUserStream,
-          catchError: (context, error) {
-            print("error = ${error.toString()}");
-            return null;
-          },
         ),
         Provider<StorageService>(
           create: (_) => StorageService(),
@@ -66,8 +72,8 @@ class _VoicesState extends State<Voices> {
         ChangeNotifierProvider<PlayerService>(
           create: (_) => PlayerService(),
         ),
-        Provider<PermissionService>(
-          create: (_) => PermissionService(),
+        Provider<PermissionService>.value(
+          value: permissionService,
         ),
         Provider<FileConverterService>(
           create: (_) => FileConverterService(),
@@ -89,26 +95,18 @@ class _VoicesState extends State<Voices> {
             brightness: Brightness.light,
             scaffoldBackgroundColor: Colors.white,
           ),
-          home: LoginOrTabsScreen(),
+          home: screenToShow,
         ),
       ),
     );
   }
 
-  _setLoggedInUserStream() async {
-    Stream<FirebaseUser> firebaseUserStream = authService.onAuthStateChanged();
-    // Wait for new sign in or sign out
-    await for (var firebaseUser in firebaseUserStream) {
-      if (firebaseUser == null) {
-        setState(() {
-          loggedInUserStream = Stream.empty();
-        });
-      } else {
-        setState(() {
-          loggedInUserStream =
-              cloudFirestoreService.getUserStream(uid: firebaseUser.uid);
-        });
-      }
+  _loadPermissions() async {
+    await permissionService.initializeAllPermissions();
+    if (!permissionService.areAllPermissionsGranted()) {
+      setState(() {
+        _showPermissionScreen = true;
+      });
     }
   }
 }

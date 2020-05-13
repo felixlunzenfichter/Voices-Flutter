@@ -1,26 +1,22 @@
+import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:voices/constants.dart';
 import 'package:voices/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/screens/registration/permissions_screen.dart';
+import 'package:voices/screens/tabs_screen.dart';
+import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
-import 'package:voices/services/permission_service.dart';
 import 'package:voices/services/storage_service.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:voices/shared_widgets/next_button.dart';
 import 'package:voices/shared_widgets/profile_picture.dart';
-import 'package:voices/screens/login_or_tabs_screen.dart';
+import 'package:voices/services/contact_service.dart';
 
 class CreateProfileScreen extends StatefulWidget {
-  final User user;
-
-  CreateProfileScreen({@required this.user});
-
   @override
   _CreateProfileScreenState createState() => _CreateProfileScreenState();
 }
@@ -29,14 +25,25 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   String _username;
   File _profilePic;
 
-  bool _showSpinner = false;
+  bool _showSpinnerOverlay = false;
+  bool _showJustSpinner = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _setMyContact();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_showJustSpinner) {
+      return CupertinoActivityIndicator();
+    }
     return ModalProgressHUD(
-      inAsyncCall: _showSpinner,
+      inAsyncCall: _showSpinnerOverlay,
       progressIndicator: CupertinoActivityIndicator(),
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: Text('Create Profile'),
           backgroundColor: Colors.white,
@@ -44,6 +51,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
         ),
         body: SafeArea(
           child: Column(
+            mainAxisSize: MainAxisSize.max,
             children: <Widget>[
               Expanded(
                 child: Column(
@@ -52,39 +60,26 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
                       onTap: _changeProfilePic,
                       child: Center(
                         heightFactor: 1.2,
-                        child: _profilePic == null
-                            ? Stack(
-                                alignment: AlignmentDirectional.center,
-                                children: <Widget>[
-                                  Opacity(
-                                    opacity: 0.4,
-                                    child: ProfilePicture(
+                        child: Stack(
+                          alignment: AlignmentDirectional.center,
+                          children: <Widget>[
+                            Opacity(
+                                opacity: 0.4,
+                                child: (_profilePic == null)
+                                    ? ProfilePicture(
                                         imageUrl: kDefaultProfilePicUrl,
-                                        radius: 60),
-                                  ),
-                                  Icon(
-                                    CupertinoIcons.photo_camera_solid,
-                                    size: 50,
-                                  )
-                                ],
-                              )
-                            : Stack(
-                                alignment: AlignmentDirectional.center,
-                                children: <Widget>[
-                                  Opacity(
-                                    opacity: 0.4,
-                                    child: CircleAvatar(
-                                      backgroundColor: Colors.grey,
-                                      backgroundImage: FileImage(_profilePic),
-                                      radius: 60,
-                                    ),
-                                  ),
-                                  Icon(
-                                    CupertinoIcons.photo_camera_solid,
-                                    size: 50,
-                                  )
-                                ],
-                              ),
+                                        radius: 60)
+                                    : CircleAvatar(
+                                        backgroundColor: Colors.grey,
+                                        backgroundImage: FileImage(_profilePic),
+                                        radius: 60,
+                                      )),
+                            Icon(
+                              CupertinoIcons.photo_camera_solid,
+                              size: 50,
+                            )
+                          ],
+                        ),
                       ),
                     ),
                     SizedBox(
@@ -108,6 +103,9 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
                 text: "Save",
                 onPressed: _uploadUser,
               ),
+              SizedBox(
+                height: 30,
+              ),
             ],
           ),
         ),
@@ -115,33 +113,48 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     );
   }
 
+  _setMyContact() async {
+    final contactService = Provider.of<ContactService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    Contact myContact = await contactService.getFirstContactWithQuery(
+        query: authService.loggedInUser.phoneNumber);
+    if (myContact != null) {
+      _profilePic = File.fromRawPath(myContact.avatar);
+      _username = myContact.displayName;
+    }
+    setState(() {
+      _showJustSpinner = false;
+    });
+  }
+
   void _changeProfilePic() async {
     showCupertinoModalPopup(
       context: context,
       builder: (BuildContext context) => CupertinoActionSheet(
-          actions: <Widget>[
-            CupertinoActionSheetAction(
-              child: const Text('Take Photo'),
-              onPressed: () {
-                Navigator.pop(context);
-                _setImage(ImageSource.camera);
-              },
-            ),
-            CupertinoActionSheetAction(
-              child: const Text('Choose Photo'),
-              onPressed: () {
-                Navigator.pop(context);
-                _setImage(ImageSource.gallery);
-              },
-            )
-          ],
-          cancelButton: CupertinoActionSheetAction(
-            child: const Text('Cancel'),
-            isDefaultAction: true,
+        actions: <Widget>[
+          CupertinoActionSheetAction(
+            child: const Text('Take Photo'),
             onPressed: () {
               Navigator.pop(context);
+              _setImage(ImageSource.camera);
             },
-          )),
+          ),
+          CupertinoActionSheetAction(
+            child: const Text('Choose Photo'),
+            onPressed: () {
+              Navigator.pop(context);
+              _setImage(ImageSource.gallery);
+            },
+          )
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          child: const Text('Cancel'),
+          isDefaultAction: true,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
     );
   }
 
@@ -174,7 +187,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
 
   _uploadUser() async {
     setState(() {
-      _showSpinner = true;
+      _showSpinnerOverlay = true;
     });
     final storageService = Provider.of<StorageService>(context, listen: false);
     String imageUrl = kDefaultProfilePicUrl;
@@ -184,33 +197,21 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     }
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
     User newUser = User(
-        uid: widget.user.uid,
-        phoneNumber: widget.user.phoneNumber,
+        uid: authService.loggedInUser.uid,
+        phoneNumber: authService.loggedInUser.phoneNumber,
         username: _username,
         imageUrl: imageUrl);
     await cloudFirestoreService.uploadUser(user: newUser);
     setState(() {
-      _showSpinner = false;
+      _showSpinnerOverlay = false;
     });
-    final permissionService =
-        Provider.of<PermissionService>(context, listen: false);
-    if (permissionService.microphonePermissionStatus !=
-            PermissionStatus.granted ||
-        permissionService.speechRecognitionPermissionStatus !=
-            PermissionStatus.granted) {
-      Navigator.of(context).push(
-        CupertinoPageRoute(
-          builder: (context) => PermissionsScreen(),
-        ),
-      );
-    } else {
-      Navigator.of(context).pushAndRemoveUntil(
-        CupertinoPageRoute(
-          builder: (context) => LoginOrTabsScreen(),
-        ),
-        (Route<dynamic> route) => false,
-      );
-    }
+    Navigator.of(context).pushAndRemoveUntil(
+      CupertinoPageRoute(
+        builder: (context) => TabsScreen(),
+      ),
+      (Route<dynamic> route) => false,
+    );
   }
 }

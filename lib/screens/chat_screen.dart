@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:voices/models/audio_chunk.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/models/user.dart';
+import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/services/speech_to_text_service.dart';
 import 'package:voices/shared_widgets/time_stamp_text.dart';
@@ -139,7 +140,7 @@ class _ListOfMessagesState extends State<ListOfMessages>
 
   @override
   Widget build(BuildContext context) {
-    final loggedInUser = Provider.of<User>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
 
     return AnimatedList(
       key: _listKey,
@@ -148,7 +149,7 @@ class _ListOfMessagesState extends State<ListOfMessages>
         TextMessage message = _messages[index];
         return MessageRow(
           message: message,
-          isMe: loggedInUser.uid == message.senderUid,
+          isMe: authService.loggedInUser.uid == message.senderUid,
         );
       },
       reverse: true,
@@ -174,7 +175,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
-    final loggedInUser = Provider.of<User>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
     final SpeechToTextService speechToText =
         Provider.of<SpeechToTextService>(context);
 
@@ -201,7 +202,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   GlobalChatScreenInfo screenInfo =
                       Provider.of<GlobalChatScreenInfo>(context, listen: false);
                   TextMessage message = TextMessage(
-                      senderUid: loggedInUser.uid, text: _messageText);
+                      senderUid: authService.loggedInUser.uid,
+                      text: _messageText);
                   final cloudFirestoreService =
                       Provider.of<CloudFirestoreService>(context,
                           listen: false);

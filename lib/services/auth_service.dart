@@ -1,19 +1,48 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 
-class AuthService {
-  final _auth = FirebaseAuth.instance;
-  String verificationId;
+class AuthService with ChangeNotifier {
+  User loggedInUser;
+  bool isFetching = true;
 
-  Stream<FirebaseUser> onAuthStateChanged() {
-    return _auth.onAuthStateChanged;
+  //private properties
+  StreamSubscription<User> _fireStoreStreamSubscription;
+  final _auth = FirebaseAuth.instance;
+  String _verificationId;
+
+  AuthService() {
+    _updateLoggedInUser();
   }
 
-  Future<FirebaseUser> getCurrentUser() async {
-    final user = await _auth.currentUser();
-    return user;
+  _updateLoggedInUser() async {
+    Stream<FirebaseUser> authenticationStream = _auth.onAuthStateChanged;
+    // Wait for new sign in or sign out
+    await for (var firebaseUser in authenticationStream) {
+      //firebaseUser == null means the user signed out and firebaseUser != null means the user just signed in
+      if (firebaseUser == null) {
+        //let the rest of the app know that the user logged out
+        loggedInUser = null;
+        isFetching = false;
+        notifyListeners();
+      } else {
+        //get the stream for the new user
+        CloudFirestoreService cloudFirestoreService = CloudFirestoreService();
+        Stream<User> fireStoreStream =
+            cloudFirestoreService.getUserStream(uid: firebaseUser.uid);
+        _fireStoreStreamSubscription?.cancel();
+        //listen to the new stream and update the loggedInUser
+        _fireStoreStreamSubscription = fireStoreStream.listen((user) {
+          loggedInUser = user;
+          isFetching = false;
+          notifyListeners();
+        }, onError: (error) {
+          print(error);
+        }, cancelOnError: false);
+      }
+    }
   }
 
   Future<void> signOut() async {
@@ -45,10 +74,10 @@ class AuthService {
         whatTodoWhenVerificationFailed(authException.message);
       };
       final PhoneCodeAutoRetrievalTimeout autoTimeout = (String verId) {
-        verificationId = verId;
+        _verificationId = verId;
       };
       final PhoneCodeSent onSmsSent = (String verId, [int forceResend]) {
-        verificationId = verId;
+        _verificationId = verId;
         whatTodoWhenSmsSent();
       };
       await _auth.verifyPhoneNumber(
@@ -72,7 +101,7 @@ class AuthService {
       @required Function whatTodoWhenCodeCorrectForExistingUser,
       @required Function whatTodoWhenCodeFalse}) async {
     AuthCredential credential = PhoneAuthProvider.getCredential(
-        verificationId: verificationId, smsCode: code);
+        verificationId: _verificationId, smsCode: code);
 
     AuthResult result = await _signInWithCredential(credential);
     FirebaseUser user = result.user;

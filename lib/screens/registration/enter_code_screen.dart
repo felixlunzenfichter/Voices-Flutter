@@ -4,13 +4,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/screens/tabs_or_permissions_screen.dart';
+import 'package:voices/screens/registration/permissions_screen.dart';
+import 'package:voices/screens/tabs_screen.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/models/user.dart';
-import 'create_profile_screen.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
+import 'package:voices/services/permission_service.dart';
 
 class EnterCodeScreen extends StatefulWidget {
   final String phoneNumber;
@@ -169,16 +170,28 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
       cloudFirestoreService.uploadUser(user: newUser);
       Navigator.of(context).pushAndRemoveUntil(
         CupertinoPageRoute(
-            builder: (context) => CreateProfileScreen(user: newUser)),
+          builder: (context) => PermissionsScreen(
+            moveOnToNextRegistrationScreenAfter: true,
+          ),
+        ),
         (Route<dynamic> route) => false,
       );
     };
     final Function whatTodoWhenCodeCorrectForExistingUser =
         (User existingUser) async {
-      Navigator.of(context).pushAndRemoveUntil(
-        CupertinoPageRoute(builder: (context) => TabsOrPermissionsScreen()),
-        (Route<dynamic> route) => false,
-      );
+      final permissionService =
+          Provider.of<PermissionService>(context, listen: false);
+      if (permissionService.areAllPermissionsGranted()) {
+        Navigator.of(context).pushAndRemoveUntil(
+          CupertinoPageRoute(builder: (context) => TabsScreen()),
+          (Route<dynamic> route) => false,
+        );
+      } else {
+        Navigator.of(context).pushAndRemoveUntil(
+          CupertinoPageRoute(builder: (context) => PermissionsScreen()),
+          (Route<dynamic> route) => false,
+        );
+      }
     };
 
     final Function whatTodoWhenCodeFalse = () {

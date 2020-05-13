@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'package:voices/screens/tabs_or_permissions_screen.dart';
+import 'package:voices/screens/registration/permissions_screen.dart';
+import 'package:voices/screens/tabs_screen.dart';
+import 'package:voices/services/permission_service.dart';
 import 'package:voices/shared_widgets/next_button.dart';
-import 'create_profile_screen.dart';
 
 import 'package:voices/screens/registration/enter_code_screen.dart';
 import 'package:voices/services/auth_service.dart';
@@ -46,13 +47,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 20.0,
                     ),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         CountryCodePicker(
                           onChanged: _onCountryChange,
                           initialSelection: '+41',
                           alignLeft: false,
                         ),
-                        Expanded(
+                        SizedBox(
+                          width: 150,
                           child: CupertinoTextField(
                             placeholder: 'Enter your phone number',
                             keyboardType: TextInputType.number,
@@ -69,6 +72,9 @@ class _LoginScreenState extends State<LoginScreen> {
               NextButton(
                 text: "Verify",
                 onPressed: _verifyPhoneNumber,
+              ),
+              SizedBox(
+                height: 30,
               ),
             ],
           ),
@@ -93,17 +99,28 @@ class _LoginScreenState extends State<LoginScreen> {
       cloudFirestoreService.uploadUser(user: newUser);
       Navigator.of(context).pushAndRemoveUntil(
         CupertinoPageRoute(
-            builder: (context) => CreateProfileScreen(user: newUser)),
+            builder: (context) => PermissionsScreen(
+                  moveOnToNextRegistrationScreenAfter: true,
+                )),
         (Route<dynamic> route) => false,
       );
     };
 
     final Function whatTodoWhenExistingUserVerified =
         (User existingUser) async {
-      Navigator.of(context).pushAndRemoveUntil(
-        CupertinoPageRoute(builder: (context) => TabsOrPermissionsScreen()),
-        (Route<dynamic> route) => false,
-      );
+      final permissionService =
+          Provider.of<PermissionService>(context, listen: false);
+      if (permissionService.areAllPermissionsGranted()) {
+        Navigator.of(context).pushAndRemoveUntil(
+          CupertinoPageRoute(builder: (context) => TabsScreen()),
+          (Route<dynamic> route) => false,
+        );
+      } else {
+        Navigator.of(context).pushAndRemoveUntil(
+          CupertinoPageRoute(builder: (context) => PermissionsScreen()),
+          (Route<dynamic> route) => false,
+        );
+      }
     };
 
     final Function whatTodoWhenVerificationFailed = (String errorMessage) {
