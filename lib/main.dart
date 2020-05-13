@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:voices/lifecycle_manager.dart';
 import 'package:voices/screens/loading_screen.dart';
 import 'package:voices/screens/registration/login_screen.dart';
 import 'package:voices/screens/registration/permissions_screen.dart';
@@ -24,22 +25,11 @@ void main() async {
   return runApp(Voices());
 }
 
-class Voices extends StatefulWidget {
-  @override
-  _VoicesState createState() => _VoicesState();
-}
-
-class _VoicesState extends State<Voices> {
+class Voices extends StatelessWidget {
+  //initialize the services here so we can use them in the build method
   final authService = AuthService();
   final cloudFirestoreService = CloudFirestoreService();
   final permissionService = PermissionService();
-  bool _showPermissionScreen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPermissions();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +38,7 @@ class _VoicesState extends State<Voices> {
       screenToShow = LoadingScreen();
     } else if (authService.loggedInUser == null) {
       screenToShow = LoginScreen();
-    } else if (_showPermissionScreen) {
+    } else if (!permissionService.areAllPermissionsGranted) {
       screenToShow = PermissionsScreen();
     } else {
       screenToShow = TabsScreen();
@@ -71,7 +61,7 @@ class _VoicesState extends State<Voices> {
         ChangeNotifierProvider<PlayerService>(
           create: (_) => PlayerService(),
         ),
-        Provider<PermissionService>.value(
+        ChangeNotifierProvider<PermissionService>.value(
           value: permissionService,
         ),
         Provider<FileConverterService>(
@@ -88,24 +78,17 @@ class _VoicesState extends State<Voices> {
             currentFocus.unfocus();
           }
         },
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            brightness: Brightness.light,
-            scaffoldBackgroundColor: Colors.white,
+        child: LifeCycleManager(
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              brightness: Brightness.light,
+              scaffoldBackgroundColor: Colors.white,
+            ),
+            home: screenToShow,
           ),
-          home: screenToShow,
         ),
       ),
     );
-  }
-
-  _loadPermissions() async {
-    await permissionService.initializeAllPermissions();
-    if (!permissionService.areAllPermissionsGranted()) {
-      setState(() {
-        _showPermissionScreen = true;
-      });
-    }
   }
 }

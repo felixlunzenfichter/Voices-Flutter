@@ -74,7 +74,8 @@ class PermissionsScreen extends StatelessWidget {
                 }
 
                 //the user can only use the app if he has granted all permissions
-                if (permissionService.areAllPermissionsGranted()) {
+                permissionService.checkIfAllPermissionsGranted();
+                if (permissionService.areAllPermissionsGranted) {
                   //user can move on
                   if (moveOnToNextRegistrationScreenAfter) {
                     Navigator.of(context).pushAndRemoveUntil(
