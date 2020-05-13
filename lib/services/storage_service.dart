@@ -15,7 +15,22 @@ class StorageService {
       String downloadUrl = await snap.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      print('Could not upload profile picture');
+      print('Could not upload profile picture with fileName = $fileName');
+      print(e);
+      return null;
+    }
+  }
+
+  Future<String> uploadAudioFile(
+      {@required String path, @required File audioFile}) async {
+    try {
+      final StorageUploadTask uploadTask =
+          _storageReference.child(path).putFile(audioFile);
+      StorageTaskSnapshot snap = await uploadTask.onComplete;
+      String downloadUrl = await snap.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Could not upload audio file with path = $path');
       print(e);
       return null;
     }

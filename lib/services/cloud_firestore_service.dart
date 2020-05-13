@@ -6,9 +6,12 @@ import 'package:voices/models/text_message.dart';
 import 'package:voices/constants.dart';
 import 'package:voices/models/chat.dart';
 import 'package:voices/models/voice_message.dart';
+import 'package:voices/services/storage_service.dart';
+import 'dart:io';
 
 class CloudFirestoreService {
   final _fireStore = Firestore.instance;
+  final _storageService = StorageService();
 
   Future<void> uploadUser({@required User user}) async {
     try {
@@ -164,8 +167,15 @@ class CloudFirestoreService {
   }
 
   Future<void> addVoiceMessage(
-      {@required String chatId, @required VoiceMessage voiceMessage}) async {
+      {@required String chatId,
+      @required VoiceMessage voiceMessage,
+      @required File audioFile}) async {
     try {
+      String path =
+          "voice_messages/$chatId/${DateTime.now().millisecondsSinceEpoch.toString()}.wav";
+      String downloadUrl = await _storageService.uploadAudioFile(
+          path: path, audioFile: audioFile);
+      voiceMessage.downloadUrl = downloadUrl;
       Map<String, dynamic> messageMap = voiceMessage.toMap();
       messageMap
           .addEntries([MapEntry('timestamp', FieldValue.serverTimestamp())]);
