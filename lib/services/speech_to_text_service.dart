@@ -5,24 +5,16 @@ import 'package:flutter/material.dart';
 
 class SpeechToTextService extends ChangeNotifier {
 
-  // Speech recognition object provided by packet.
+  // Speech recognition object provided by the package.
   SpeechRecognition _speech;
 
-
-  int unresolvedStartClicks = 0;
-  int pausesToSkip = 0;
-
-  // Set to true when we are currently recording.
   bool _isListening = false;
-
-  // Stopping the recorder can take time. Therefore we use this boolean
-  // to postpone starting the recorder upon completing the stop.
-  bool _shouldPlayOnComplete = false;
+  bool _speechRecognitionAvailable = false;
 
   // Transcript since the las time we pressed start.
-  String transciptionCurrentRecoringSnippet = '';
+  String transcriptionCurrentRecordingSnippet = '';
 
-  // Transcript of the whole voice message.
+  // Transcript of the whole voice message excluding since the last time we pressed start.
   String fullTranscription = '';
 
   //String _currentLocale = 'en_US';
@@ -32,84 +24,64 @@ class SpeechToTextService extends ChangeNotifier {
     activateSpeechRecognizer();
   }
 
-
   void activateSpeechRecognizer() async {
+    print('_MyAppState.activateSpeechRecognizer... ');
     _speech = new SpeechRecognition();
-    _speech.setAvailabilityHandler((bool result) async {});
+    _speech.setAvailabilityHandler((bool result) {
+      _speechRecognitionAvailable = result;
+    });
     _speech.setCurrentLocaleHandler((String locale) {
       selectedLang = languages.firstWhere((l) => l.code == locale);
     });
-    _speech.setRecognitionStartedHandler(() => {});
+    _speech.setRecognitionStartedHandler(() => _isListening = true);
     _speech.setRecognitionResultHandler((String text) {
-      transciptionCurrentRecoringSnippet = text;
+      transcriptionCurrentRecordingSnippet = text;
       notifyListeners();
     });
-
-    _speech.setRecognitionCompleteHandler(() async {
-      unresolvedStartClicks--;
-
-      // This case distinction takes care of potential pending start calls.
-      if (_shouldPlayOnComplete) {
-        // Don't Play upon next completion.
-        _shouldPlayOnComplete = false;
-
-        // Save transcript.
-        saveTranscipt();
-
-        // Start listening.
-        _speech.listen(locale: selectedLang.code);
-      } else {
-        // We are done listening.
-        _isListening = false;
-
-        // Save transcript.
-        saveTranscipt();
-      }
+    _speech.setRecognitionCompleteHandler(() {
+      _isListening = false;
+      saveTranscript();
     });
-    await _speech.activate();
+    _speech
+        .activate()
+        .then((res) => _speechRecognitionAvailable = res);
   }
 
-
   // Save transcript.
-  saveTranscipt() {
+  saveTranscript() {
     fullTranscription =
-    "$fullTranscription$transciptionCurrentRecoringSnippet\n";
-    transciptionCurrentRecoringSnippet = '';
+    "$fullTranscription$transcriptionCurrentRecordingSnippet\n";
+    transcriptionCurrentRecordingSnippet = '';
+    notifyListeners();
   }
 
   // Start new Recording or pick up where we left off.
-  void start() async {
-    if (unresolvedStartClicks >= 2) {
-      pausesToSkip++;
-    } else {
-      unresolvedStartClicks++;
-      if (!_isListening) {
-        // Start listening.
-        _isListening = true;
-
-        _speech.listen(locale: selectedLang.code);
-      } else {
-        // Postpone start listening to onComplete.
-        _shouldPlayOnComplete = true;
-      }
-    }
-
+  void start() {
+    _speechRecognitionAvailable && !_isListening ? _listen() : print(
+        'Available: $_speechRecognitionAvailable. Is listening: $_isListening');
   }
 
-  // Stop recording
-  void stop() async {
+  _listen() {
+    _speech.listen(locale: selectedLang.code).then((result) =>
+        print('_MyAppState.start => result $result'));
+  }
+
+  // Stop recording and return text.
+  Future<String> stop() async {
     await _speech.stop();
+    saveTranscript();
+    String result = fullTranscription;
     fullTranscription = '';
-    transciptionCurrentRecoringSnippet = '';
+
+    // Reset in case of error.
+    activateSpeechRecognizer();
+    return Future.value(result);
   }
 
   // Pause recording.
   void pause() async {
-    if (pausesToSkip > 0) {
-      pausesToSkip--;
-    } else {
-      await _speech.stop();
-    }
+    _isListening ? await _speech.stop() : print(
+        'Did not pause because is listening: $_isListening');
   }
 
   void setLanguage() {}

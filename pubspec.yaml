@@ -37,7 +37,7 @@ dependencies:
 
   flutter_audio_recorder: ^0.5.5
   just_audio: ^0.1.5
-  speech_recognition: ^0.3.0
+  speech_recognition: ^0.3.0+1
 
   path_provider: ^1.6.5
   flutter_ffmpeg: ^0.2.10
