@@ -21,16 +21,17 @@ class StorageService {
     }
   }
 
+  //returns the downloadUrl of the uploaded file
   Future<String> uploadAudioFile(
-      {@required String path, @required File audioFile}) async {
+      {@required String firebasePath, @required File audioFile}) async {
     try {
       final StorageUploadTask uploadTask =
-          _storageReference.child(path).putFile(audioFile);
+          _storageReference.child(firebasePath).putFile(audioFile);
       StorageTaskSnapshot snap = await uploadTask.onComplete;
       String downloadUrl = await snap.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      print('Could not upload audio file with path = $path');
+      print('Could not upload audio file with path = $firebasePath');
       print(e);
       return null;
     }

@@ -5,7 +5,6 @@ class ImageMessage extends Message {
 
   ImageMessage({
     String senderUid,
-    String text,
     DateTime timestamp,
     String downloadUrl,
   }) {

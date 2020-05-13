@@ -7,7 +7,6 @@ class VoiceMessage extends Message {
 
   VoiceMessage({
     String senderUid,
-    String text,
     DateTime timestamp,
     String downloadUrl,
     String transcript,

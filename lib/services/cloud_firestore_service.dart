@@ -1,17 +1,16 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:voices/models/image_message.dart';
+import 'package:voices/models/message.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/constants.dart';
 import 'package:voices/models/chat.dart';
 import 'package:voices/models/voice_message.dart';
-import 'package:voices/services/storage_service.dart';
-import 'dart:io';
 
 class CloudFirestoreService {
   final _fireStore = Firestore.instance;
-  final _storageService = StorageService();
 
   Future<void> uploadUser({@required User user}) async {
     try {
@@ -138,15 +137,24 @@ class CloudFirestoreService {
     }
   }
 
-  Stream<List<TextMessage>> getMessageStream({@required String chatId}) {
+  Stream<List<Message>> getMessageStream({@required String chatId}) {
     try {
       var messageStream = _fireStore
           .collection('chats/$chatId/messages')
           .orderBy('timestamp', descending: true)
           .snapshots()
-          .map((snap) => snap.documents
-              .map((doc) => TextMessage.fromMap(map: doc.data))
-              .toList());
+          .map((snap) => snap.documents.map((doc) {
+                switch (doc.data['messageType']) {
+                  case "MessageType.text":
+                    return TextMessage.fromMap(map: doc.data);
+                  case "MessageType.voice":
+                    return VoiceMessage.fromMap(map: doc.data);
+                  case "MessageType.image":
+                    return ImageMessage.fromMap(map: doc.data);
+                  default:
+                    return null;
+                }
+              }).toList());
       return messageStream;
     } catch (e) {
       print('Could not get the message stream because of error: $e');
@@ -167,15 +175,8 @@ class CloudFirestoreService {
   }
 
   Future<void> addVoiceMessage(
-      {@required String chatId,
-      @required VoiceMessage voiceMessage,
-      @required File audioFile}) async {
+      {@required String chatId, @required VoiceMessage voiceMessage}) async {
     try {
-      String path =
-          "voice_messages/$chatId/${DateTime.now().millisecondsSinceEpoch.toString()}.wav";
-      String downloadUrl = await _storageService.uploadAudioFile(
-          path: path, audioFile: audioFile);
-      voiceMessage.downloadUrl = downloadUrl;
       Map<String, dynamic> messageMap = voiceMessage.toMap();
       messageMap
           .addEntries([MapEntry('timestamp', FieldValue.serverTimestamp())]);

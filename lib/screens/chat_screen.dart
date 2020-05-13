@@ -3,15 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/models/audio_chunk.dart';
+import 'package:voices/models/image_message.dart';
+import 'package:voices/models/message.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/models/user.dart';
+import 'package:voices/models/voice_message.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/services/speech_to_text_service.dart';
+import 'package:voices/services/storage_service.dart';
 import 'package:voices/shared_widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/player_service.dart';
+import 'dart:io';
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
@@ -56,7 +60,7 @@ class MessagesStream extends StatefulWidget {
 }
 
 class _MessagesStreamState extends State<MessagesStream> {
-  Stream<List<TextMessage>> messagesStream;
+  Stream<List<Message>> messagesStream;
 
   @override
   void initState() {
@@ -71,7 +75,7 @@ class _MessagesStreamState extends State<MessagesStream> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<TextMessage>>(
+    return StreamBuilder<List<Message>>(
       stream: messagesStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting ||
@@ -86,9 +90,9 @@ class _MessagesStreamState extends State<MessagesStream> {
           );
         }
 
-        final List<TextMessage> messages = snapshot.data;
+        final List<Message> messages = snapshot.data;
 
-        if (messages == null) {
+        if (messages == null || messages.isEmpty) {
           return Container(
             color: Colors.white,
             child: Center(
@@ -107,7 +111,7 @@ class _MessagesStreamState extends State<MessagesStream> {
 }
 
 class ListOfMessages extends StatefulWidget {
-  final List<TextMessage> messages;
+  final List<Message> messages;
 
   ListOfMessages({@required this.messages});
 
@@ -117,7 +121,7 @@ class ListOfMessages extends StatefulWidget {
 
 class _ListOfMessagesState extends State<ListOfMessages>
     with SingleTickerProviderStateMixin {
-  List<TextMessage> _messages;
+  List<Message> _messages;
   final _listKey = GlobalKey<AnimatedListState>();
 
   @override
@@ -146,7 +150,7 @@ class _ListOfMessagesState extends State<ListOfMessages>
       key: _listKey,
       initialItemCount: _messages.length,
       itemBuilder: (context, index, animation) {
-        TextMessage message = _messages[index];
+        Message message = _messages[index];
         return MessageRow(
           message: message,
           isMe: authService.loggedInUser.uid == message.senderUid,
@@ -157,7 +161,7 @@ class _ListOfMessagesState extends State<ListOfMessages>
     );
   }
 
-  _insertMessageAtIndex({@required TextMessage message, @required int index}) {
+  _insertMessageAtIndex({@required Message message, @required int index}) {
     _messages.insert(index, message);
     _listKey.currentState.insertItem(index);
   }
@@ -178,15 +182,17 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
     final authService = Provider.of<AuthService>(context, listen: false);
     final SpeechToTextService speechToText =
         Provider.of<SpeechToTextService>(context);
+    final screenInfo =
+        Provider.of<GlobalChatScreenInfo>(context, listen: false);
 
     return Column(
       children: <Widget>[
         RecordingInfo(),
-        if (recorderService.currentStatus == RecordingStatus.Stopped)
-          PlayerInfo(),
-        Text(speechToText.fullTranscription +
-            " " +
-            speechToText.transciptionCurrentRecoringSnippet),
+//        if (recorderService.currentStatus == RecordingStatus.Stopped)
+//          PlayerInfo(),
+//        Text(speechToText.fullTranscription +
+//            " " +
+//            speechToText.transciptionCurrentRecoringSnippet),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -199,8 +205,6 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 onPress: () async {
                   // prevent to send the previously typed message with an empty text field
                   //Implement send functionality.
-                  GlobalChatScreenInfo screenInfo =
-                      Provider.of<GlobalChatScreenInfo>(context, listen: false);
                   TextMessage message = TextMessage(
                       senderUid: authService.loggedInUser.uid,
                       text: _messageText);
@@ -244,14 +248,37 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 onPress: () async {
                   // Stop voice to text conversion service.
                   speechToText.stop();
-                  await recorderService.stopRecording();
-                  final playerService =
-                      Provider.of<PlayerService>(context, listen: false);
-                  playerService.initializePlayer(
-                      //audiochunk is the object used to pass information from recording to player
-                      audioChunk: AudioChunk(
-                          path: recorderService.currentRecording.path,
-                          length: recorderService.currentRecording.duration));
+                  try {
+                    await recorderService.stopRecording();
+                    final storageService =
+                        Provider.of<StorageService>(context, listen: false);
+                    String path =
+                        "voice_messages/${screenInfo.chatId}/${DateTime.now().millisecondsSinceEpoch.toString()}.wav";
+                    String downloadUrl = await storageService.uploadAudioFile(
+                        firebasePath: path,
+                        audioFile: File(recorderService.currentRecording.path));
+                    VoiceMessage voiceMessage = VoiceMessage(
+                        senderUid: authService.loggedInUser.uid,
+                        downloadUrl: downloadUrl,
+                        transcript: "This is the transcript",
+                        length: recorderService.currentRecording.duration);
+
+                    final cloudFirestoreService =
+                        Provider.of<CloudFirestoreService>(context,
+                            listen: false);
+                    await cloudFirestoreService.addVoiceMessage(
+                        chatId: screenInfo.chatId, voiceMessage: voiceMessage);
+                  } catch (e) {
+                    print(
+                        "Something went wrong when uploading voice message: $e");
+                  }
+//                  final playerService =
+//                      Provider.of<PlayerService>(context, listen: false);
+//                  playerService.initializePlayer(
+//                      //audiochunk is the object used to pass information from recording to player
+//                      audioChunk: AudioChunk(
+//                          path: recorderService.currentRecording.path,
+//                          length: recorderService.currentRecording.duration));
                 },
               ),
           ],
@@ -553,7 +580,7 @@ class PlayerInfo extends StatelessWidget {
 class MessageRow extends StatelessWidget {
   MessageRow({this.message, this.isMe});
 
-  final TextMessage message;
+  final Message message;
   final bool isMe;
 
   @override
@@ -561,12 +588,98 @@ class MessageRow extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 4),
       child: Column(
-        // a column with just one child because I haven't figure out out else to size the bubble to fit its contents instead of filling it
+        // a column with just one child because I haven't figure out how else to size the bubble to fit its contents instead of filling it
         crossAxisAlignment:
             isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: <Widget>[
-          MessageBubble(
-              isMe: isMe, text: message.text, timestamp: message.timestamp),
+          if (message.messageType == MessageType.text)
+            MessageBubble(
+                isMe: isMe,
+                child: Text(
+                  (message as TextMessage).text,
+                  style: TextStyle(
+                    fontSize: 15.0,
+                  ),
+                ),
+                timestamp: message.timestamp),
+          if (message.messageType == MessageType.voice)
+            MessageBubble(
+                isMe: isMe,
+                child: Container(
+                  width: 100,
+                  height: 30,
+                  color: Colors.brown,
+                ),
+                timestamp: message.timestamp),
+          if (message.messageType == MessageType.image)
+            MessageBubble(
+                isMe: isMe,
+                child: Image.network(
+                  (message as ImageMessage).downloadUrl,
+                  loadingBuilder: (context, child, progress) {
+                    return progress == null
+                        ? child
+                        : CupertinoActivityIndicator();
+                  },
+                  width: MediaQuery.of(context).size.width * 2 / 3,
+                  height: MediaQuery.of(context).size.width * 2 / 3,
+                  fit: BoxFit.cover,
+                ),
+                timestamp: message.timestamp),
+        ],
+      ),
+    );
+  }
+}
+
+class VoiceMessageContent extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final playerService = Provider.of<PlayerService>(context);
+    return Container(
+      color: Colors.yellow,
+      height: 70,
+      child: Row(
+        children: <Widget>[
+          if (playerService.currentStatus == PlayerStatus.playing)
+            ButtonFromPicture(
+              onPress: () {
+                playerService.pause();
+              },
+              image: Image.asset('assets/pause_1.png'),
+            )
+          else
+            ButtonFromPicture(
+              onPress: () async {
+                await playerService.play();
+              },
+              image: Image.asset('assets/play_1.png'),
+            ),
+//          Expanded(
+//            child: LinearProgressIndicator(
+//              backgroundColor: Colors.grey,
+//              value: progress,
+//            ),
+//          ),
+          if (playerService.currentStatus == PlayerStatus.playing ||
+              playerService.currentStatus == PlayerStatus.paused)
+            StopButton(
+              onPress: () {
+                playerService.stop();
+              },
+            ),
+          SpeedButton(
+            onPress: () {
+              if (playerService.currentSpeed == 1) {
+                playerService.setSpeed(speed: 2);
+              } else {
+                playerService.setSpeed(speed: 1);
+              }
+            },
+            text: "${playerService.currentSpeed}x",
+          ),
+          Text(
+              "${playerService.currentPosition.inSeconds}s of ${playerService.audioChunk.length.inSeconds}s"),
         ],
       ),
     );
@@ -577,12 +690,12 @@ class MessageBubble extends StatelessWidget {
   const MessageBubble({
     Key key,
     @required this.isMe,
-    @required this.text,
+    @required this.child,
     @required this.timestamp,
   }) : super(key: key);
 
   final bool isMe;
-  final String text;
+  final Widget child;
   final DateTime timestamp;
 
   @override
@@ -606,12 +719,7 @@ class MessageBubble extends StatelessWidget {
           alignment: WrapAlignment.end,
           crossAxisAlignment: WrapCrossAlignment.end,
           children: <Widget>[
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 15.0,
-              ),
-            ),
+            child,
             SizedBox(
               width: 10,
             ),
