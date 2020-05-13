@@ -45,6 +45,35 @@ class PlayerService with ChangeNotifier {
     await _player.setFilePath(audioChunk.path);
   }
 
+  initializePlayerWithUrl({@required String url}) async {
+    Future<Duration> futureDuration = _player.setUrl(url);
+    futureDuration.catchError((error) {
+      print("Error occured when fetching audio from url: $error");
+    });
+    await futureDuration;
+    _positionStreamSubscription =
+        _player.getPositionStream().listen((newPosition) {
+      currentPosition = newPosition;
+      notifyListeners();
+    });
+    _statusStreamSubscription = _player.playbackStateStream.listen((newState) {
+      switch (newState) {
+        case AudioPlaybackState.paused:
+          currentStatus = PlayerStatus.paused;
+          break;
+        case AudioPlaybackState.playing:
+          if (!_shouldIgnorePlaying) {
+            currentStatus = PlayerStatus.playing;
+          }
+          break;
+        default:
+          currentStatus = PlayerStatus.idle;
+          break;
+      }
+      notifyListeners();
+    });
+  }
+
   disposePlayer() {
     _positionStreamSubscription.cancel();
     _statusStreamSubscription.cancel();

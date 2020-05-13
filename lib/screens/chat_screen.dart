@@ -605,10 +605,8 @@ class MessageRow extends StatelessWidget {
           if (message.messageType == MessageType.voice)
             MessageBubble(
                 isMe: isMe,
-                child: Container(
-                  width: 100,
-                  height: 30,
-                  color: Colors.brown,
+                child: VoiceMessageContent(
+                  voiceMessage: (message as VoiceMessage),
                 ),
                 timestamp: message.timestamp),
           if (message.messageType == MessageType.image)
@@ -632,10 +630,29 @@ class MessageRow extends StatelessWidget {
   }
 }
 
-class VoiceMessageContent extends StatelessWidget {
+class VoiceMessageContent extends StatefulWidget {
+  final VoiceMessage voiceMessage;
+
+  VoiceMessageContent({@required this.voiceMessage});
+
+  @override
+  _VoiceMessageContentState createState() => _VoiceMessageContentState();
+}
+
+class _VoiceMessageContentState extends State<VoiceMessageContent> {
+  @override
+  void initState() {
+    super.initState();
+    final playerService = Provider.of<PlayerService>(context, listen: false);
+    playerService.initializePlayerWithUrl(url: widget.voiceMessage.downloadUrl);
+  }
+
   @override
   Widget build(BuildContext context) {
     final playerService = Provider.of<PlayerService>(context);
+    final double progress =
+        playerService.currentPosition.inMilliseconds.toDouble() /
+            widget.voiceMessage.length.inMilliseconds.toDouble();
     return Container(
       color: Colors.yellow,
       height: 70,
@@ -655,12 +672,12 @@ class VoiceMessageContent extends StatelessWidget {
               },
               image: Image.asset('assets/play_1.png'),
             ),
-//          Expanded(
-//            child: LinearProgressIndicator(
-//              backgroundColor: Colors.grey,
-//              value: progress,
-//            ),
-//          ),
+          Expanded(
+            child: LinearProgressIndicator(
+              backgroundColor: Colors.grey,
+              value: progress,
+            ),
+          ),
           if (playerService.currentStatus == PlayerStatus.playing ||
               playerService.currentStatus == PlayerStatus.paused)
             StopButton(
@@ -679,7 +696,7 @@ class VoiceMessageContent extends StatelessWidget {
             text: "${playerService.currentSpeed}x",
           ),
           Text(
-              "${playerService.currentPosition.inSeconds}s of ${playerService.audioChunk.length.inSeconds}s"),
+              "${playerService.currentPosition?.inSeconds ?? 0}s of ${widget.voiceMessage.length.inSeconds}s"),
         ],
       ),
     );
