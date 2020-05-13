@@ -110,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
         (User existingUser) async {
       final permissionService =
           Provider.of<PermissionService>(context, listen: false);
-      if (permissionService.areAllPermissionsGranted()) {
+      if (permissionService.areAllPermissionsGranted) {
         Navigator.of(context).pushAndRemoveUntil(
           CupertinoPageRoute(builder: (context) => TabsScreen()),
           (Route<dynamic> route) => false,

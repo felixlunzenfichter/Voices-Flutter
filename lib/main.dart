@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:voices/lifecycle_manager.dart';
 import 'package:voices/screens/loading_screen.dart';
 import 'package:voices/screens/registration/login_screen.dart';
 import 'package:voices/screens/registration/permissions_screen.dart';
@@ -24,44 +25,16 @@ void main() async {
   return runApp(Voices());
 }
 
-class Voices extends StatefulWidget {
-  @override
-  _VoicesState createState() => _VoicesState();
-}
-
-
-class _VoicesState extends State<Voices> {
-  final authService = AuthService();
-  final cloudFirestoreService = CloudFirestoreService();
-  final permissionService = PermissionService();
-  bool _showPermissionScreen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPermissions();
-  }
-
+class Voices extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    Widget screenToShow;
-    if (authService.isFetching) {
-      screenToShow = LoadingScreen();
-    } else if (authService.loggedInUser == null) {
-      screenToShow = LoginScreen();
-    } else if (_showPermissionScreen) {
-      screenToShow = PermissionsScreen();
-    } else {
-      screenToShow = TabsScreen();
-    }
-
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<AuthService>.value(
-          value: authService,
+        ChangeNotifierProvider<AuthService>(
+          create: (_) => AuthService(),
         ),
-        Provider<CloudFirestoreService>.value(
-          value: cloudFirestoreService,
+        Provider<CloudFirestoreService>(
+          create: (_) => CloudFirestoreService(),
         ),
         Provider<StorageService>(
           create: (_) => StorageService(),
@@ -72,8 +45,8 @@ class _VoicesState extends State<Voices> {
         ChangeNotifierProvider<PlayerService>(
           create: (_) => PlayerService(),
         ),
-        Provider<PermissionService>.value(
-          value: permissionService,
+        ChangeNotifierProvider<PermissionService>(
+          create: (_) => PermissionService(),
         ),
         Provider<FileConverterService>(
           create: (_) => FileConverterService(),
@@ -89,24 +62,35 @@ class _VoicesState extends State<Voices> {
             currentFocus.unfocus();
           }
         },
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            brightness: Brightness.light,
-            scaffoldBackgroundColor: Colors.white,
+        child: LifeCycleManager(
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              brightness: Brightness.light,
+              scaffoldBackgroundColor: Colors.white,
+            ),
+            home: ScreenToShow(),
           ),
-          home: screenToShow,
         ),
       ),
     );
   }
+}
 
-  _loadPermissions() async {
-    await permissionService.initializeAllPermissions();
-    if (!permissionService.areAllPermissionsGranted()) {
-      setState(() {
-        _showPermissionScreen = true;
-      });
+class ScreenToShow extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final permissionService = Provider.of<PermissionService>(context);
+
+    if (authService.isFetching) {
+      return LoadingScreen();
+    } else if (authService.loggedInUser == null) {
+      return LoginScreen();
+    } else if (!permissionService.areAllPermissionsGranted) {
+      return PermissionsScreen();
+    } else {
+      return TabsScreen();
     }
   }
 }

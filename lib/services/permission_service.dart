@@ -1,13 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class PermissionService {
+class PermissionService with ChangeNotifier {
+  bool areAllPermissionsGranted = false;
   PermissionStatus microphonePermissionStatus = PermissionStatus.undetermined;
   PermissionStatus speechRecognitionPermissionStatus =
       PermissionStatus.undetermined;
   PermissionStatus contactsPermissionStatus = PermissionStatus.undetermined;
   PermissionStatus cameraPermissionStatus = PermissionStatus.undetermined;
   PermissionStatus photosPermissionStatus = PermissionStatus.undetermined;
+
+  PermissionService() {
+    initializeAllPermissions();
+  }
 
   initializeAllPermissions() async {
     List<Future<PermissionStatus>> futures = [
@@ -23,6 +28,7 @@ class PermissionService {
     contactsPermissionStatus = statuses[2];
     cameraPermissionStatus = statuses[3];
     photosPermissionStatus = statuses[4];
+    checkIfAllPermissionsGranted();
   }
 
   askForAllPermissions() async {
@@ -53,16 +59,17 @@ class PermissionService {
     return notGrantedPermissions;
   }
 
-  bool areAllPermissionsGranted() {
+  checkIfAllPermissionsGranted() {
     if (microphonePermissionStatus == PermissionStatus.granted &&
         speechRecognitionPermissionStatus == PermissionStatus.granted &&
         contactsPermissionStatus == PermissionStatus.granted &&
         cameraPermissionStatus == PermissionStatus.granted &&
         photosPermissionStatus == PermissionStatus.granted) {
-      return true;
+      areAllPermissionsGranted = true;
     } else {
-      return false;
+      areAllPermissionsGranted = false;
     }
+    notifyListeners();
   }
 }
 
