@@ -28,6 +28,7 @@ class Voices extends StatefulWidget {
   _VoicesState createState() => _VoicesState();
 }
 
+
 class _VoicesState extends State<Voices> {
   final authService = AuthService();
   final cloudFirestoreService = CloudFirestoreService();
