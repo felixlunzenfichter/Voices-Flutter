@@ -26,31 +26,15 @@ void main() async {
 }
 
 class Voices extends StatelessWidget {
-  //initialize the services here so we can use them in the build method
-  final authService = AuthService();
-  final cloudFirestoreService = CloudFirestoreService();
-  final permissionService = PermissionService();
-
   @override
   Widget build(BuildContext context) {
-    Widget screenToShow;
-    if (authService.isFetching) {
-      screenToShow = LoadingScreen();
-    } else if (authService.loggedInUser == null) {
-      screenToShow = LoginScreen();
-    } else if (!permissionService.areAllPermissionsGranted) {
-      screenToShow = PermissionsScreen();
-    } else {
-      screenToShow = TabsScreen();
-    }
-
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<AuthService>.value(
-          value: authService,
+        ChangeNotifierProvider<AuthService>(
+          create: (_) => AuthService(),
         ),
-        Provider<CloudFirestoreService>.value(
-          value: cloudFirestoreService,
+        Provider<CloudFirestoreService>(
+          create: (_) => CloudFirestoreService(),
         ),
         Provider<StorageService>(
           create: (_) => StorageService(),
@@ -61,8 +45,8 @@ class Voices extends StatelessWidget {
         ChangeNotifierProvider<PlayerService>(
           create: (_) => PlayerService(),
         ),
-        ChangeNotifierProvider<PermissionService>.value(
-          value: permissionService,
+        ChangeNotifierProvider<PermissionService>(
+          create: (_) => PermissionService(),
         ),
         Provider<FileConverterService>(
           create: (_) => FileConverterService(),
@@ -85,10 +69,28 @@ class Voices extends StatelessWidget {
               brightness: Brightness.light,
               scaffoldBackgroundColor: Colors.white,
             ),
-            home: screenToShow,
+            home: ScreenToShow(),
           ),
         ),
       ),
     );
+  }
+}
+
+class ScreenToShow extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final permissionService = Provider.of<PermissionService>(context);
+
+    if (authService.isFetching) {
+      return LoadingScreen();
+    } else if (authService.loggedInUser == null) {
+      return LoginScreen();
+    } else if (!permissionService.areAllPermissionsGranted) {
+      return PermissionsScreen();
+    } else {
+      return TabsScreen();
+    }
   }
 }
