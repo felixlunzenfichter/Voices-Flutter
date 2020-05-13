@@ -10,11 +10,19 @@ class PermissionService {
   PermissionStatus photosPermissionStatus = PermissionStatus.undetermined;
 
   initializeAllPermissions() async {
-    microphonePermissionStatus = await Permission.microphone.status;
-    speechRecognitionPermissionStatus = await Permission.speech.status;
-    contactsPermissionStatus = await Permission.contacts.status;
-    cameraPermissionStatus = await Permission.camera.status;
-    photosPermissionStatus = await Permission.photos.status;
+    List<Future<PermissionStatus>> futures = [
+      Permission.microphone.status,
+      Permission.speech.status,
+      Permission.contacts.status,
+      Permission.camera.status,
+      Permission.photos.status
+    ];
+    List<PermissionStatus> statuses = await Future.wait(futures);
+    microphonePermissionStatus = statuses[0];
+    speechRecognitionPermissionStatus = statuses[1];
+    contactsPermissionStatus = statuses[2];
+    cameraPermissionStatus = statuses[3];
+    photosPermissionStatus = statuses[4];
   }
 
   askForAllPermissions() async {
