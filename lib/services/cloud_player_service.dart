@@ -51,6 +51,7 @@ class CloudPlayerService {
     return _playerDict[playerId].getPositionStream();
   }
 
+  //this doesn't seem to work if we upload the file without metadata
   Stream<Duration> getLengthOfAudioStream({@required String playerId}) {
     return _playerDict[playerId].durationStream;
   }
