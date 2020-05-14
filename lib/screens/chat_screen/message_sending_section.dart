@@ -35,9 +35,9 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
         RecordingInfo(),
 //        if (recorderService.currentStatus == RecordingStatus.Stopped)
 //          PlayerInfo(),
-//        Text(speechToText.fullTranscription +
-//            " " +
-//            speechToText.transciptionCurrentRecoringSnippet),
+        Text(speechToText.fullTranscription +
+            " " +
+            speechToText.transcriptionCurrentRecordingSnippet),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -92,7 +92,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
               StopRecordingButton(
                 onPress: () async {
                   // Stop voice to text conversion service.
-                  speechToText.stop();
+                  String transcript = await speechToText.stop();
                   try {
                     await recorderService.stopRecording();
                     final storageService =
@@ -105,9 +105,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                     VoiceMessage voiceMessage = VoiceMessage(
                         senderUid: authService.loggedInUser.uid,
                         downloadUrl: downloadUrl,
-                        transcript: "This is the transcript",
+                        transcript: transcript,
                         length: recorderService.currentRecording.duration);
-
                     final cloudFirestoreService =
                         Provider.of<CloudFirestoreService>(context,
                             listen: false);

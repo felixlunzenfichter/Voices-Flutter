@@ -50,7 +50,7 @@ class _VoiceMessageContentState extends State<VoiceMessageContent> {
     Provider.of<CloudPlayerService>(context, listen: false);
     return Container(
       color: Colors.yellow,
-      height: 70,
+//      height: 70,
       child: StreamBuilder<FullAudioPlaybackState>(
         stream: _playBackStream,
         builder: (context, snapshot) {
@@ -58,76 +58,75 @@ class _VoiceMessageContentState extends State<VoiceMessageContent> {
           final state = fullState?.state;
           final buffering = fullState?.buffering;
           final lengthOfAudio = widget.voiceMessage.length;
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("${widget.voiceMessage.length.inSeconds}s"),
-              if (state == AudioPlaybackState.connecting || buffering == true)
-                Container(
-                  margin: EdgeInsets.all(8.0),
-                  width: 64.0,
-                  height: 64.0,
-                  child: CupertinoActivityIndicator(),
-                )
-              else if (state == AudioPlaybackState.playing)
-                ButtonFromPicture(
-                  onPress: () async {
-                    await cloudPlayerService.pause(playerId: _playerId);
-                  },
-                  image: Image.asset('assets/pause_1.png'),
-                )
-              else
-                ButtonFromPicture(
-                  onPress: () async {
-                    await cloudPlayerService.play(playerId: _playerId);
-                  },
-                  image: Image.asset('assets/play_1.png'),
-                ),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 2 / 7,
-                ),
-                child: StreamBuilder<Duration>(
-                  stream: _positionStream,
-                  builder: (context, snapshot) {
-                    var position = snapshot.data ?? Duration.zero;
-                    if (position > lengthOfAudio) {
-                      position = lengthOfAudio;
-                    }
-                    return SeekBar(
-                      duration: lengthOfAudio,
-                      position: position,
-                      onChangeEnd: (newPosition) async {
-                        await cloudPlayerService.seek(
-                            position: newPosition, playerId: _playerId);
+          return Column(
+            children: <Widget>[
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("${widget.voiceMessage.length.inSeconds}s"),
+                  if (state == AudioPlaybackState.connecting || buffering == true)
+                    Container(
+                      margin: EdgeInsets.all(8.0),
+                      width: 64.0,
+                      height: 64.0,
+                      child: CupertinoActivityIndicator(),
+                    )
+                  else if (state == AudioPlaybackState.playing)
+                    ButtonFromPicture(
+                      onPress: () async {
+                        await cloudPlayerService.pause(playerId: _playerId);
                       },
-                    );
-                  },
-                ),
+                      image: Image.asset('assets/pause_1.png'),
+                    )
+                  else
+                    ButtonFromPicture(
+                      onPress: () async {
+                        await cloudPlayerService.play(playerId: _playerId);
+                      },
+                      image: Image.asset('assets/play_1.png'),
+                    ),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 2 / 7,
+                    ),
+                    child: StreamBuilder<Duration>(
+                      stream: _positionStream,
+                      builder: (context, snapshot) {
+                        var position = snapshot.data ?? Duration.zero;
+                        if (position > lengthOfAudio) {
+                          position = lengthOfAudio;
+                        }
+                        return SeekBar(
+                          duration: lengthOfAudio,
+                          position: position,
+                          onChangeEnd: (newPosition) async {
+                            await cloudPlayerService.seek(
+                                position: newPosition, playerId: _playerId);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  SpeedButton(
+                    onPress: () {
+                      if (_currentSpeed == 1) {
+                        setState(() {
+                          _currentSpeed = 2;
+                        });
+                        cloudPlayerService.setSpeed(speed: 2, playerId: _playerId);
+                      } else {
+                        setState(() {
+                          _currentSpeed = 1;
+                        });
+                        cloudPlayerService.setSpeed(speed: 1, playerId: _playerId);
+                      }
+                    },
+                    text: "${_currentSpeed.floor().toString()}x",
+                  ),
+                ],
               ),
-              SpeedButton(
-                onPress: () {
-                  if (_currentSpeed == 1) {
-                    setState(() {
-                      _currentSpeed = 2;
-                    });
-                    cloudPlayerService.setSpeed(speed: 2, playerId: _playerId);
-                  } else {
-                    setState(() {
-                      _currentSpeed = 1;
-                    });
-                    cloudPlayerService.setSpeed(speed: 1, playerId: _playerId);
-                  }
-                },
-                text: "${_currentSpeed.floor().toString()}x",
-              ),
-//              if (!(state == AudioPlaybackState.stopped ||
-//                  state == AudioPlaybackState.none))
-//                StopButton(
-//                  onPress: () async {
-//                    await cloudPlayerService.stop(playerId: _playerId);
-//                  },
-//                ),
+              // Transcript of the audio file.
+              Text(widget.voiceMessage.transcript),
             ],
           );
         },
