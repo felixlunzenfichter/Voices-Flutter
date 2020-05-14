@@ -7,7 +7,7 @@ import 'package:voices/models/message.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/models/voice_message.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:voices/screens/chat_screen/voice_message.dart';
+import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_player_service.dart';
 import 'package:voices/services/player_service.dart';
 import 'package:voices/shared_widgets/time_stamp_text.dart';
@@ -313,7 +313,7 @@ class MessageRow extends StatelessWidget {
         children: <Widget>[
           if (message.messageType == MessageType.text)
             MessageBubble(
-                isMe: isMe,
+                shouldAlignRight: isMe,
                 child: Text(
                   (message as TextMessage).text,
                   style: TextStyle(
@@ -322,16 +322,13 @@ class MessageRow extends StatelessWidget {
                 ),
                 timestamp: message.timestamp),
           if (message.messageType == MessageType.voice)
-            MessageBubble(
-                isMe: isMe,
-                child: VoiceMessageContent(
-                  voiceMessage: (message as VoiceMessage),
-                  key: ObjectKey(message as VoiceMessage),
-                ),
-                timestamp: message.timestamp),
+            VoiceMessageWidget(
+              voiceMessage: (message as VoiceMessage),
+              key: ObjectKey(message as VoiceMessage),
+            ),
           if (message.messageType == MessageType.image)
             MessageBubble(
-                isMe: isMe,
+                shouldAlignRight: isMe,
                 child: Image.network(
                   (message as ImageMessage).downloadUrl,
                   loadingBuilder: (context, child, progress) {
@@ -345,56 +342,6 @@ class MessageRow extends StatelessWidget {
                 ),
                 timestamp: message.timestamp),
         ],
-      ),
-    );
-  }
-}
-
-class MessageBubble extends StatelessWidget {
-  const MessageBubble({
-    Key key,
-    @required this.isMe,
-    @required this.child,
-    @required this.timestamp,
-  }) : super(key: key);
-
-  final bool isMe;
-  final Widget child;
-  final DateTime timestamp;
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 6 / 7,
-      ),
-      child: Material(
-        borderRadius: isMe
-            ? BorderRadius.only(
-                topLeft: Radius.circular(15),
-                bottomLeft: Radius.circular(15),
-                bottomRight: Radius.circular(15))
-            : BorderRadius.only(
-                topRight: Radius.circular(15),
-                bottomLeft: Radius.circular(15),
-                bottomRight: Radius.circular(15)),
-        elevation: 0.0,
-        color: isMe ? Colors.yellow : Colors.teal,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-          child: Wrap(
-            direction: Axis.horizontal,
-            alignment: WrapAlignment.end,
-            crossAxisAlignment: WrapCrossAlignment.end,
-            children: <Widget>[
-              child,
-              SizedBox(
-                width: 10,
-              ),
-              TimeStampText(timestamp: timestamp)
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -425,17 +372,16 @@ class RoundButton extends StatelessWidget {
   }
 }
 
-class VoiceMessageContent extends StatefulWidget {
+class VoiceMessageWidget extends StatefulWidget {
   final VoiceMessage voiceMessage;
 
-  VoiceMessageContent({@required this.voiceMessage, @required Key key})
-      : super(key: key);
+  VoiceMessageWidget({Key key, @required this.voiceMessage}) : super(key: key);
 
   @override
-  _VoiceMessageContentState createState() => _VoiceMessageContentState();
+  _VoiceMessageWidgetState createState() => _VoiceMessageWidgetState();
 }
 
-class _VoiceMessageContentState extends State<VoiceMessageContent> {
+class _VoiceMessageWidgetState extends State<VoiceMessageWidget> {
   String _playerId;
   Stream<FullAudioPlaybackState> _playBackStream;
   Stream<Duration> _positionStream;
@@ -470,91 +416,92 @@ class _VoiceMessageContentState extends State<VoiceMessageContent> {
   Widget build(BuildContext context) {
     final cloudPlayerService =
         Provider.of<CloudPlayerService>(context, listen: false);
-    return Container(
-      color: Colors.yellow,
-      height: 70,
-      child: StreamBuilder<FullAudioPlaybackState>(
-        stream: _playBackStream,
-        builder: (context, snapshot) {
-          final fullState = snapshot.data;
-          final state = fullState?.state;
-          final buffering = fullState?.buffering;
-          final lengthOfAudio = widget.voiceMessage.length;
-          print("state of the playback is = $state");
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final isMe = widget.voiceMessage.senderUid == authService.loggedInUser.uid;
+    return MessageBubble(
+      shouldAlignRight: isMe,
+      timestamp: widget.voiceMessage.timestamp,
+      child: Container(
+        color: Colors.yellow,
+        height: 70,
+        child: StreamBuilder<FullAudioPlaybackState>(
+          stream: _playBackStream,
+          builder: (context, snapshot) {
+            final fullState = snapshot.data;
+            final state = fullState?.state;
+            final buffering = fullState?.buffering;
+            final lengthOfAudio = widget.voiceMessage.length;
+            print("state of the playback is = $state");
 
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("${widget.voiceMessage.length.inSeconds}s"),
-              if (state == AudioPlaybackState.connecting || buffering == true)
-                Container(
-                  margin: EdgeInsets.all(8.0),
-                  width: 64.0,
-                  height: 64.0,
-                  child: CupertinoActivityIndicator(),
-                )
-              else if (state == AudioPlaybackState.playing)
-                ButtonFromPicture(
-                  onPress: () async {
-                    await cloudPlayerService.pause(playerId: _playerId);
-                  },
-                  image: Image.asset('assets/pause_1.png'),
-                )
-              else
-                ButtonFromPicture(
-                  onPress: () async {
-                    await cloudPlayerService.play(playerId: _playerId);
-                  },
-                  image: Image.asset('assets/play_1.png'),
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("${widget.voiceMessage.length.inSeconds}s"),
+                if (state == AudioPlaybackState.connecting || buffering == true)
+                  Container(
+                    margin: EdgeInsets.all(8.0),
+                    width: 64.0,
+                    height: 64.0,
+                    child: CupertinoActivityIndicator(),
+                  )
+                else if (state == AudioPlaybackState.playing)
+                  ButtonFromPicture(
+                    onPress: () async {
+                      await cloudPlayerService.pause(playerId: _playerId);
+                    },
+                    image: Image.asset('assets/pause_1.png'),
+                  )
+                else
+                  ButtonFromPicture(
+                    onPress: () async {
+                      await cloudPlayerService.play(playerId: _playerId);
+                    },
+                    image: Image.asset('assets/play_1.png'),
+                  ),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 2 / 7,
+                  ),
+                  child: StreamBuilder<Duration>(
+                    stream: _positionStream,
+                    builder: (context, snapshot) {
+                      var position = snapshot.data ?? Duration.zero;
+                      if (position > lengthOfAudio) {
+                        position = lengthOfAudio;
+                      }
+                      return SeekBar(
+                        duration: lengthOfAudio,
+                        position: position,
+                        onChangeEnd: (newPosition) async {
+                          await cloudPlayerService.seek(
+                              position: newPosition, playerId: _playerId);
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 2 / 7,
-                ),
-                child: StreamBuilder<Duration>(
-                  stream: _positionStream,
-                  builder: (context, snapshot) {
-                    var position = snapshot.data ?? Duration.zero;
-                    if (position > lengthOfAudio) {
-                      position = lengthOfAudio;
+                SpeedButton(
+                  onPress: () {
+                    if (_currentSpeed == 1) {
+                      setState(() {
+                        _currentSpeed = 2;
+                      });
+                      cloudPlayerService.setSpeed(
+                          speed: 2, playerId: _playerId);
+                    } else {
+                      setState(() {
+                        _currentSpeed = 1;
+                      });
+                      cloudPlayerService.setSpeed(
+                          speed: 1, playerId: _playerId);
                     }
-                    return SeekBar(
-                      duration: lengthOfAudio,
-                      position: position,
-                      onChangeEnd: (newPosition) async {
-                        await cloudPlayerService.seek(
-                            position: newPosition, playerId: _playerId);
-                      },
-                    );
                   },
+                  text: "${_currentSpeed.floor().toString()}x",
                 ),
-              ),
-              SpeedButton(
-                onPress: () {
-                  if (_currentSpeed == 1) {
-                    setState(() {
-                      _currentSpeed = 2;
-                    });
-                    cloudPlayerService.setSpeed(speed: 2, playerId: _playerId);
-                  } else {
-                    setState(() {
-                      _currentSpeed = 1;
-                    });
-                    cloudPlayerService.setSpeed(speed: 1, playerId: _playerId);
-                  }
-                },
-                text: "${_currentSpeed.floor().toString()}x",
-              ),
-//              if (!(state == AudioPlaybackState.stopped ||
-//                  state == AudioPlaybackState.none))
-//                StopButton(
-//                  onPress: () async {
-//                    await cloudPlayerService.stop(playerId: _playerId);
-//                  },
-//                ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -600,6 +547,56 @@ class _SeekBarState extends State<SeekBar> {
           widget.onChangeEnd(Duration(milliseconds: value.round()));
         }
       },
+    );
+  }
+}
+
+class MessageBubble extends StatelessWidget {
+  const MessageBubble({
+    Key key,
+    @required this.shouldAlignRight,
+    @required this.child,
+    @required this.timestamp,
+  }) : super(key: key);
+
+  final bool shouldAlignRight;
+  final Widget child;
+  final DateTime timestamp;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 6 / 7,
+      ),
+      child: Material(
+        borderRadius: shouldAlignRight
+            ? BorderRadius.only(
+                topLeft: Radius.circular(15),
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15))
+            : BorderRadius.only(
+                topRight: Radius.circular(15),
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15)),
+        elevation: 0.0,
+        color: shouldAlignRight ? Colors.yellow : Colors.teal,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+          child: Wrap(
+            direction: Axis.horizontal,
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.end,
+            children: <Widget>[
+              child,
+              SizedBox(
+                width: 10,
+              ),
+              TimeStampText(timestamp: timestamp)
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

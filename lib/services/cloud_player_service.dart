@@ -29,10 +29,6 @@ class CloudPlayerService {
     await _playerDict[playerId].pause();
   }
 
-  stop({@required String playerId}) async {
-    await _playerDict[playerId].stop();
-  }
-
   seek({@required Duration position, @required String playerId}) async {
     await _playerDict[playerId].seek(position);
   }
