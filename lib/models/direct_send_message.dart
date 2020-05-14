@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:voices/models/message.dart';
 
 class DirectSendMessage extends Message {
@@ -11,6 +12,7 @@ class DirectSendMessage extends Message {
     List<String> downloadUrlsOfChunks,
     Duration totalLength,
   }) {
+    this.messageId = messageId;
     this.senderUid = senderUid;
     this.timestamp = timestamp;
     this.messageType = MessageType.directSend;
@@ -18,7 +20,9 @@ class DirectSendMessage extends Message {
     this.totalLength = totalLength;
   }
 
-  DirectSendMessage.fromMap({Map<String, dynamic> map}) {
+  DirectSendMessage.fromFirestore({DocumentSnapshot doc}) {
+    this.messageId = doc.documentID;
+    Map<String, dynamic> map = doc.data;
     this.senderUid = map['senderUid'];
     this.timestamp = map['timestamp']?.toDate() ?? DateTime.now();
     this.messageType = MessageType.directSend;
@@ -39,6 +43,7 @@ class DirectSendMessage extends Message {
   @override
   String toString() {
     String toPrint = '\n{ senderUid: $senderUid, ';
+    toPrint += 'messageId: $messageId, ';
     toPrint += 'messageType: $messageType, ';
     toPrint += 'downloadUrlsOfChunks: $downloadUrlsOfChunks, ';
     toPrint += 'totalLength: $totalLength, ';

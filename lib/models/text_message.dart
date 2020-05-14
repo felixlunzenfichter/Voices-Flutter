@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:voices/models/message.dart';
 
 class TextMessage extends Message {
@@ -14,7 +15,9 @@ class TextMessage extends Message {
     this.text = text;
   }
 
-  TextMessage.fromMap({Map<String, dynamic> map}) {
+  TextMessage.fromFirestore({DocumentSnapshot doc}) {
+    this.messageId = doc.documentID;
+    Map<String, dynamic> map = doc.data;
     this.senderUid = map['senderUid'];
     this.timestamp = map['timestamp']?.toDate() ?? DateTime.now();
     this.messageType = MessageType.text;

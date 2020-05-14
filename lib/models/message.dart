@@ -1,4 +1,5 @@
 abstract class Message {
+  String messageId;
   String senderUid;
   DateTime timestamp;
   MessageType messageType;

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:voices/models/message.dart';
 
 class VoiceMessage extends Message {
@@ -20,7 +21,9 @@ class VoiceMessage extends Message {
     this.length = length;
   }
 
-  VoiceMessage.fromMap({Map<String, dynamic> map}) {
+  VoiceMessage.fromFirestore({DocumentSnapshot doc}) {
+    this.messageId = doc.documentID;
+    Map<String, dynamic> map = doc.data;
     this.senderUid = map['senderUid'];
     this.timestamp = map['timestamp']?.toDate() ?? DateTime.now();
     this.messageType = MessageType.voice;
@@ -42,6 +45,7 @@ class VoiceMessage extends Message {
   @override
   String toString() {
     String toPrint = '\n{ senderUid: $senderUid, ';
+    toPrint += 'messageId: $messageId, ';
     toPrint += 'messageType: $messageType, ';
     toPrint += 'downloadUrl: $downloadUrl, ';
     toPrint += 'transcript: $transcript, ';

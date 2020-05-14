@@ -7,6 +7,7 @@ import 'package:voices/screens/loading_screen.dart';
 import 'package:voices/screens/registration/login_screen.dart';
 import 'package:voices/screens/registration/permissions_screen.dart';
 import 'package:voices/screens/tabs_screen.dart';
+import 'package:voices/services/cloud_player_service.dart';
 import 'package:voices/services/player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/permission_service.dart';
@@ -44,6 +45,9 @@ class Voices extends StatelessWidget {
         ),
         ChangeNotifierProvider<PlayerService>(
           create: (_) => PlayerService(),
+        ),
+        Provider<CloudPlayerService>(
+          create: (_) => CloudPlayerService(),
         ),
         ChangeNotifierProvider<PermissionService>(
           create: (_) => PermissionService(),

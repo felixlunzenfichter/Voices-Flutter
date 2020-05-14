@@ -146,11 +146,11 @@ class CloudFirestoreService {
           .map((snap) => snap.documents.map((doc) {
                 switch (doc.data['messageType']) {
                   case "MessageType.text":
-                    return TextMessage.fromMap(map: doc.data);
+                    return TextMessage.fromFirestore(doc: doc);
                   case "MessageType.voice":
-                    return VoiceMessage.fromMap(map: doc.data);
+                    return VoiceMessage.fromFirestore(doc: doc);
                   case "MessageType.image":
-                    return ImageMessage.fromMap(map: doc.data);
+                    return ImageMessage.fromFirestore(doc: doc);
                   default:
                     return null;
                 }

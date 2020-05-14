@@ -7,7 +7,7 @@ import 'package:voices/models/audio_chunk.dart';
 class PlayerService with ChangeNotifier {
   //properties that the outside needs access to
   double currentSpeed = 1.0;
-  Duration currentPosition = Duration(seconds: 0);
+  Duration currentPosition = Duration.zero;
   PlayerStatus currentStatus = PlayerStatus.idle;
   AudioChunk audioChunk;
 
@@ -43,35 +43,6 @@ class PlayerService with ChangeNotifier {
       notifyListeners();
     });
     await _player.setFilePath(audioChunk.path);
-  }
-
-  initializePlayerWithUrl({@required String url}) async {
-    Future<Duration> futureDuration = _player.setUrl(url);
-    futureDuration.catchError((error) {
-      print("Error occured when fetching audio from url: $error");
-    });
-    await futureDuration;
-    _positionStreamSubscription =
-        _player.getPositionStream().listen((newPosition) {
-      currentPosition = newPosition;
-      notifyListeners();
-    });
-    _statusStreamSubscription = _player.playbackStateStream.listen((newState) {
-      switch (newState) {
-        case AudioPlaybackState.paused:
-          currentStatus = PlayerStatus.paused;
-          break;
-        case AudioPlaybackState.playing:
-          if (!_shouldIgnorePlaying) {
-            currentStatus = PlayerStatus.playing;
-          }
-          break;
-        default:
-          currentStatus = PlayerStatus.idle;
-          break;
-      }
-      notifyListeners();
-    });
   }
 
   disposePlayer() {
