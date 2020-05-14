@@ -33,11 +33,6 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
     return Column(
       children: <Widget>[
         RecordingInfo(),
-//        if (recorderService.currentStatus == RecordingStatus.Stopped)
-//          PlayerInfo(),
-//        Text(speechToText.fullTranscription +
-//            " " +
-//            speechToText.transciptionCurrentRecoringSnippet),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[

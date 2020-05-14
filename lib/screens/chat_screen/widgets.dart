@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/image_message.dart';
 import 'package:voices/models/message.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/models/voice_message.dart';
-import 'package:voices/services/player_service.dart';
 import 'package:voices/shared_widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'voice_message_widget.dart';
@@ -236,60 +236,101 @@ class RecordingInfo extends StatelessWidget {
   }
 }
 
-class PlayerInfo extends StatelessWidget {
+class PlayerControls extends StatefulWidget {
+  final Function play;
+  final Function pause;
+  final Function({@required Duration position}) seek;
+  final Function({@required double speed}) setSpeed;
+  final Stream<FullAudioPlaybackState> playBackStateStream;
+  final Stream<Duration> positionStream;
+  final Duration lengthOfAudio;
+
+  PlayerControls(
+      {@required this.play,
+      @required this.pause,
+      @required this.seek,
+      @required this.setSpeed,
+      @required this.playBackStateStream,
+      @required this.positionStream,
+      @required this.lengthOfAudio});
+
+  @override
+  _PlayerControlsState createState() => _PlayerControlsState();
+}
+
+class _PlayerControlsState extends State<PlayerControls> {
+  double _currentSpeed = 1;
+
   @override
   Widget build(BuildContext context) {
-    final playerService = Provider.of<PlayerService>(context);
-    final Duration lengthOfAudio = playerService.audioChunk.length;
-    final double progress =
-        playerService.currentPosition.inMilliseconds.toDouble() /
-            lengthOfAudio.inMilliseconds.toDouble();
-    return Container(
-      color: Colors.yellow,
-      height: 70,
-      child: Row(
-        children: <Widget>[
-          if (playerService.currentStatus == PlayerStatus.playing)
-            ButtonFromPicture(
+    return StreamBuilder<FullAudioPlaybackState>(
+      stream: widget.playBackStateStream,
+      builder: (context, snapshot) {
+        final fullState = snapshot.data;
+        final state = fullState?.state;
+        final buffering = fullState?.buffering;
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("${widget.lengthOfAudio.inSeconds}s"),
+            if (state == AudioPlaybackState.connecting || buffering == true)
+              Container(
+                margin: EdgeInsets.all(8.0),
+                width: 64.0,
+                height: 64.0,
+                child: CupertinoActivityIndicator(),
+              )
+            else if (state == AudioPlaybackState.playing)
+              ButtonFromPicture(
+                onPress: widget.pause,
+                image: Image.asset('assets/pause_1.png'),
+              )
+            else
+              ButtonFromPicture(
+                onPress: widget.play,
+                image: Image.asset('assets/play_1.png'),
+              ),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 2 / 7,
+              ),
+              child: StreamBuilder<Duration>(
+                stream: widget.positionStream,
+                builder: (context, snapshot) {
+                  var position = snapshot.data ?? Duration.zero;
+                  if (position > widget.lengthOfAudio) {
+                    position = widget.lengthOfAudio;
+                  }
+                  return SeekBar(
+                    duration: widget.lengthOfAudio,
+                    position: position,
+                    onChangeEnd: (newPosition) {
+                      widget.seek(position: newPosition);
+                    },
+                  );
+                },
+              ),
+            ),
+            SpeedButton(
               onPress: () {
-                playerService.pause();
+                if (_currentSpeed == 1) {
+                  setState(() {
+                    _currentSpeed = 2;
+                  });
+                  widget.setSpeed(speed: 2);
+                } else {
+                  setState(() {
+                    _currentSpeed = 1;
+                  });
+                  widget.setSpeed(speed: 1);
+                }
               },
-              image: Image.asset('assets/pause_1.png'),
-            )
-          else
-            ButtonFromPicture(
-              onPress: () async {
-                await playerService.play();
-              },
-              image: Image.asset('assets/play_1.png'),
+              text: "${_currentSpeed.floor().toString()}x",
             ),
-          Expanded(
-            child: LinearProgressIndicator(
-              backgroundColor: Colors.grey,
-              value: progress,
-            ),
-          ),
-          if (playerService.currentStatus == PlayerStatus.playing ||
-              playerService.currentStatus == PlayerStatus.paused)
-            StopButton(
-              onPress: () {
-                playerService.stop();
-              },
-            ),
-          SpeedButton(
-            onPress: () {
-              if (playerService.currentSpeed == 1) {
-                playerService.setSpeed(speed: 2);
-              } else {
-                playerService.setSpeed(speed: 1);
-              }
-            },
-            text: "${playerService.currentSpeed}x",
-          ),
-          Text(
-              "${playerService.currentPosition.inSeconds}s of ${playerService.audioChunk.length.inSeconds}s"),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }
