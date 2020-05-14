@@ -325,7 +325,7 @@ class MessageRow extends StatelessWidget {
                 isMe: isMe,
                 child: VoiceMessageContent(
                   voiceMessage: (message as VoiceMessage),
-                  key: UniqueKey(),
+                  key: ObjectKey(message as VoiceMessage),
                 ),
                 timestamp: message.timestamp),
           if (message.messageType == MessageType.image)
@@ -426,9 +426,9 @@ class RoundButton extends StatelessWidget {
 
 class VoiceMessageContent extends StatefulWidget {
   final VoiceMessage voiceMessage;
-  final UniqueKey key;
 
-  VoiceMessageContent({@required this.voiceMessage, @required this.key});
+  VoiceMessageContent({@required this.voiceMessage, @required Key key})
+      : super(key: key);
 
   @override
   _VoiceMessageContentState createState() => _VoiceMessageContentState();
@@ -456,13 +456,14 @@ class _VoiceMessageContentState extends State<VoiceMessageContent> {
         .asBroadcastStream();
   }
 
-  @override
-  void dispose() {
-    final cloudPlayerService =
-        Provider.of<CloudPlayerService>(context, listen: false);
-    cloudPlayerService.disposePlayer(playerId: _playerId);
-    super.dispose();
-  }
+  //todo dispose player
+//  @override
+//  void dispose() {
+//    final cloudPlayerService =
+//        Provider.of<CloudPlayerService>(context, listen: false);
+//    cloudPlayerService.disposePlayer(playerId: _playerId);
+//    super.dispose();
+//  }
 
   @override
   Widget build(BuildContext context) {
@@ -478,6 +479,8 @@ class _VoiceMessageContentState extends State<VoiceMessageContent> {
           final state = fullState?.state;
           final buffering = fullState?.buffering;
           final lengthOfAudio = widget.voiceMessage.length;
+          print("state of the playback is = $state");
+
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
