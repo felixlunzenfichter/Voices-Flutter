@@ -324,7 +324,7 @@ class MessageRow extends StatelessWidget {
           if (message.messageType == MessageType.voice)
             VoiceMessageWidget(
               voiceMessage: (message as VoiceMessage),
-              key: ObjectKey(message as VoiceMessage),
+              key: ValueKey(message.messageId),
             ),
           if (message.messageType == MessageType.image)
             MessageBubble(
@@ -395,12 +395,9 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget> {
         Provider.of<CloudPlayerService>(context, listen: false);
     cloudPlayerService.initializePlayerWithUrl(
         url: widget.voiceMessage.downloadUrl, playerId: _playerId);
-    _playBackStream = cloudPlayerService
-        .getPlaybackStateStream(playerId: _playerId)
-        .asBroadcastStream();
-    _positionStream = cloudPlayerService
-        .getPositionStream(playerId: _playerId)
-        .asBroadcastStream();
+    _playBackStream =
+        cloudPlayerService.getPlaybackStateStream(playerId: _playerId);
+    _positionStream = cloudPlayerService.getPositionStream(playerId: _playerId);
   }
 
   //todo dispose player
