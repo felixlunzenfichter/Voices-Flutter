@@ -6,12 +6,10 @@ import 'package:voices/models/image_message.dart';
 import 'package:voices/models/message.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/models/voice_message.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:voices/screens/chat_screen/voice_message.dart';
-import 'package:voices/services/cloud_player_service.dart';
 import 'package:voices/services/player_service.dart';
 import 'package:voices/shared_widgets/time_stamp_text.dart';
 import 'package:voices/services/recorder_service.dart';
+import 'voice_message_widget.dart';
 
 class SendTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -313,7 +311,7 @@ class MessageRow extends StatelessWidget {
         children: <Widget>[
           if (message.messageType == MessageType.text)
             MessageBubble(
-                isMe: isMe,
+                shouldAlignRight: isMe,
                 child: Text(
                   (message as TextMessage).text,
                   style: TextStyle(
@@ -322,17 +320,13 @@ class MessageRow extends StatelessWidget {
                 ),
                 timestamp: message.timestamp),
           if (message.messageType == MessageType.voice)
-            MessageBubble(
-                isMe: isMe,
-                child: VoiceMessageContent(
-                  voiceMessage: (message as VoiceMessage),
-                  // TODO: don't create different key on every build.
-                  key: UniqueKey(),
-                ),
-                timestamp: message.timestamp),
+            VoiceMessageWidget(
+              voiceMessage: (message as VoiceMessage),
+              key: ValueKey(message.messageId),
+            ),
           if (message.messageType == MessageType.image)
             MessageBubble(
-                isMe: isMe,
+                shouldAlignRight: isMe,
                 child: Image.network(
                   (message as ImageMessage).downloadUrl,
                   loadingBuilder: (context, child, progress) {
@@ -346,56 +340,6 @@ class MessageRow extends StatelessWidget {
                 ),
                 timestamp: message.timestamp),
         ],
-      ),
-    );
-  }
-}
-
-class MessageBubble extends StatelessWidget {
-  const MessageBubble({
-    Key key,
-    @required this.isMe,
-    @required this.child,
-    @required this.timestamp,
-  }) : super(key: key);
-
-  final bool isMe;
-  final Widget child;
-  final DateTime timestamp;
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 6 / 7,
-      ),
-      child: Material(
-        borderRadius: isMe
-            ? BorderRadius.only(
-                topLeft: Radius.circular(15),
-                bottomLeft: Radius.circular(15),
-                bottomRight: Radius.circular(15))
-            : BorderRadius.only(
-                topRight: Radius.circular(15),
-                bottomLeft: Radius.circular(15),
-                bottomRight: Radius.circular(15)),
-        elevation: 0.0,
-        color: isMe ? Colors.yellow : Colors.teal,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-          child: Wrap(
-            direction: Axis.horizontal,
-            alignment: WrapAlignment.end,
-            crossAxisAlignment: WrapCrossAlignment.end,
-            children: <Widget>[
-              child,
-              SizedBox(
-                width: 10,
-              ),
-              TimeStampText(timestamp: timestamp)
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -426,3 +370,52 @@ class RoundButton extends StatelessWidget {
   }
 }
 
+class MessageBubble extends StatelessWidget {
+  const MessageBubble({
+    Key key,
+    @required this.shouldAlignRight,
+    @required this.child,
+    @required this.timestamp,
+  }) : super(key: key);
+
+  final bool shouldAlignRight;
+  final Widget child;
+  final DateTime timestamp;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 6 / 7,
+      ),
+      child: Material(
+        borderRadius: shouldAlignRight
+            ? BorderRadius.only(
+                topLeft: Radius.circular(15),
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15))
+            : BorderRadius.only(
+                topRight: Radius.circular(15),
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15)),
+        elevation: 0.0,
+        color: shouldAlignRight ? Colors.yellow : Colors.teal,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+          child: Wrap(
+            direction: Axis.horizontal,
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.end,
+            children: <Widget>[
+              child,
+              SizedBox(
+                width: 10,
+              ),
+              TimeStampText(timestamp: timestamp)
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
