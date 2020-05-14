@@ -7,6 +7,7 @@ import 'package:voices/models/message.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/models/voice_message.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:voices/screens/chat_screen/voice_message.dart';
 import 'package:voices/services/cloud_player_service.dart';
 import 'package:voices/services/player_service.dart';
 import 'package:voices/shared_widgets/time_stamp_text.dart';
