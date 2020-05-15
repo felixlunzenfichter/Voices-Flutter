@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/models/voice_message.dart';
@@ -23,7 +22,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
 
   @override
   Widget build(BuildContext context) {
-    final recorderService = Provider.of<RecorderService>(context);
+    final recorderService =
+        Provider.of<RecorderService>(context, listen: false);
     final authService = Provider.of<AuthService>(context, listen: false);
     final SpeechToTextService speechToText =
         Provider.of<SpeechToTextService>(context);

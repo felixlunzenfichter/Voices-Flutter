@@ -9,6 +9,7 @@ class PermissionService with ChangeNotifier {
   PermissionStatus contactsPermissionStatus = PermissionStatus.undetermined;
   PermissionStatus cameraPermissionStatus = PermissionStatus.undetermined;
   PermissionStatus photosPermissionStatus = PermissionStatus.undetermined;
+  PermissionStatus storagePermissionStatus = PermissionStatus.undetermined;
 
   PermissionService() {
     initializeAllPermissions();
@@ -20,7 +21,8 @@ class PermissionService with ChangeNotifier {
       Permission.speech.status,
       Permission.contacts.status,
       Permission.camera.status,
-      Permission.photos.status
+      Permission.photos.status,
+      Permission.storage.status
     ];
     List<PermissionStatus> statuses = await Future.wait(futures);
     microphonePermissionStatus = statuses[0];
@@ -28,6 +30,7 @@ class PermissionService with ChangeNotifier {
     contactsPermissionStatus = statuses[2];
     cameraPermissionStatus = statuses[3];
     photosPermissionStatus = statuses[4];
+    storagePermissionStatus = statuses[5];
     checkIfAllPermissionsGranted();
   }
 
@@ -37,6 +40,7 @@ class PermissionService with ChangeNotifier {
     contactsPermissionStatus = await Permission.contacts.request();
     cameraPermissionStatus = await Permission.camera.request();
     photosPermissionStatus = await Permission.photos.request();
+    storagePermissionStatus = await Permission.storage.request();
   }
 
   List<OurPermission> getNotGrantedPermissions() {
@@ -56,6 +60,9 @@ class PermissionService with ChangeNotifier {
     if (photosPermissionStatus != PermissionStatus.granted) {
       notGrantedPermissions.add(OurPermission(type: PermissionType.photos));
     }
+    if (storagePermissionStatus != PermissionStatus.granted) {
+      notGrantedPermissions.add(OurPermission(type: PermissionType.storage));
+    }
     return notGrantedPermissions;
   }
 
@@ -64,7 +71,8 @@ class PermissionService with ChangeNotifier {
         speechRecognitionPermissionStatus == PermissionStatus.granted &&
         contactsPermissionStatus == PermissionStatus.granted &&
         cameraPermissionStatus == PermissionStatus.granted &&
-        photosPermissionStatus == PermissionStatus.granted) {
+        photosPermissionStatus == PermissionStatus.granted &&
+        storagePermissionStatus == PermissionStatus.granted) {
       areAllPermissionsGranted = true;
     } else {
       areAllPermissionsGranted = false;
@@ -91,10 +99,12 @@ class OurPermission {
         return "camera access";
       case PermissionType.photos:
         return "photos access";
+      case PermissionType.storage:
+        return "storage access";
       default:
         return "unknown permission";
     }
   }
 }
 
-enum PermissionType { microphone, speech, contacts, camera, photos }
+enum PermissionType { microphone, speech, contacts, camera, photos, storage }

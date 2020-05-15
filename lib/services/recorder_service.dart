@@ -1,152 +1,86 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
+import 'package:flutter_sound/flauto.dart';
+import 'package:flutter_sound/flutter_sound_recorder.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:voices/services/file_converter_service.dart';
 
-class RecorderService with ChangeNotifier {
-  //publicly available
-  Recording
-      currentRecording; //while recording the outside has access to the current recording with this property
-  List<Recording> currentRecordingChunks =
-      []; //if direct send is enabled chunks of the recording are saved in this list
-  bool hasPermission = false;
-  bool isDirectSendActivated = false;
-  RecordingStatus currentStatus = RecordingStatus.Unset;
-  static const Duration DEFAULT_CHUNK_SIZE =
-      Duration(seconds: 3); //the last chunk might have a different size
-  static const int SAMPLING_FREQUENCY =
-      44100; //this is the industry standard for audio files (44100 samples per second)
+class RecorderService {
+  FlutterSoundRecorder _recorderModule;
+  t_CODEC _codec = t_CODEC.CODEC_AAC;
+  //paths depending on which codec is chosen
+  static const List<String> _paths = [
+    'voice_message_recording.aac', // DEFAULT
+    'voice_message_recording.aac', // CODEC_AAC
+    'voice_message_recording.opus', // CODEC_OPUS
+    'voice_message_recording.caf', // CODEC_CAF_OPUS
+    'voice_message_recording.mp3', // CODEC_MP3
+    'voice_message_recording.ogg', // CODEC_VORBIS
+    'voice_message_recording.pcm', // CODEC_PCM
+  ];
 
-  //for internal use only
-  FlutterAudioRecorder _recorder;
-  Duration _howMuchOfCurrentMessageSent = Duration(milliseconds: 0);
-  final FileConverterService _fileConverterService = FileConverterService();
-
-  activateDirectSend() {
-    isDirectSendActivated = true;
-    notifyListeners();
-  }
-
-  startRecording() async {
-    await _initializeRecorder();
-
-    if (hasPermission) {
-      const tickToUpdateUI = const Duration(
-          milliseconds:
-              15); //this timer updates the current recording therefore the time should be chosen however much we need it to be updated. If we are just tracking seconds we could let the timer tick less often than 15ms.
-      Timer.periodic(tickToUpdateUI, (Timer t) async {
-        if (currentStatus == RecordingStatus.Stopped) {
-          t.cancel();
-        }
-        currentRecording = await _recorder.current(channel: 0);
-        notifyListeners();
-      });
-
-      //this timer adds chunks to the list of chunks if direct send is activated
-      Timer.periodic(DEFAULT_CHUNK_SIZE, (Timer t) async {
-        if (currentStatus == RecordingStatus.Stopped) {
-          t.cancel();
-        }
-        if (isDirectSendActivated) {
-          _addChunkToListOfChunks();
-        }
-      });
-
-      await _recorder.start();
-      _howMuchOfCurrentMessageSent = Duration(milliseconds: 0);
-      currentRecordingChunks = [];
-      currentRecording = null;
-      currentStatus = RecordingStatus.Recording;
-      notifyListeners();
-    }
-  }
-
-  pauseRecording() async {
-    currentStatus = RecordingStatus.Paused;
-    notifyListeners();
-    await _recorder.pause();
-  }
-
-  resumeRecording() async {
-    currentStatus = RecordingStatus.Recording;
-    notifyListeners();
-    await _recorder.resume();
-  }
-
-  stopRecording() async {
-    isDirectSendActivated = false;
-    currentStatus = RecordingStatus.Stopped;
-    notifyListeners();
-    Recording result = await _recorder.stop();
-    if (isDirectSendActivated) {
-      _addLastChunk();
-    } else {
-      currentRecording = result;
-    }
+  RecorderService() {
+    _initializeRecorder();
   }
 
   _initializeRecorder() async {
-    hasPermission = await FlutterAudioRecorder.hasPermissions;
-    String customPath = '/voices_';
-    Directory appDocDirectory;
-    if (Platform.isIOS) {
-      appDocDirectory = await getApplicationDocumentsDirectory();
-    } else {
-      appDocDirectory = await getExternalStorageDirectory();
-    }
-    customPath = appDocDirectory.path +
-        customPath +
-        DateTime.now().millisecondsSinceEpoch.toString();
-
-    _recorder = FlutterAudioRecorder(customPath,
-        audioFormat: AudioFormat.AAC, sampleRate: SAMPLING_FREQUENCY);
-    await _recorder.initialized;
-    currentStatus = RecordingStatus.Initialized;
-    notifyListeners();
+    _recorderModule = await FlutterSoundRecorder().initialize();
+    await _recorderModule.setDbPeakLevelUpdate(0.8);
+    await _recorderModule.setDbLevelEnabled(true);
+    await _recorderModule.setDbLevelEnabled(true);
   }
 
-  _addChunkToListOfChunks() async {
-    //check if a new chunk is ready to be processed
-    Duration currentRecordingLength = currentRecording.duration;
-    bool isNewChunkReady = currentRecordingLength >
-        _howMuchOfCurrentMessageSent + DEFAULT_CHUNK_SIZE;
-    if (isNewChunkReady) {
-      Duration startTimeOfChunk = _howMuchOfCurrentMessageSent;
-      Duration endTimeOfChunk = startTimeOfChunk + DEFAULT_CHUNK_SIZE;
-      assert(endTimeOfChunk < currentRecordingLength);
-      _getChunkAndAddToChunkList(
-          startTime: startTimeOfChunk, endTime: endTimeOfChunk);
+  releaseRecorder() async {
+    try {
+      await _recorderModule.release();
+    } catch (e) {
+      print('Could not release recorder because of error = $e');
     }
   }
 
-  _addLastChunk() async {
-    Duration startTimeOfChunk = _howMuchOfCurrentMessageSent;
-    Duration endTimeOfChunk = currentRecording.duration;
-    _getChunkAndAddToChunkList(
-        startTime: startTimeOfChunk, endTime: endTimeOfChunk);
+  start() async {
+    try {
+      Directory tempDir = await getTemporaryDirectory();
+
+      String path = await _recorderModule.startRecorder(
+        uri:
+            '${tempDir.path}/${_recorderModule.slotNo}-${_paths[_codec.index]}',
+        codec: _codec,
+      );
+    } catch (e) {
+      print("Could not start recording because of error = $e");
+    }
   }
 
-  _getChunkAndAddToChunkList(
-      {@required Duration startTime, @required Duration endTime}) async {
-    //get the audio chunk
-    File chunk = await _fileConverterService.createAudioFileChunkFromFile(
-        file: File(currentRecording.path),
-        startTime: startTime,
-        endTime: endTime,
-        chunkFilename: currentRecordingChunks.length.toString());
+  pause() {
+    try {
+      _recorderModule.pauseRecorder();
+    } catch (e) {
+      print("Could not pause recording because of error = $e");
+    }
+  }
 
-    //create recording and add it to the list of recordings
-    Recording recordingChunk = Recording();
-    recordingChunk.path = chunk.path;
-    recordingChunk.extension = currentRecording.extension;
-    recordingChunk.duration = endTime - startTime;
-    recordingChunk.audioFormat = AudioFormat.AAC;
-    recordingChunk.metering = currentRecording.metering;
-    recordingChunk.status = RecordingStatus.Stopped;
-    currentRecordingChunks.add(recordingChunk);
+  resume() {
+    try {
+      _recorderModule.resumeRecorder();
+    } catch (e) {
+      print("Could not resume recording because of error = $e");
+    }
+  }
 
-    _howMuchOfCurrentMessageSent = endTime;
+  stop() async {
+    try {
+      String result = await _recorderModule.stopRecorder();
+    } catch (e) {
+      print("Could not stop recorder because of error: $e");
+    }
+  }
+
+  Stream<RecordStatus> getRecorderStatus() {
+    try {
+      return _recorderModule.onRecorderStateChanged;
+    } catch (e) {
+      print("Could not get recorder status because of error: $e");
+      return null;
+    }
   }
 }

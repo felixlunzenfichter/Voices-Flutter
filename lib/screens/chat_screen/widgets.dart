@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/image_message.dart';
@@ -215,10 +214,27 @@ class PlayButton extends StatelessWidget {
   }
 }
 
-class RecordingInfo extends StatelessWidget {
+
+class RecordingInfo extends StatefulWidget {
+  @override
+  _RecordingInfoState createState() => _RecordingInfoState();
+}
+
+class _RecordingInfoState extends State<RecordingInfo> {
+
+  
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final recorderService = Provider.of<RecorderService>(context);
+    final recorderService = Provider.of<RecorderService>(context,listen: false);
+    return StreamBuilder<>(
+      stream: recorderService.,
+    )
     if (recorderService.currentStatus == RecordingStatus.Recording) {
       return Row(
           mainAxisAlignment: MainAxisAlignment.center,

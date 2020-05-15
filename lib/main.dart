@@ -32,7 +32,7 @@ class Voices extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthService>(
-          create: (_) => AuthService(),
+          create: (_) => AuthService(), //(_) stands for (context)
         ),
         Provider<CloudFirestoreService>(
           create: (_) => CloudFirestoreService(),
@@ -40,8 +40,9 @@ class Voices extends StatelessWidget {
         Provider<StorageService>(
           create: (_) => StorageService(),
         ),
-        ChangeNotifierProvider<RecorderService>(
+        Provider<RecorderService>(
           create: (_) => RecorderService(),
+          dispose: (context, value) => value.releaseRecorder(),
         ),
         Provider<LocalPlayerService>(
           create: (_) => LocalPlayerService(),
