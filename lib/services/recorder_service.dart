@@ -101,7 +101,7 @@ class RecorderService with ChangeNotifier {
         DateTime.now().millisecondsSinceEpoch.toString();
 
     _recorder = FlutterAudioRecorder(customPath,
-        audioFormat: AudioFormat.WAV, sampleRate: SAMPLING_FREQUENCY);
+        audioFormat: AudioFormat.AAC, sampleRate: SAMPLING_FREQUENCY);
     await _recorder.initialized;
     currentStatus = RecordingStatus.Initialized;
     notifyListeners();
@@ -142,7 +142,7 @@ class RecorderService with ChangeNotifier {
     recordingChunk.path = chunk.path;
     recordingChunk.extension = currentRecording.extension;
     recordingChunk.duration = endTime - startTime;
-    recordingChunk.audioFormat = AudioFormat.WAV;
+    recordingChunk.audioFormat = AudioFormat.AAC;
     recordingChunk.metering = currentRecording.metering;
     recordingChunk.status = RecordingStatus.Stopped;
     currentRecordingChunks.add(recordingChunk);
