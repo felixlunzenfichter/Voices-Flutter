@@ -13,7 +13,7 @@ class FileConverterService {
     assert(endTime > startTime);
     assert(file != null);
 
-    String path = file.parent.path + "/$chunkFilename.wav";
+    String path = file.parent.path + "/$chunkFilename.aac";
     File newFile = File(path);
     if (await newFile.exists()) {
       await newFile.delete();

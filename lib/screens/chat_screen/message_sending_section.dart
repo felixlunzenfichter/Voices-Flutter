@@ -93,7 +93,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                     final storageService =
                         Provider.of<StorageService>(context, listen: false);
                     String path =
-                        "voice_messages/${screenInfo.chatId}/${DateTime.now().millisecondsSinceEpoch.toString()}.wav";
+                        "voice_messages/${screenInfo.chatId}/${DateTime.now().millisecondsSinceEpoch.toString()}.aac";
                     String downloadUrl = await storageService.uploadAudioFile(
                         firebasePath: path,
                         audioFile: File(recorderService.currentRecording.path));
