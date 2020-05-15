@@ -42,7 +42,7 @@ class Voices extends StatelessWidget {
         ),
         Provider<RecorderService>(
           create: (_) => RecorderService(),
-          dispose: (context, value) => value.releaseRecorder(),
+          dispose: (context, value) => value.disposeRecorder(),
         ),
         Provider<LocalPlayerService>(
           create: (_) => LocalPlayerService(),

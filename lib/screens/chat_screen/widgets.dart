@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:provider/provider.dart';
 import 'package:voices/models/image_message.dart';
 import 'package:voices/models/message.dart';
 import 'package:voices/models/text_message.dart';
@@ -135,6 +134,20 @@ class StopRecordingButton extends StatelessWidget {
   }
 }
 
+class SendRecordingButton extends StatelessWidget {
+  final Function onPress;
+
+  SendRecordingButton({@required this.onPress});
+
+  @override
+  Widget build(BuildContext context) {
+    return RoundButton(
+      onPress: onPress,
+      iconData: Icons.send,
+    );
+  }
+}
+
 class SpeedButton extends StatelessWidget {
   final Function onPress;
   final String text;
@@ -214,41 +227,94 @@ class PlayButton extends StatelessWidget {
   }
 }
 
+class RecorderControls extends StatelessWidget {
+  final Stream<RecordingStatus> recorderStatusStream;
+  final Function start;
+  final Function pause;
+  final Function resume;
+  final Function stopAndSend;
 
-class RecordingInfo extends StatefulWidget {
-  @override
-  _RecordingInfoState createState() => _RecordingInfoState();
-}
-
-class _RecordingInfoState extends State<RecordingInfo> {
-
-  
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
+  RecorderControls(
+      {@required this.recorderStatusStream,
+      @required this.start,
+      @required this.pause,
+      @required this.resume,
+      @required this.stopAndSend});
 
   @override
   Widget build(BuildContext context) {
-    final recorderService = Provider.of<RecorderService>(context,listen: false);
-    return StreamBuilder<>(
-      stream: recorderService.,
-    )
-    if (recorderService.currentStatus == RecordingStatus.Recording) {
-      return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-                "Is recording: ${recorderService.currentRecording?.duration?.inSeconds.toString()}s"),
-            CupertinoActivityIndicator()
-          ]);
-    } else if (recorderService.currentStatus == RecordingStatus.Paused) {
-      return Text(
-          "Is paused: ${recorderService.currentRecording?.duration?.inSeconds.toString()}s");
-    } else {
-      return Container();
-    }
+    return StreamBuilder(
+      initialData: RecordingStatus.initialized,
+      stream: recorderStatusStream,
+      builder: (context, snapshot) {
+        RecordingStatus status = snapshot.data;
+
+        if (status == RecordingStatus.initialized ||
+            status == RecordingStatus.stopped) {
+          return StartRecordingButton(onPress: start);
+        } else if (status == RecordingStatus.recording) {
+          return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                PauseRecordingButton(onPress: pause),
+                SendRecordingButton(onPress: stopAndSend),
+              ]);
+        } else if (status == RecordingStatus.paused) {
+          return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                ResumeRecordingButton(onPress: resume),
+                SendRecordingButton(onPress: stopAndSend),
+              ]);
+        } else {
+          return Container(
+            color: Colors.red,
+            child: Text("The recorder controls are in a state it shouldn't be"),
+          );
+        }
+      },
+    );
+  }
+}
+
+class RecordingInfo extends StatelessWidget {
+  final Stream<RecordingStatus> recorderStatusStream;
+  final Stream<Duration> positionStream;
+
+  RecordingInfo(
+      {@required this.recorderStatusStream, @required this.positionStream});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      initialData: RecordingStatus.initialized,
+      stream: recorderStatusStream,
+      builder: (context, snapshot) {
+        RecordingStatus status = snapshot.data;
+
+        if (status == RecordingStatus.initialized) {
+          return Text("Recorder initialized");
+        } else if (status == RecordingStatus.paused ||
+            status == RecordingStatus.recording) {
+          return Column(
+            children: <Widget>[
+              if (status == RecordingStatus.paused)
+                Text("Recorder paused")
+              else
+                Text("Recorder recording"),
+              Text("Show position Streambuilder here")
+            ],
+          );
+        } else if (status == RecordingStatus.stopped) {
+          return Text("Recorder stopped");
+        } else {
+          return Container(
+            color: Colors.red,
+            child: Text("The recorder controls are in a state it shouldn't be"),
+          );
+        }
+      },
+    );
   }
 }
 

@@ -2,15 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:voices/models/audio_chunk.dart';
+import 'package:voices/models/recording.dart';
 
 class LocalPlayerService {
   //private variables
   final _player = AudioPlayer();
 
   //pass in audioChunk to be played
-  initializePlayer({@required AudioChunk audioChunk}) async {
-    await _player.setFilePath(audioChunk.path);
+  initializePlayer({@required Recording recording}) async {
+    await _player.setFilePath(recording.path);
   }
 
   disposePlayer() {

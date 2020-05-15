@@ -1,15 +1,11 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/text_message.dart';
-import 'package:voices/models/voice_message.dart';
 import 'package:voices/screens/chat_screen/chat_screen.dart';
 import 'package:voices/screens/chat_screen/widgets.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/services/recorder_service.dart';
-import 'package:voices/services/speech_to_text_service.dart';
-import 'package:voices/services/storage_service.dart';
 
 class MessageSendingSection extends StatefulWidget {
   @override
@@ -20,19 +16,32 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   final TextEditingController _messageTextController = TextEditingController();
   String _messageText = "";
 
+  Stream<RecordingStatus> _recorderStatusStream;
+  Stream<Duration> _recorderPositionStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final recorderService =
+        Provider.of<RecorderService>(context, listen: false);
+    _recorderStatusStream = recorderService.getRecorderStatusStream();
+    _recorderPositionStream = recorderService.getRecorderPositionStream();
+  }
+
   @override
   Widget build(BuildContext context) {
     final recorderService =
         Provider.of<RecorderService>(context, listen: false);
     final authService = Provider.of<AuthService>(context, listen: false);
-    final SpeechToTextService speechToText =
-        Provider.of<SpeechToTextService>(context);
     final screenInfo =
         Provider.of<GlobalChatScreenInfo>(context, listen: false);
 
     return Column(
       children: <Widget>[
-        RecordingInfo(),
+        RecordingInfo(
+          recorderStatusStream: _recorderStatusStream,
+          positionStream: _recorderPositionStream,
+        ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -56,71 +65,47 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   //clear text field
                   _messageTextController.text = "";
                 },
-              ),
-            if (recorderService.currentStatus == RecordingStatus.Unset ||
-                recorderService.currentStatus == RecordingStatus.Stopped)
-              StartRecordingButton(
-                onPress: () async {
-                  // Speech to text converter
-                  speechToText.start();
-                  await recorderService.startRecording();
-                },
-              ),
-            if (recorderService.currentStatus == RecordingStatus.Recording)
-              PauseRecordingButton(
-                onPress: () async {
-                  // pause speech to text.
+              )
+            else
+              RecorderControls(
+                  recorderStatusStream: _recorderStatusStream,
+                  start: () {
+                    recorderService.start();
+                  },
+                  pause: () {
+                    recorderService.pause();
+                  },
+                  resume: (recorderService.resume()),
+                  stopAndSend: () async {
+                    try {
+                      //stop the recording
+                      await recorderService.stop();
 
-                  await recorderService.pauseRecording();
-                  speechToText.pause();
-                },
-              ),
-            if (recorderService.currentStatus == RecordingStatus.Paused)
-              ResumeRecordingButton(
-                onPress: () async {
-                  await recorderService.resumeRecording();
-                  speechToText.start();
-                },
-              ),
-            if (recorderService.currentStatus == RecordingStatus.Recording ||
-                recorderService.currentStatus == RecordingStatus.Paused)
-              StopRecordingButton(
-                onPress: () async {
-                  // Stop voice to text conversion service.
-                  speechToText.stop();
-                  try {
-                    await recorderService.stopRecording();
-                    final storageService =
-                        Provider.of<StorageService>(context, listen: false);
-                    String path =
-                        "voice_messages/${screenInfo.chatId}/${DateTime.now().millisecondsSinceEpoch.toString()}.aac";
-                    String downloadUrl = await storageService.uploadAudioFile(
-                        firebasePath: path,
-                        audioFile: File(recorderService.currentRecording.path));
-                    VoiceMessage voiceMessage = VoiceMessage(
-                        senderUid: authService.loggedInUser.uid,
-                        downloadUrl: downloadUrl,
-                        transcript: "This is the transcript",
-                        length: recorderService.currentRecording.duration);
-
-                    final cloudFirestoreService =
-                        Provider.of<CloudFirestoreService>(context,
-                            listen: false);
-                    await cloudFirestoreService.addVoiceMessage(
-                        chatId: screenInfo.chatId, voiceMessage: voiceMessage);
-                  } catch (e) {
-                    print(
-                        "Something went wrong when uploading voice message: $e");
-                  }
-//                  final playerService =
-//                      Provider.of<PlayerService>(context, listen: false);
-//                  playerService.initializePlayer(
-//                      //audiochunk is the object used to pass information from recording to player
-//                      audioChunk: AudioChunk(
-//                          path: recorderService.currentRecording.path,
-//                          length: recorderService.currentRecording.duration));
-                },
-              ),
+                      //send the voice message
+//                      final storageService =
+//                          Provider.of<StorageService>(context, listen: false);
+//                      String pathInFirebaseStorage =
+//                          "voice_messages/${screenInfo.chatId}/${DateTime.now().millisecondsSinceEpoch.toString()}.aac";
+//                      String downloadUrl = await storageService.uploadAudioFile(
+//                          firebasePath: pathInFirebaseStorage,
+//                          audioFile: File(recorderService.recording.path));
+//                      VoiceMessage voiceMessage = VoiceMessage(
+//                          senderUid: authService.loggedInUser.uid,
+//                          downloadUrl: downloadUrl,
+//                          transcript: "This is the transcript",
+//                          length: recorderService.recording.duration);
+//
+//                      final cloudFirestoreService =
+//                          Provider.of<CloudFirestoreService>(context,
+//                              listen: false);
+//                      await cloudFirestoreService.addVoiceMessage(
+//                          chatId: screenInfo.chatId,
+//                          voiceMessage: voiceMessage);
+                    } catch (e) {
+                      print(
+                          "Something went wrong when uploading voice message: $e");
+                    }
+                  }),
           ],
         ),
       ],
