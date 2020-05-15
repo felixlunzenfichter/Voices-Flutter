@@ -56,8 +56,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   final cloudFirestoreService =
                       Provider.of<CloudFirestoreService>(context,
                           listen: false);
-                  cloudFirestoreService.addTextMessage(
-                      chatId: screenInfo.chatId, textMessage: message);
+//                  cloudFirestoreService.addTextMessage(
+//                      chatId: screenInfo.chatId, textMessage: message);
                   //clear text field
                   _messageTextController.text = "";
                 },
@@ -125,11 +125,23 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
 //                          length: recorderService.currentRecording.duration));
                 },
               ),
+            PopupMenuButton<Language>(
+              onSelected: speechToText.selectLangHandler,
+              itemBuilder: (BuildContext context) => _buildLanguagesWidgets,
+            )
           ],
         ),
       ],
     );
   }
+
+  List<CheckedPopupMenuItem<Language>> get _buildLanguagesWidgets => languages
+      .map((l) => new CheckedPopupMenuItem<Language>(
+    value: l,
+    checked: l == Provider.of<SpeechToTextService>(context, listen: false).selectedLang,
+    child: new Text(l.name),
+  ))
+      .toList();
 
   _onTextChanged(String newText) {
     setState(() {

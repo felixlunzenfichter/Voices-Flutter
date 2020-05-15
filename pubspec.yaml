@@ -19,6 +19,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  speech_recognition:
+    git:
+      url: https://github.com/felixlunzenfichter/speech_recognition
+
   firebase_core: 0.4.4
   cloud_firestore: 0.13.4
   firebase_storage: ^3.1.3
@@ -27,6 +32,8 @@ dependencies:
   country_code_picker: ^1.3.12+1
   pin_code_fields: ^3.0.0
   flare_flutter: ^2.0.3
+
+
 
   provider: ^4.0.4
 
@@ -37,7 +44,7 @@ dependencies:
 
   flutter_audio_recorder: ^0.5.5
   just_audio: ^0.1.5
-  speech_recognition: ^0.3.0+1
+#  speech_recognition: ^0.3.0+1
 
   path_provider: ^1.6.5
   flutter_ffmpeg: ^0.2.10
