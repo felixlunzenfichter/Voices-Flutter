@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:voices/screens/flutter_sound_recorder_example.dart';
 import 'settings_tab.dart';
-import 'chats_tab.dart';
 
 class TabsScreen extends StatelessWidget {
   @override

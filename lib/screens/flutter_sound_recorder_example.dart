@@ -16,19 +16,19 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data' show Uint8List;
 
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:flutter_sound/flauto.dart';
-import 'package:flutter_sound/flutter_sound_player.dart';
-import 'package:flutter_sound/flutter_sound.dart';
-import 'package:flutter_sound/track_player.dart';
 import 'package:flutter_sound/flutter_sound_recorder.dart';
+import 'package:provider/provider.dart';
+import 'package:voices/models/recording.dart';
+import 'package:voices/screens/chat_screen/widgets.dart';
+import 'package:voices/services/local_player_service.dart';
 
 enum t_MEDIA {
   FILE,
@@ -55,17 +55,16 @@ class FlutterSoundRecorderExample extends StatefulWidget {
 class _FlutterSoundRecorderExampleState
     extends State<FlutterSoundRecorderExample> {
   bool _isRecording = false;
+  bool _isDoneRecording = false;
+  Duration _lengthOfRecording;
   List<String> _path = [null, null, null, null, null, null, null];
+  String _pathOfRecording;
   StreamSubscription _recorderSubscription;
   StreamSubscription _dbPeakSubscription;
-  StreamSubscription _playerSubscription;
-  StreamSubscription _playbackStateSubscription;
 
-  FlutterSoundPlayer playerModule;
   FlutterSoundRecorder recorderModule;
 
   String _recorderTxt = '00:00:00';
-  String _playerTxt = '00:00:00';
   double _dbLevel;
 
   double sliderCurrentPosition = 0.0;
@@ -74,46 +73,22 @@ class _FlutterSoundRecorderExampleState
   t_CODEC _codec = t_CODEC.CODEC_AAC;
 
   bool _encoderSupported = true; // Optimist
-  bool _decoderSupported = true; // Optimist
-
-  // Whether the user wants to use the audio player features
-  bool _isAudioPlayer = false;
-  bool _duckOthers = false;
 
   double _duration = null;
 
-  Future<void> _initializeExample(FlutterSoundPlayer module) async {
-    playerModule = module;
-
-    await module.initialize();
-    await playerModule.setSubscriptionDuration(0.01);
+  Future<void> _initializeExample() async {
     await recorderModule.setSubscriptionDuration(0.01);
     initializeDateFormatting();
     setCodec(_codec);
-    setDuck();
   }
 
   Future<void> init() async {
-    playerModule = await FlutterSoundPlayer().initialize();
     recorderModule = await FlutterSoundRecorder().initialize();
-    await _initializeExample(playerModule);
+    await _initializeExample();
 
     await recorderModule.setDbPeakLevelUpdate(0.8);
     await recorderModule.setDbLevelEnabled(true);
     await recorderModule.setDbLevelEnabled(true);
-    if (Platform.isAndroid) {
-      copyAssets();
-    }
-  }
-
-  Future<void> copyAssets() async {
-    Uint8List dataBuffer =
-        (await rootBundle.load("assets/canardo.png")).buffer.asUint8List();
-    String path = await playerModule.getResourcePath() + "/assets";
-    if (!await Directory(path).exists()) {
-      await Directory(path).create(recursive: true);
-    }
-    await File(path + '/canardo.png').writeAsBytes(dataBuffer);
   }
 
   @override
@@ -133,50 +108,15 @@ class _FlutterSoundRecorderExampleState
     }
   }
 
-  void cancelPlayerSubscriptions() {
-    if (_playerSubscription != null) {
-      _playerSubscription.cancel();
-      _playerSubscription = null;
-    }
-
-    if (_playbackStateSubscription != null) {
-      _playbackStateSubscription.cancel();
-      _playbackStateSubscription = null;
-    }
-  }
-
   @override
   void dispose() {
     super.dispose();
-    cancelPlayerSubscriptions();
     cancelRecorderSubscriptions();
     releaseFlauto();
   }
 
-  Future<void> setDuck() async {
-    if (_duckOthers) {
-      if (Platform.isIOS)
-        await playerModule.iosSetCategory(
-            t_IOS_SESSION_CATEGORY.PLAY_AND_RECORD,
-            t_IOS_SESSION_MODE.DEFAULT,
-            IOS_DUCK_OTHERS | IOS_DEFAULT_TO_SPEAKER);
-      else if (Platform.isAndroid)
-        await playerModule.androidAudioFocusRequest(
-            ANDROID_AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
-    } else {
-      if (Platform.isIOS)
-        await playerModule.iosSetCategory(
-            t_IOS_SESSION_CATEGORY.PLAY_AND_RECORD,
-            t_IOS_SESSION_MODE.DEFAULT,
-            IOS_DEFAULT_TO_SPEAKER);
-      else if (Platform.isAndroid)
-        await playerModule.androidAudioFocusRequest(ANDROID_AUDIOFOCUS_GAIN);
-    }
-  }
-
   Future<void> releaseFlauto() async {
     try {
-      await playerModule.release();
       await recorderModule.release();
     } catch (e) {
       print('Released unsuccessful');
@@ -207,11 +147,11 @@ class _FlutterSoundRecorderExampleState
       // );
       Directory tempDir = await getTemporaryDirectory();
 
-      String path = await recorderModule.startRecorder(
+      _pathOfRecording = await recorderModule.startRecorder(
         uri: '${tempDir.path}/${recorderModule.slotNo}-${paths[_codec.index]}',
         codec: _codec,
       );
-      print('startRecorder: $path');
+      print('startRecorder: $_pathOfRecording');
 
       _recorderSubscription = recorderModule.onRecorderStateChanged.listen((e) {
         if (e != null && e.currentPosition != null) {
@@ -219,7 +159,8 @@ class _FlutterSoundRecorderExampleState
               e.currentPosition.toInt(),
               isUtc: true);
           String txt = DateFormat('mm:ss:SS', 'en_GB').format(date);
-
+          _lengthOfRecording =
+              Duration(milliseconds: e.currentPosition.toInt());
           this.setState(() {
             this._recorderTxt = txt.substring(0, 8);
           });
@@ -235,7 +176,7 @@ class _FlutterSoundRecorderExampleState
 
       this.setState(() {
         this._isRecording = true;
-        this._path[_codec.index] = path;
+        this._path[_codec.index] = _pathOfRecording;
       });
     } catch (err) {
       print('startRecorder error: $err');
@@ -283,6 +224,7 @@ class _FlutterSoundRecorderExampleState
     }
     this.setState(() {
       this._isRecording = false;
+      this._isDoneRecording = true;
     });
   }
 
@@ -315,164 +257,6 @@ class _FlutterSoundRecorderExampleState
     'assets/samples/sample.pcm',
   ];
 
-  void _addListeners() {
-    cancelPlayerSubscriptions();
-    _playerSubscription = playerModule.onPlayerStateChanged.listen((e) {
-      if (e != null) {
-        maxDuration = e.duration;
-        if (maxDuration <= 0) maxDuration = 0.0;
-
-        sliderCurrentPosition = min(e.currentPosition, maxDuration);
-        if (sliderCurrentPosition < 0.0) {
-          sliderCurrentPosition = 0.0;
-        }
-
-        DateTime date = new DateTime.fromMillisecondsSinceEpoch(
-            e.currentPosition.toInt(),
-            isUtc: true);
-        String txt = DateFormat('mm:ss:SS', 'en_GB').format(date);
-        this.setState(() {
-          //this._isPlaying = true;
-          this._playerTxt = txt.substring(0, 8);
-        });
-      }
-    });
-  }
-
-  Future<void> startPlayer() async {
-    try {
-      String path;
-      Uint8List dataBuffer;
-      String audioFilePath;
-      if (_media == t_MEDIA.ASSET) {
-        dataBuffer = (await rootBundle.load(assetSample[_codec.index]))
-            .buffer
-            .asUint8List();
-      } else if (_media == t_MEDIA.FILE) {
-        // Do we want to play from buffer or from file ?
-        if (await fileExists(_path[_codec.index]))
-          audioFilePath = this._path[_codec.index];
-      } else if (_media == t_MEDIA.BUFFER) {
-        // Do we want to play from buffer or from file ?
-        if (await fileExists(_path[_codec.index])) {
-          dataBuffer = await makeBuffer(this._path[_codec.index]);
-          if (dataBuffer == null) {
-            throw Exception('Unable to create the buffer');
-          }
-        }
-      } else if (_media == t_MEDIA.REMOTE_EXAMPLE_FILE) {
-        // We have to play an example audio file loaded via a URL
-        audioFilePath = exampleAudioFilePath;
-      }
-
-      // Check whether the user wants to use the audio player features
-      if (_isAudioPlayer) {
-        String albumArtUrl;
-        String albumArtAsset;
-        String albumArtFile;
-        if (_media == t_MEDIA.REMOTE_EXAMPLE_FILE)
-          albumArtUrl = albumArtPath;
-        else {
-          if (true) {
-            albumArtFile =
-                await playerModule.getResourcePath() + "/assets/canardo.png";
-            print(albumArtFile);
-          } else {
-            if (Platform.isIOS) {
-              albumArtAsset = 'AppIcon';
-            } else if (Platform.isAndroid) {
-              albumArtAsset = 'AppIcon.png';
-            }
-          }
-        }
-
-        final track = Track(
-          trackPath: audioFilePath,
-          dataBuffer: dataBuffer,
-          codec: _codec,
-          trackTitle: "This is a record",
-          trackAuthor: "from flutter_sound",
-          albumArtUrl: albumArtUrl,
-          albumArtAsset: albumArtAsset,
-          albumArtFile: albumArtFile,
-        );
-
-        TrackPlayer f = playerModule as TrackPlayer;
-        path = await f.startPlayerFromTrack(track,
-            /*canSkipForward:true, canSkipBackward:true,*/
-            whenFinished: () {
-          print('I hope you enjoyed listening to this song');
-          setState(() {});
-        }, onSkipBackward: () {
-          print('Skip backward');
-          stopPlayer();
-          startPlayer();
-        }, onSkipForward: () {
-          print('Skip forward');
-          stopPlayer();
-          startPlayer();
-        }, onPaused: (bool b) {
-          if (b)
-            playerModule.pausePlayer();
-          else
-            playerModule.resumePlayer();
-        });
-      } else {
-        if (audioFilePath != null) {
-          path = await playerModule.startPlayer(audioFilePath, codec: _codec,
-              whenFinished: () {
-            print('Play finished');
-            setState(() {});
-          });
-        } else if (dataBuffer != null) {
-          path = await playerModule.startPlayerFromBuffer(dataBuffer,
-              codec: _codec, whenFinished: () {
-            print('Play finished');
-            setState(() {});
-          });
-        }
-
-        if (path == null) {
-          print('Error starting player');
-          return;
-        }
-      }
-      _addListeners();
-
-      print('startPlayer: $path');
-      // await flutterSoundModule.setVolume(1.0);
-    } catch (err) {
-      print('error: $err');
-    }
-    setState(() {});
-  }
-
-  Future<void> stopPlayer() async {
-    try {
-      String result = await playerModule.stopPlayer();
-      print('stopPlayer: $result');
-      if (_playerSubscription != null) {
-        _playerSubscription.cancel();
-        _playerSubscription = null;
-      }
-      sliderCurrentPosition = 0.0;
-    } catch (err) {
-      print('error: $err');
-    }
-
-    this.setState(() {
-      //this._isPlaying = false;
-    });
-  }
-
-  void pauseResumePlayer() {
-    if (playerModule.isPlaying) {
-      playerModule.pausePlayer();
-    } else {
-      playerModule.resumePlayer();
-    }
-  }
-
   void pauseResumeRecorder() {
     if (recorderModule.isPaused) {
       {
@@ -483,152 +267,12 @@ class _FlutterSoundRecorderExampleState
     }
   }
 
-  void seekToPlayer(int milliSecs) async {
-    String result = await playerModule.seekToPlayer(milliSecs);
-    print('seekToPlayer: $result');
-  }
-
-  Widget makeDropdowns(BuildContext context) {
-    final mediaDropdown = Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0),
-          child: Text('Media:'),
-        ),
-        DropdownButton<t_MEDIA>(
-          value: _media,
-          onChanged: (newMedia) {
-            if (newMedia == t_MEDIA.REMOTE_EXAMPLE_FILE)
-              _codec = t_CODEC
-                  .CODEC_MP3; // Actually this is the only example we use in this example
-            _media = newMedia;
-            getDuration();
-            setState(() {});
-          },
-          items: <DropdownMenuItem<t_MEDIA>>[
-            DropdownMenuItem<t_MEDIA>(
-              value: t_MEDIA.FILE,
-              child: Text('File'),
-            ),
-            DropdownMenuItem<t_MEDIA>(
-              value: t_MEDIA.BUFFER,
-              child: Text('Buffer'),
-            ),
-            DropdownMenuItem<t_MEDIA>(
-              value: t_MEDIA.ASSET,
-              child: Text('Asset'),
-            ),
-            DropdownMenuItem<t_MEDIA>(
-              value: t_MEDIA.REMOTE_EXAMPLE_FILE,
-              child: Text('Remote Example File'),
-            ),
-          ],
-        ),
-      ],
-    );
-
-    final codecDropdown = Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0),
-          child: Text('Codec:'),
-        ),
-        DropdownButton<t_CODEC>(
-          value: _codec,
-          onChanged: (newCodec) {
-            setCodec(newCodec);
-            _codec = newCodec;
-            getDuration();
-            setState(() {});
-          },
-          items: <DropdownMenuItem<t_CODEC>>[
-            DropdownMenuItem<t_CODEC>(
-              value: t_CODEC.CODEC_AAC,
-              child: Text('AAC'),
-            ),
-            DropdownMenuItem<t_CODEC>(
-              value: t_CODEC.CODEC_OPUS,
-              child: Text('OGG/Opus'),
-            ),
-            DropdownMenuItem<t_CODEC>(
-              value: t_CODEC.CODEC_CAF_OPUS,
-              child: Text('CAF/Opus'),
-            ),
-            DropdownMenuItem<t_CODEC>(
-              value: t_CODEC.CODEC_MP3,
-              child: Text('MP3'),
-            ),
-            DropdownMenuItem<t_CODEC>(
-              value: t_CODEC.CODEC_VORBIS,
-              child: Text('OGG/Vorbis'),
-            ),
-            DropdownMenuItem<t_CODEC>(
-              value: t_CODEC.CODEC_PCM,
-              child: Text('PCM'),
-            ),
-          ],
-        ),
-      ],
-    );
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
-            child: mediaDropdown,
-          ),
-          codecDropdown,
-        ],
-      ),
-    );
-  }
-
-  void Function() onPauseResumePlayerPressed() {
-    if (playerModule == null) return null;
-    if (playerModule.isPaused || playerModule.isPlaying) {
-      return pauseResumePlayer;
-    }
-    return null;
-  }
-
   void Function() onPauseResumeRecorderPressed() {
     if (recorderModule == null) return null;
     if (recorderModule.isPaused || recorderModule.isRecording) {
       return pauseResumeRecorder;
     }
     return null;
-  }
-
-  void Function() onStopPlayerPressed() {
-    if (playerModule == null) return null;
-    return (playerModule.isPlaying || playerModule.isPaused)
-        ? stopPlayer
-        : null;
-  }
-
-  void Function() onStartPlayerPressed() {
-    if (playerModule == null) return null;
-    if (_media == t_MEDIA.FILE ||
-        _media == t_MEDIA.BUFFER) // A file must be already recorded to play it
-    {
-      if (_path[_codec.index] == null) return null;
-    }
-    if (_media == t_MEDIA.REMOTE_EXAMPLE_FILE &&
-        _codec !=
-            t_CODEC.CODEC_MP3) // in this example we use just a remote mp3 file
-      return null;
-
-    // Disable the button if the selected codec is not supported
-    if (!_decoderSupported) return null;
-    return (playerModule.isStopped) ? startPlayer : null;
   }
 
   void Function() startStopRecorder() {
@@ -655,147 +299,14 @@ class _FlutterSoundRecorderExampleState
 
   void setCodec(t_CODEC codec) async {
     _encoderSupported = await recorderModule.isEncoderSupported(codec);
-    _decoderSupported = await playerModule.isDecoderSupported(codec);
 
     setState(() {
       _codec = codec;
     });
   }
 
-  void Function(bool) audioPlayerSwitchChanged() {
-    if (playerModule == null) return null;
-
-    if ((!playerModule.isStopped) || (!recorderModule.isStopped)) return null;
-    return ((newVal) async {
-      try {
-        if (playerModule != null) await playerModule.release();
-
-        _isAudioPlayer = newVal;
-        if (!newVal) {
-          _initializeExample(FlutterSoundPlayer());
-        } else {
-          _initializeExample(TrackPlayer());
-        }
-        setState(() {});
-      } catch (err) {
-        print(err);
-      }
-    });
-  }
-
-  void Function(bool) duckOthersSwitchChanged() {
-    return ((newVal) async {
-      _duckOthers = newVal;
-
-      try {
-        setDuck();
-        setState(() {});
-      } catch (err) {
-        print(err);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final recorderProgressIndicator = _isRecording
-        ? LinearProgressIndicator(
-            value: 100.0 / 160.0 * (this._dbLevel ?? 1) / 100,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-            backgroundColor: Colors.red,
-          )
-        : Container();
-    final playerControls = Row(
-      children: <Widget>[
-        Container(
-          width: 56.0,
-          height: 56.0,
-          child: ClipOval(
-            child: FlatButton(
-              onPressed: onStartPlayerPressed(),
-              padding: EdgeInsets.all(8.0),
-              child: Image(
-                image: AssetImage(onStartPlayerPressed() != null
-                    ? 'res/icons/ic_play.png'
-                    : 'res/icons/ic_play_disabled.png'),
-              ),
-            ),
-          ),
-        ),
-        Container(
-          width: 56.0,
-          height: 56.0,
-          child: ClipOval(
-            child: FlatButton(
-              onPressed: onPauseResumePlayerPressed(),
-              padding: EdgeInsets.all(8.0),
-              child: Image(
-                width: 36.0,
-                height: 36.0,
-                image: AssetImage(onPauseResumePlayerPressed() != null
-                    ? 'res/icons/ic_pause.png'
-                    : 'res/icons/ic_pause_disabled.png'),
-              ),
-            ),
-          ),
-        ),
-        Container(
-          width: 56.0,
-          height: 56.0,
-          child: ClipOval(
-            child: FlatButton(
-              onPressed: onStopPlayerPressed(),
-              padding: EdgeInsets.all(8.0),
-              child: Image(
-                width: 28.0,
-                height: 28.0,
-                image: AssetImage(onStopPlayerPressed() != null
-                    ? 'res/icons/ic_stop.png'
-                    : 'res/icons/ic_stop_disabled.png'),
-              ),
-            ),
-          ),
-        ),
-      ],
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-    );
-    final playerSlider = Container(
-        height: 56.0,
-        child: Slider(
-            value: min(sliderCurrentPosition, maxDuration),
-            min: 0.0,
-            max: maxDuration,
-            onChanged: (double value) async {
-              await playerModule.seekToPlayer(value.toInt());
-            },
-            divisions: maxDuration == 0.0 ? 1 : maxDuration.toInt()));
-
-    final dropdowns = makeDropdowns(context);
-    final trackSwitch = Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: Text('Track Player:'),
-          ),
-          Switch(
-            value: _isAudioPlayer,
-            onChanged: audioPlayerSwitchChanged(),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 4.0),
-            child: Text('Duck Others:'),
-          ),
-          Switch(
-            value: _duckOthers,
-            onChanged: duckOthersSwitchChanged(),
-          ),
-        ],
-      ),
-    );
-
     Widget recorderSection = Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -854,96 +365,8 @@ class _FlutterSoundRecorderExampleState
             crossAxisAlignment: CrossAxisAlignment.center,
           ),
         ]);
-
-    Widget playerSection = Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Container(
-          margin: EdgeInsets.only(top: 12.0, bottom: 16.0),
-          child: Text(
-            this._playerTxt,
-            style: TextStyle(
-              fontSize: 35.0,
-              color: Colors.black,
-            ),
-          ),
-        ),
-        Row(
-          children: <Widget>[
-            Container(
-              width: 56.0,
-              height: 50.0,
-              child: ClipOval(
-                child: FlatButton(
-                  onPressed: onStartPlayerPressed(),
-                  disabledColor: Colors.white,
-                  padding: EdgeInsets.all(8.0),
-                  child: Image(
-                    image: AssetImage(onStartPlayerPressed() != null
-                        ? 'res/icons/ic_play.png'
-                        : 'res/icons/ic_play_disabled.png'),
-                  ),
-                ),
-              ),
-            ),
-            Container(
-              width: 56.0,
-              height: 50.0,
-              child: ClipOval(
-                child: FlatButton(
-                  onPressed: onPauseResumePlayerPressed(),
-                  disabledColor: Colors.white,
-                  padding: EdgeInsets.all(8.0),
-                  child: Image(
-                    width: 36.0,
-                    height: 36.0,
-                    image: AssetImage(onPauseResumePlayerPressed() != null
-                        ? 'res/icons/ic_pause.png'
-                        : 'res/icons/ic_pause_disabled.png'),
-                  ),
-                ),
-              ),
-            ),
-            Container(
-              width: 56.0,
-              height: 50.0,
-              child: ClipOval(
-                child: FlatButton(
-                  onPressed: onStopPlayerPressed(),
-                  disabledColor: Colors.white,
-                  padding: EdgeInsets.all(8.0),
-                  child: Image(
-                    width: 28.0,
-                    height: 28.0,
-                    image: AssetImage(onStopPlayerPressed() != null
-                        ? 'res/icons/ic_stop.png'
-                        : 'res/icons/ic_stop_disabled.png'),
-                  ),
-                ),
-              ),
-            ),
-          ],
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-        ),
-        Container(
-            height: 30.0,
-            child: Slider(
-                value: min(sliderCurrentPosition, maxDuration),
-                min: 0.0,
-                max: maxDuration,
-                onChanged: (double value) async {
-                  await playerModule.seekToPlayer(value.toInt());
-                },
-                divisions: maxDuration == 0.0 ? 1 : maxDuration.toInt())),
-        Container(
-          height: 30.0,
-          child: Text(_duration != null ? "Duration: $_duration sec." : ''),
-        ),
-      ],
-    );
-
+    print("pathhhhhhhhhhhhhhhhh = $_pathOfRecording");
+    print("duration of recording = ${_lengthOfRecording.toString()}");
     return Scaffold(
       appBar: AppBar(
         title: const Text('Flutter Sound'),
@@ -951,11 +374,64 @@ class _FlutterSoundRecorderExampleState
       body: ListView(
         children: <Widget>[
           recorderSection,
-          playerSection,
-          dropdowns,
-          trackSwitch,
+          if (_isDoneRecording)
+            PlayerSection(
+              recording: Recording(
+                  path: _pathOfRecording, duration: _lengthOfRecording),
+            ),
         ],
       ),
     );
+  }
+}
+
+class PlayerSection extends StatefulWidget {
+  final Recording recording;
+
+  PlayerSection({@required this.recording});
+
+  @override
+  _PlayerSectionState createState() => _PlayerSectionState();
+}
+
+class _PlayerSectionState extends State<PlayerSection> {
+  bool isInitialized = false;
+  Stream<Duration> positionStream;
+  Stream<FullAudioPlaybackState> playBackStateStream;
+
+  @override
+  void initState() {
+    _initialize();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isInitialized) {
+      return Text("Player is not initialized yet");
+    } else {
+      final playerService =
+          Provider.of<LocalPlayerService>(context, listen: false);
+      return PlayerControls(
+          play: playerService.play,
+          pause: playerService.pause,
+          seek: playerService.seek,
+          setSpeed: playerService.setSpeed,
+          playBackStateStream: playBackStateStream,
+          positionStream: positionStream,
+          lengthOfAudio: widget.recording.duration);
+      ;
+    }
+  }
+
+  _initialize() async {
+    final playerService =
+        Provider.of<LocalPlayerService>(context, listen: false);
+    await playerService.initializePlayer(recording: widget.recording);
+    setState(() {
+      isInitialized = true;
+    });
+    positionStream = playerService.getPositionStream();
+    playBackStateStream = playerService.getPlaybackStateStream();
   }
 }

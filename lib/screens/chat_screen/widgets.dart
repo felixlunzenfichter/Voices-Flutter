@@ -319,7 +319,7 @@ class RecordingInfo extends StatelessWidget {
 }
 
 class PlayerControls extends StatefulWidget {
-  final Function play;
+  final Function({@required double currentSpeed}) play;
   final Function pause;
   final Function({@required Duration position}) seek;
   final Function({@required double speed}) setSpeed;
@@ -370,7 +370,9 @@ class _PlayerControlsState extends State<PlayerControls> {
               )
             else
               ButtonFromPicture(
-                onPress: widget.play,
+                onPress: () {
+                  widget.play(currentSpeed: _currentSpeed);
+                },
                 image: Image.asset('assets/play_1.png'),
               ),
             ConstrainedBox(

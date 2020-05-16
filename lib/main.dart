@@ -8,8 +8,8 @@ import 'package:voices/screens/registration/login_screen.dart';
 import 'package:voices/screens/registration/permissions_screen.dart';
 import 'package:voices/screens/tabs_screen.dart';
 import 'package:voices/services/cloud_player_service.dart';
+import 'package:voices/services/new_recorder_service.dart';
 import 'services/local_player_service.dart';
-import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/permission_service.dart';
 import 'services/auth_service.dart';
 import 'services/cloud_firestore_service.dart';
@@ -40,9 +40,8 @@ class Voices extends StatelessWidget {
         Provider<StorageService>(
           create: (_) => StorageService(),
         ),
-        Provider<RecorderService>(
-          create: (_) => RecorderService(),
-          dispose: (context, value) => value.disposeRecorder(),
+        Provider<NewRecorderService>(
+          create: (_) => NewRecorderService(),
         ),
         Provider<LocalPlayerService>(
           create: (_) => LocalPlayerService(),
