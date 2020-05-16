@@ -20,57 +20,56 @@ import 'package:voices/services/new_recorder_service.dart';
 class NewRecorderService {
   FlutterSoundRecorder recorderModule;
 
-  initialize() async {
-    recorderModule = await FlutterSoundRecorder().initialize();
-    await recorderModule.setSubscriptionDuration(0.01);
-    await recorderModule.setDbPeakLevelUpdate(0.8);
-    await recorderModule.setDbLevelEnabled(true);
-    await recorderModule.setDbLevelEnabled(true);
-  }
-
-  dispose() async {
-    await recorderModule.release();
-  }
-
-  start({@required String pathOfRecording}) async {
-    await recorderModule.startRecorder(
-      uri: pathOfRecording,
-      codec: t_CODEC.CODEC_AAC,
-    );
-  }
-
-  stop() async {
-    await recorderModule.stopRecorder();
-  }
-
-  bool getIsPaused() {
-    return recorderModule.isPaused;
-  }
-
-  bool getIsRecording() {
-    return recorderModule.isRecording;
-  }
-
-  bool getIsStopped() {
-    return recorderModule.isStopped;
-  }
-
-  pause() async {
-    await recorderModule.pauseRecorder();
-  }
-
-  resume() async {
-    await recorderModule.resumeRecorder();
-  }
-
-  Stream<Duration> getPositionStream() {
-    return recorderModule.onRecorderStateChanged
-        .map((state) => Duration(milliseconds: state.currentPosition.toInt()));
-  }
-
-  Stream<double> getDbLevelStream() {
-    return recorderModule.onRecorderDbPeakChanged;
-  }
+//  initialize() async {
+//    recorderModule = await FlutterSoundRecorder().initialize();
+//    await recorderModule.setSubscriptionDuration(0.01);
+//    await recorderModule.setDbPeakLevelUpdate(0.8);
+//    await recorderModule.setDbLevelEnabled(true);
+//    await recorderModule.setDbLevelEnabled(true);
+//  }
+//
+//  dispose() async {
+//    await recorderModule.release();
+//  }
+//
+//  start({@required String pathOfRecording}) async {
+//    return await recorderModule.startRecorder(
+//      uri: pathOfRecording,
+//      codec: t_CODEC.CODEC_AAC,
+//    );
+//  }
+//
+//  stop() async {
+//    await recorderModule.stopRecorder();
+//  }
+//
+//  bool getIsPaused() {
+//    return recorderModule.isPaused;
+//  }
+//
+//  bool getIsRecording() {
+//    return recorderModule.isRecording;
+//  }
+//
+//  bool getIsStopped() {
+//    return recorderModule.isStopped;
+//  }
+//
+//  pause() async {
+//    await recorderModule.pauseRecorder();
+//  }
+//
+//  resume() async {
+//    await recorderModule.resumeRecorder();
+//  }
+//
+//  Stream<RecordStatus> getPositionStream() {
+//    return recorderModule.onRecorderStateChanged;
+//  }
+//
+//  Stream<double> getDbLevelStream() {
+//    return recorderModule.onRecorderDbPeakChanged;
+//  }
 }
 
 enum RecordingStatus { initialized, recording, paused, stopped }

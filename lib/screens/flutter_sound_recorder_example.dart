@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:voices/models/recording.dart';
 import 'package:voices/screens/chat_screen/widgets.dart';
 import 'package:voices/services/local_player_service.dart';
+import 'package:voices/services/new_recorder_service.dart';
 
 class FlutterSoundRecorderExample extends StatefulWidget {
   @override
@@ -27,20 +28,23 @@ class _FlutterSoundRecorderExampleState
   String _pathOfRecording;
   StreamSubscription _recorderSubscription;
   StreamSubscription _dbPeakSubscription;
-  FlutterSoundRecorder recorderModule;
   double _dbLevel;
+  NewRecorderService newRecorderService;
 
   Future<void> init() async {
-    recorderModule = await FlutterSoundRecorder().initialize();
-    await recorderModule.setSubscriptionDuration(0.01);
-    await recorderModule.setDbPeakLevelUpdate(0.8);
-    await recorderModule.setDbLevelEnabled(true);
-    await recorderModule.setDbLevelEnabled(true);
+    newRecorderService.recorderModule =
+        await FlutterSoundRecorder().initialize();
+    await newRecorderService.recorderModule.setSubscriptionDuration(0.01);
+    await newRecorderService.recorderModule.setDbPeakLevelUpdate(0.8);
+    await newRecorderService.recorderModule.setDbLevelEnabled(true);
+    await newRecorderService.recorderModule.setDbLevelEnabled(true);
   }
 
   @override
   void initState() {
     super.initState();
+    newRecorderService =
+        Provider.of<NewRecorderService>(context, listen: false);
     init();
   }
 
@@ -64,7 +68,7 @@ class _FlutterSoundRecorderExampleState
 
   Future<void> releaseFlauto() async {
     try {
-      await recorderModule.release();
+      await newRecorderService.recorderModule.release();
     } catch (e) {
       print('Released unsuccessful');
       print(e);
@@ -75,13 +79,14 @@ class _FlutterSoundRecorderExampleState
     try {
       Directory tempDir = await getTemporaryDirectory();
 
-      _pathOfRecording = await recorderModule.startRecorder(
+      _pathOfRecording = await newRecorderService.recorderModule.startRecorder(
         uri:
-            '${tempDir.path}/${recorderModule.slotNo}-flutter_sound_example.aac',
+            '${tempDir.path}/${newRecorderService.recorderModule.slotNo}-flutter_sound_example.aac',
         codec: t_CODEC.CODEC_AAC,
       );
 
-      _recorderSubscription = recorderModule.onRecorderStateChanged.listen((e) {
+      _recorderSubscription =
+          newRecorderService.recorderModule.onRecorderStateChanged.listen((e) {
         if (e != null && e.currentPosition != null) {
           this.setState(() {
             _lengthOfRecording =
@@ -89,8 +94,9 @@ class _FlutterSoundRecorderExampleState
           });
         }
       });
-      _dbPeakSubscription =
-          recorderModule.onRecorderDbPeakChanged.listen((value) {
+      _dbPeakSubscription = newRecorderService
+          .recorderModule.onRecorderDbPeakChanged
+          .listen((value) {
         setState(() {
           this._dbLevel = value;
         });
@@ -118,7 +124,7 @@ class _FlutterSoundRecorderExampleState
 
   void stopRecorder() async {
     try {
-      String result = await recorderModule.stopRecorder();
+      String result = await newRecorderService.recorderModule.stopRecorder();
       print('stopRecorder: $result');
       cancelRecorderSubscriptions();
     } catch (err) {
@@ -150,25 +156,27 @@ class _FlutterSoundRecorderExampleState
   }
 
   void pauseResumeRecorder() {
-    if (recorderModule.isPaused) {
+    if (newRecorderService.recorderModule.isPaused) {
       {
-        recorderModule.resumeRecorder();
+        newRecorderService.recorderModule.resumeRecorder();
       }
     } else {
-      recorderModule.pauseRecorder();
+      newRecorderService.recorderModule.pauseRecorder();
     }
   }
 
   void Function() onPauseResumeRecorderPressed() {
-    if (recorderModule == null) return null;
-    if (recorderModule.isPaused || recorderModule.isRecording) {
+    if (newRecorderService.recorderModule == null) return null;
+    if (newRecorderService.recorderModule.isPaused ||
+        newRecorderService.recorderModule.isRecording) {
       return pauseResumeRecorder;
     }
     return null;
   }
 
   void Function() startStopRecorder() {
-    if (recorderModule.isRecording || recorderModule.isPaused)
+    if (newRecorderService.recorderModule.isRecording ||
+        newRecorderService.recorderModule.isPaused)
       stopRecorder();
     else
       startRecorder();
@@ -177,14 +185,14 @@ class _FlutterSoundRecorderExampleState
   void Function() onStartRecorderPressed() {
     //if (_media == t_MEDIA.ASSET || _media == t_MEDIA.BUFFER || _media == t_MEDIA.REMOTE_EXAMPLE_FILE) return null;
     // Disable the button if the selected codec is not supported
-    if (recorderModule == null) return null;
+    if (newRecorderService.recorderModule == null) return null;
     return startStopRecorder;
   }
 
   AssetImage recorderAssetImage() {
     if (onStartRecorderPressed() == null)
       return AssetImage('res/icons/ic_mic_disabled.png');
-    return (recorderModule.isStopped)
+    return (newRecorderService.recorderModule.isStopped)
         ? AssetImage('res/icons/ic_mic.png')
         : AssetImage('res/icons/ic_stop.png');
   }
