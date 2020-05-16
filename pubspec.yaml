@@ -28,6 +28,8 @@ dependencies:
   pin_code_fields: ^3.0.0
   flare_flutter: ^2.0.3
   flutter_sound: ^4.0.4+1
+  intl: ^0.16.1
+
 
   provider: ^4.0.4
 
@@ -68,6 +70,33 @@ flutter:
     - assets/play_1.png
     - assets/pause_1.png
     - assets/phone_verification.flr
+
+    - res/icons/ic_play.png
+    - res/icons/ic_play_disabled.png
+    - res/icons/2.0x/ic_play.png
+    - res/icons/3.0x/ic_play.png
+    - res/icons/ic_stop.png
+    - res/icons/ic_stop_disabled.png
+    - res/icons/2.0x/ic_stop.png
+    - res/icons/3.0x/ic_stop.png
+    - res/icons/ic_pause.png
+    - res/icons/ic_pause_disabled.png
+    - res/icons/2.0x/ic_pause.png
+    - res/icons/3.0x/ic_pause.png
+    - res/icons/ic_mic.png
+    - res/icons/ic_mic_disabled.png
+    - res/icons/2.0x/ic_mic.png
+    - res/icons/3.0x/ic_mic.png
+    - res/icons/ic_volume_down.png
+    - res/icons/2.0x/ic_volume_down.png
+    - res/icons/3.0x/ic_volume_down.png
+    - res/icons/ic_volume_up.png
+    - res/icons/2.0x/ic_volume_up.png
+    - res/icons/3.0x/ic_volume_up.png
+
+    - assets/samples/
+    - assets/canardo.png
+    - assets/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
