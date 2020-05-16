@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:voices/screens/flutter_sound_recorder_example.dart';
 import 'settings_tab.dart';
 import 'chats_tab.dart';
 
@@ -31,7 +30,7 @@ class TabsScreen extends StatelessWidget {
           case 0:
             returnValue = CupertinoTabView(builder: (context) {
               return CupertinoPageScaffold(
-                child: FlutterSoundRecorderExample(),
+                child: ChatsTab(),
               );
             });
             break;
