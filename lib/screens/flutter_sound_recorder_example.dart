@@ -30,14 +30,9 @@ class _FlutterSoundRecorderExampleState
   FlutterSoundRecorder recorderModule;
   double _dbLevel;
 
-  Future<void> _initializeExample() async {
-    await recorderModule.setSubscriptionDuration(0.01);
-  }
-
   Future<void> init() async {
     recorderModule = await FlutterSoundRecorder().initialize();
-    await _initializeExample();
-
+    await recorderModule.setSubscriptionDuration(0.01);
     await recorderModule.setDbPeakLevelUpdate(0.8);
     await recorderModule.setDbLevelEnabled(true);
     await recorderModule.setDbLevelEnabled(true);
