@@ -9,7 +9,7 @@ class RecorderService {
   Recording recording;
 
   //private properties
-  FlutterSoundRecorder _recorderModule;
+  FlutterSoundRecorder _recorder;
   StreamController<RecordingStatus> _streamController =
       StreamController<RecordingStatus>();
   String _pathOfRecording;
@@ -32,17 +32,17 @@ class RecorderService {
   }
 
   _initializeRecorder() async {
-    _recorderModule = await FlutterSoundRecorder().initialize();
-    await _recorderModule.setDbPeakLevelUpdate(0.8);
-    await _recorderModule.setDbLevelEnabled(true);
-    await _recorderModule.setDbLevelEnabled(true);
+    _recorder = await FlutterSoundRecorder().initialize();
+    await _recorder.setDbPeakLevelUpdate(0.8);
+    await _recorder.setDbLevelEnabled(true);
+    await _recorder.setDbLevelEnabled(true);
   }
 
   _initializeFileLocation() async {
     try {
       Directory tempDir = await getTemporaryDirectory();
       _pathOfRecording =
-          '${tempDir.path}/${_recorderModule.slotNo}-voice_message_recording${_fileExtensions[_codec.index]}';
+          '${tempDir.path}/${_recorder.slotNo}-voice_message_recording${_fileExtensions[_codec.index]}';
     } catch (e) {
       print(
           'Could not initialize recording file location because of error = $e');
@@ -51,7 +51,7 @@ class RecorderService {
 
   disposeRecorder() async {
     try {
-      await _recorderModule.release();
+      await _recorder.release();
       await _streamController.close();
     } catch (e) {
       print('Could not release recorder because of error = $e');
@@ -61,7 +61,7 @@ class RecorderService {
   start() async {
     try {
       _streamController.add(RecordingStatus.recording);
-      await _recorderModule.startRecorder(
+      await _recorder.startRecorder(
         uri: _pathOfRecording,
         codec: _codec,
       );
@@ -73,7 +73,7 @@ class RecorderService {
   pause() {
     try {
       _streamController.add(RecordingStatus.paused);
-      _recorderModule.pauseRecorder();
+      _recorder.pauseRecorder();
     } catch (e) {
       print("Could not pause recording because of error = $e");
     }
@@ -82,7 +82,7 @@ class RecorderService {
   resume() {
     try {
       _streamController.add(RecordingStatus.recording);
-      _recorderModule.resumeRecorder();
+      _recorder.resumeRecorder();
     } catch (e) {
       print("Could not resume recording because of error = $e");
     }
@@ -91,7 +91,7 @@ class RecorderService {
   stop() async {
     try {
       _streamController.add(RecordingStatus.stopped);
-      await _recorderModule.stopRecorder();
+      await _recorder.stopRecorder();
       int lengthOfRecordingInMilliseconds = await flutterSoundHelper
           .duration(_pathOfRecording); //this is an estimate
       recording = Recording(
@@ -105,7 +105,7 @@ class RecorderService {
 
   Stream<Duration> getRecorderPositionStream() {
     try {
-      return _recorderModule.onRecorderStateChanged.map(
+      return _recorder.onRecorderStateChanged.map(
           (state) => Duration(milliseconds: state.currentPosition.toInt()));
     } catch (e) {
       print("Could not get recorder position because of error: $e");
