@@ -365,8 +365,6 @@ class _FlutterSoundRecorderExampleState
             crossAxisAlignment: CrossAxisAlignment.center,
           ),
         ]);
-    print("pathhhhhhhhhhhhhhhhh = $_pathOfRecording");
-    print("duration of recording = ${_lengthOfRecording.toString()}");
     return Scaffold(
       appBar: AppBar(
         title: const Text('Flutter Sound'),
@@ -416,11 +414,13 @@ class _PlayerSectionState extends State<PlayerSection> {
           play: playerService.play,
           pause: playerService.pause,
           seek: playerService.seek,
-          setSpeed: playerService.setSpeed,
+          setSpeed: ({@required double speed}) {
+            playerService.setSpeed(
+                speed: speed, shouldBePlayingAfterSpeedIsSet: true);
+          },
           playBackStateStream: playBackStateStream,
           positionStream: positionStream,
           lengthOfAudio: widget.recording.duration);
-      ;
     }
   }
 
