@@ -1,82 +1,87 @@
 import 'dart:async';
-import 'package:voices/models/recording.dart';
 import 'package:flutter_sound/flauto.dart';
 import 'package:flutter_sound/flutter_sound_recorder.dart';
-import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data' show Uint8List;
-
-import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_sound/flauto.dart';
-import 'package:flutter_sound/flutter_sound_recorder.dart';
-import 'package:provider/provider.dart';
 import 'package:voices/models/recording.dart';
-import 'package:voices/screens/chat_screen/widgets.dart';
-import 'package:voices/services/local_player_service.dart';
-import 'package:voices/services/new_recorder_service.dart';
 
 class NewRecorderService {
-  FlutterSoundRecorder recorderModule;
+  Recording recording;
+
+  //for internal use
+  FlutterSoundRecorder _recorder;
+  StreamController<RecordingStatus> _streamController =
+      StreamController<RecordingStatus>();
+  String _pathToRecording;
 
   initialize() async {
-    recorderModule = await FlutterSoundRecorder().initialize();
-    await recorderModule.setSubscriptionDuration(0.01);
-    await recorderModule.setDbPeakLevelUpdate(0.8);
-    await recorderModule.setDbLevelEnabled(true);
-    await recorderModule.setDbLevelEnabled(true);
+    _recorder = await FlutterSoundRecorder().initialize();
+    await _recorder.setSubscriptionDuration(0.01);
+    await _recorder.setDbPeakLevelUpdate(0.8);
+    await _recorder.setDbLevelEnabled(true);
+    await _recorder.setDbLevelEnabled(true);
+    _streamController.add(RecordingStatus.initialized);
   }
 
   dispose() async {
-    await recorderModule.release();
+    await _recorder.release();
+    _streamController.close();
   }
 
-  Future<String> start() async {
+  start() async {
     Directory tempDir = await getTemporaryDirectory();
-
-    String pathToRecording =
-        '${tempDir.path}/${recorderModule.slotNo}-flutter_sound_example.aac';
-    await recorderModule.startRecorder(
-      uri: pathToRecording,
+    _pathToRecording =
+        '${tempDir.path}/${_recorder.slotNo}-flutter_sound_example.aac';
+    await _recorder.startRecorder(
+      uri: _pathToRecording,
       codec: t_CODEC.CODEC_AAC,
     );
-
-    return pathToRecording;
+    _streamController.add(RecordingStatus.recording);
   }
 
   stop() async {
-    await recorderModule.stopRecorder();
+    _streamController.add(RecordingStatus.stopped);
+    await _recorder.stopRecorder();
+    int durationInMs = await flutterSoundHelper.duration(_pathToRecording);
+    recording = Recording(
+        path: _pathToRecording, duration: Duration(milliseconds: durationInMs));
   }
 
   bool getIsPaused() {
-    return recorderModule.isPaused;
+    return _recorder.isPaused;
   }
 
   bool getIsRecording() {
-    return recorderModule.isRecording;
+    return _recorder.isRecording;
   }
 
   bool getIsStopped() {
-    return recorderModule.isStopped;
+    return _recorder.isStopped;
   }
 
   pause() async {
-    await recorderModule.pauseRecorder();
+    _streamController.add(RecordingStatus.paused);
+    await _recorder.pauseRecorder();
   }
 
   resume() async {
-    await recorderModule.resumeRecorder();
+    _streamController.add(RecordingStatus.recording);
+    await _recorder.resumeRecorder();
   }
 
+  ///we can only call this after start() is done
   Stream<Duration> getPositionStream() {
-    return recorderModule.onRecorderStateChanged
-        .map((state) => Duration(milliseconds: state.currentPosition.toInt()));
+    return _recorder.onRecorderStateChanged.map((state) =>
+        Duration(milliseconds: state?.currentPosition?.toInt() ?? 0));
   }
 
   Stream<double> getDbLevelStream() {
-    return recorderModule.onRecorderDbPeakChanged;
+    return _recorder.onRecorderDbPeakChanged;
+  }
+
+  Stream<RecordingStatus> getStatusStream() {
+    return _streamController.stream.asBroadcastStream();
   }
 }
 
-enum RecordingStatus { initialized, recording, paused, stopped }
+enum RecordingStatus { uninitialized, initialized, recording, paused, stopped }

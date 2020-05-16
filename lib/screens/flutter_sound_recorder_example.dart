@@ -1,12 +1,6 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:typed_data' show Uint8List;
-
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter_sound/flauto.dart';
-import 'package:flutter_sound/flutter_sound_recorder.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/recording.dart';
 import 'package:voices/screens/chat_screen/widgets.dart';
@@ -21,124 +15,42 @@ class FlutterSoundRecorderExample extends StatefulWidget {
 
 class _FlutterSoundRecorderExampleState
     extends State<FlutterSoundRecorderExample> {
-  //for UI
-  bool _isRecording = false;
+  Stream<RecordingStatus> statusStream;
   bool _isDoneRecording = false;
-  bool _isInitialized = false;
-  Duration _lengthOfRecording;
-  String _pathOfRecording;
-  StreamSubscription _recorderSubscription;
-  StreamSubscription _dbPeakSubscription;
-  double _dbLevel;
   NewRecorderService newRecorderService;
 
   @override
   void initState() {
     super.initState();
-    initialize();
-  }
-
-  initialize() async {
     newRecorderService =
         Provider.of<NewRecorderService>(context, listen: false);
-    await newRecorderService.initialize();
-    setState(() {
-      _isInitialized = true;
-    });
-  }
-
-  void cancelRecorderSubscriptions() {
-    if (_recorderSubscription != null) {
-      _recorderSubscription.cancel();
-      _recorderSubscription = null;
-    }
-    if (_dbPeakSubscription != null) {
-      _dbPeakSubscription.cancel();
-      _dbPeakSubscription = null;
-    }
+    newRecorderService.initialize();
+    statusStream = newRecorderService.getStatusStream();
   }
 
   @override
   void dispose() {
     super.dispose();
-    cancelRecorderSubscriptions();
-    releaseFlauto();
-  }
-
-  Future<void> releaseFlauto() async {
-    try {
-      newRecorderService.dispose();
-    } catch (e) {
-      print('Released unsuccessful');
-      print(e);
-    }
+    newRecorderService.dispose();
   }
 
   void startRecorder() async {
     try {
-      _pathOfRecording = await newRecorderService.start();
-
-      _recorderSubscription =
-          newRecorderService.getPositionStream().listen((newPosition) {
-        _lengthOfRecording = newPosition;
-      });
-      _dbPeakSubscription =
-          newRecorderService.getDbLevelStream().listen((value) {
-        setState(() {
-          this._dbLevel = value;
-        });
-      });
-
-      this.setState(() {
-        this._isRecording = true;
-      });
+      await newRecorderService.start();
     } catch (err) {
       print('startRecorder error: $err');
-      setState(() {
-        stopRecorder();
-        this._isRecording = false;
-        if (_recorderSubscription != null) {
-          _recorderSubscription.cancel();
-          _recorderSubscription = null;
-        }
-        if (_dbPeakSubscription != null) {
-          _dbPeakSubscription.cancel();
-          _dbPeakSubscription = null;
-        }
-      });
     }
   }
 
   void stopRecorder() async {
     try {
       await newRecorderService.stop();
-      cancelRecorderSubscriptions();
     } catch (err) {
       print('stopRecorder error: $err');
     }
-    this.setState(() {
-      this._isRecording = false;
-      this._isDoneRecording = true;
+    setState(() {
+      _isDoneRecording = true;
     });
-  }
-
-  Future<bool> fileExists(String path) async {
-    return await File(path).exists();
-  }
-
-  // In this simple example, we just load a file in memory.This is stupid but just for demonstration  of startPlayerFromBuffer()
-  Future<Uint8List> makeBuffer(String path) async {
-    try {
-      if (!await fileExists(path)) return null;
-      File file = File(path);
-      file.openRead();
-      var contents = await file.readAsBytes();
-      print('The file is ${contents.length} bytes long.');
-      return contents;
-    } catch (e) {
-      print(e);
-      return null;
-    }
   }
 
   void pauseResumeRecorder() {
@@ -180,81 +92,148 @@ class _FlutterSoundRecorderExampleState
 
   @override
   Widget build(BuildContext context) {
-    if (!_isInitialized) {
-      return Container();
-    }
-    Widget recorderSection = Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Container(
-            margin: EdgeInsets.only(top: 12.0, bottom: 16.0),
-            child: Text(
-              this._lengthOfRecording?.toString() ?? '0s',
-              style: TextStyle(
-                fontSize: 35.0,
-                color: Colors.black,
-              ),
-            ),
-          ),
-          _isRecording
-              ? LinearProgressIndicator(
-                  value: 100.0 / 160.0 * (this._dbLevel ?? 1) / 100,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-                  backgroundColor: Colors.red)
-              : Container(),
-          Row(
-            children: <Widget>[
-              Container(
-                width: 56.0,
-                height: 50.0,
-                child: ClipOval(
-                  child: FlatButton(
-                    onPressed: onStartRecorderPressed(),
-                    padding: EdgeInsets.all(8.0),
-                    child: Image(
-                      image: recorderAssetImage(),
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                width: 56.0,
-                height: 50.0,
-                child: ClipOval(
-                  child: FlatButton(
-                    onPressed: onPauseResumeRecorderPressed(),
-                    disabledColor: Colors.white,
-                    padding: EdgeInsets.all(8.0),
-                    child: Image(
-                      width: 36.0,
-                      height: 36.0,
-                      image: AssetImage(onPauseResumeRecorderPressed() != null
-                          ? 'res/icons/ic_pause.png'
-                          : 'res/icons/ic_pause_disabled.png'),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-          ),
-        ]);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Flutter Sound'),
       ),
       body: ListView(
         children: <Widget>[
-          recorderSection,
+          StreamBuilder(
+              stream: statusStream,
+              initialData: RecordingStatus.uninitialized,
+              builder: (context, snapshot) {
+                RecordingStatus currentStatus = snapshot.data;
+                if (currentStatus == RecordingStatus.uninitialized) {
+                  return Container();
+                } else {
+                  return Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        if (currentStatus == RecordingStatus.recording)
+                          Container(
+                            margin: EdgeInsets.only(top: 12.0, bottom: 16.0),
+                            child: DurationCounter(),
+                          ),
+                        if (currentStatus == RecordingStatus.recording)
+                          DBLevelDisplay(),
+                        Row(
+                          children: <Widget>[
+                            Container(
+                              width: 56.0,
+                              height: 50.0,
+                              child: ClipOval(
+                                child: FlatButton(
+                                  onPressed: onStartRecorderPressed(),
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Image(
+                                    image: recorderAssetImage(),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 56.0,
+                              height: 50.0,
+                              child: ClipOval(
+                                child: FlatButton(
+                                  onPressed: onPauseResumeRecorderPressed(),
+                                  disabledColor: Colors.white,
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Image(
+                                    width: 36.0,
+                                    height: 36.0,
+                                    image: AssetImage(
+                                        onPauseResumeRecorderPressed() != null
+                                            ? 'res/icons/ic_pause.png'
+                                            : 'res/icons/ic_pause_disabled.png'),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                        ),
+                      ]);
+                }
+              }),
           if (_isDoneRecording)
             PlayerSection(
-              recording: Recording(
-                  path: _pathOfRecording, duration: _lengthOfRecording),
+              recording: newRecorderService.recording,
             ),
         ],
       ),
+    );
+  }
+}
+
+class DurationCounter extends StatefulWidget {
+  @override
+  _DurationCounterState createState() => _DurationCounterState();
+}
+
+class _DurationCounterState extends State<DurationCounter> {
+  Stream<Duration> positionStream;
+
+  @override
+  void initState() {
+    final newRecorderService =
+        Provider.of<NewRecorderService>(context, listen: false);
+    positionStream = newRecorderService.getPositionStream();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        StreamBuilder(
+          stream: positionStream,
+          builder: (context, snapshot) {
+            Duration position = snapshot.data;
+            return Text(
+              position?.toString() ?? '0s',
+              style: TextStyle(
+                fontSize: 35.0,
+                color: Colors.black,
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class DBLevelDisplay extends StatefulWidget {
+  @override
+  _DBLevelDisplayState createState() => _DBLevelDisplayState();
+}
+
+class _DBLevelDisplayState extends State<DBLevelDisplay> {
+  Stream<double> dbLevelStream;
+
+  @override
+  void initState() {
+    final newRecorderService =
+        Provider.of<NewRecorderService>(context, listen: false);
+    dbLevelStream = newRecorderService.getDbLevelStream();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: dbLevelStream,
+      builder: (context, snapshot) {
+        double dbLevel = snapshot.data;
+        return LinearProgressIndicator(
+            value: 100.0 / 160.0 * (dbLevel ?? 1) / 100,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+            backgroundColor: Colors.red);
+      },
     );
   }
 }
