@@ -1,19 +1,3 @@
-/*
- * This file is part of Flutter-Sound (Flauto).
- *
- *   Flutter-Sound (Flauto) is free software: you can redistribute it and/or modify
- *   it under the terms of the Lesser GNU General Public License
- *   version 3 (LGPL3) as published by the Free Software Foundation.
- *
- *   Flutter-Sound (Flauto) is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the Lesser GNU General Public License
- *   along with Flutter-Sound (Flauto).  If not, see <https://www.gnu.org/licenses/>.
- */
-
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data' show Uint8List;
@@ -21,30 +5,12 @@ import 'dart:typed_data' show Uint8List;
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:flutter_sound/flauto.dart';
 import 'package:flutter_sound/flutter_sound_recorder.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/recording.dart';
 import 'package:voices/screens/chat_screen/widgets.dart';
 import 'package:voices/services/local_player_service.dart';
-
-enum t_MEDIA {
-  FILE,
-  BUFFER,
-  ASSET,
-  STREAM,
-  REMOTE_EXAMPLE_FILE,
-}
-
-/// Boolean to specify if we want to test the Rentrance/Concurency feature.
-/// If true, we start two instances of FlautoPlayer when the user hit the "Play" button.
-/// If true, we start two instances of FlautoRecorder and one instance of FlautoPlayer when the user hit the Record button
-final exampleAudioFilePath =
-    "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3";
-final albumArtPath =
-    "https://file-examples.com/wp-content/uploads/2017/10/file_example_PNG_500kB.png";
 
 class FlutterSoundRecorderExample extends StatefulWidget {
   @override
@@ -54,32 +20,18 @@ class FlutterSoundRecorderExample extends StatefulWidget {
 
 class _FlutterSoundRecorderExampleState
     extends State<FlutterSoundRecorderExample> {
+  //for UI
   bool _isRecording = false;
   bool _isDoneRecording = false;
   Duration _lengthOfRecording;
-  List<String> _path = [null, null, null, null, null, null, null];
   String _pathOfRecording;
   StreamSubscription _recorderSubscription;
   StreamSubscription _dbPeakSubscription;
-
   FlutterSoundRecorder recorderModule;
-
-  String _recorderTxt = '00:00:00';
   double _dbLevel;
-
-  double sliderCurrentPosition = 0.0;
-  double maxDuration = 1.0;
-  t_MEDIA _media = t_MEDIA.FILE;
-  t_CODEC _codec = t_CODEC.CODEC_AAC;
-
-  bool _encoderSupported = true; // Optimist
-
-  double _duration = null;
 
   Future<void> _initializeExample() async {
     await recorderModule.setSubscriptionDuration(0.01);
-    initializeDateFormatting();
-    setCodec(_codec);
   }
 
   Future<void> init() async {
@@ -124,51 +76,26 @@ class _FlutterSoundRecorderExampleState
     }
   }
 
-  static const List<String> paths = [
-    'flutter_sound_example.aac', // DEFAULT
-    'flutter_sound_example.aac', // CODEC_AAC
-    'flutter_sound_example.opus', // CODEC_OPUS
-    'flutter_sound_example.caf', // CODEC_CAF_OPUS
-    'flutter_sound_example.mp3', // CODEC_MP3
-    'flutter_sound_example.ogg', // CODEC_VORBIS
-    'flutter_sound_example.pcm', // CODEC_PCM
-  ];
-
   void startRecorder() async {
     try {
-      // String path = await flutterSoundModule.startRecorder
-      // (
-      //   paths[_codec.index],
-      //   codec: _codec,
-      //   sampleRate: 16000,
-      //   bitRate: 16000,
-      //   numChannels: 1,
-      //   androidAudioSource: AndroidAudioSource.MIC,
-      // );
       Directory tempDir = await getTemporaryDirectory();
 
       _pathOfRecording = await recorderModule.startRecorder(
-        uri: '${tempDir.path}/${recorderModule.slotNo}-${paths[_codec.index]}',
-        codec: _codec,
+        uri:
+            '${tempDir.path}/${recorderModule.slotNo}-flutter_sound_example.aac',
+        codec: t_CODEC.CODEC_AAC,
       );
-      print('startRecorder: $_pathOfRecording');
 
       _recorderSubscription = recorderModule.onRecorderStateChanged.listen((e) {
         if (e != null && e.currentPosition != null) {
-          DateTime date = new DateTime.fromMillisecondsSinceEpoch(
-              e.currentPosition.toInt(),
-              isUtc: true);
-          String txt = DateFormat('mm:ss:SS', 'en_GB').format(date);
-          _lengthOfRecording =
-              Duration(milliseconds: e.currentPosition.toInt());
           this.setState(() {
-            this._recorderTxt = txt.substring(0, 8);
+            _lengthOfRecording =
+                Duration(milliseconds: e.currentPosition.toInt());
           });
         }
       });
       _dbPeakSubscription =
           recorderModule.onRecorderDbPeakChanged.listen((value) {
-        print("got update -> $value");
         setState(() {
           this._dbLevel = value;
         });
@@ -176,7 +103,6 @@ class _FlutterSoundRecorderExampleState
 
       this.setState(() {
         this._isRecording = true;
-        this._path[_codec.index] = _pathOfRecording;
       });
     } catch (err) {
       print('startRecorder error: $err');
@@ -195,30 +121,11 @@ class _FlutterSoundRecorderExampleState
     }
   }
 
-  Future<void> getDuration() async {
-    switch (_media) {
-      case t_MEDIA.FILE:
-      case t_MEDIA.BUFFER:
-        int d = await flutterSoundHelper.duration(this._path[_codec.index]);
-        _duration = d != null ? d / 1000.0 : null;
-        break;
-      case t_MEDIA.ASSET:
-        _duration = null;
-        break;
-      case t_MEDIA.REMOTE_EXAMPLE_FILE:
-        _duration = null;
-        break;
-    }
-    setState(() {});
-  }
-
   void stopRecorder() async {
     try {
       String result = await recorderModule.stopRecorder();
       print('stopRecorder: $result');
       cancelRecorderSubscriptions();
-
-      getDuration();
     } catch (err) {
       print('stopRecorder error: $err');
     }
@@ -246,16 +153,6 @@ class _FlutterSoundRecorderExampleState
       return null;
     }
   }
-
-  List<String> assetSample = [
-    'assets/samples/sample.aac',
-    'assets/samples/sample.aac',
-    'assets/samples/sample.opus',
-    'assets/samples/sample.caf',
-    'assets/samples/sample.mp3',
-    'assets/samples/sample.ogg',
-    'assets/samples/sample.pcm',
-  ];
 
   void pauseResumeRecorder() {
     if (recorderModule.isPaused) {
@@ -285,7 +182,7 @@ class _FlutterSoundRecorderExampleState
   void Function() onStartRecorderPressed() {
     //if (_media == t_MEDIA.ASSET || _media == t_MEDIA.BUFFER || _media == t_MEDIA.REMOTE_EXAMPLE_FILE) return null;
     // Disable the button if the selected codec is not supported
-    if (recorderModule == null || !_encoderSupported) return null;
+    if (recorderModule == null) return null;
     return startStopRecorder;
   }
 
@@ -297,14 +194,6 @@ class _FlutterSoundRecorderExampleState
         : AssetImage('res/icons/ic_stop.png');
   }
 
-  void setCodec(t_CODEC codec) async {
-    _encoderSupported = await recorderModule.isEncoderSupported(codec);
-
-    setState(() {
-      _codec = codec;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     Widget recorderSection = Column(
@@ -314,7 +203,7 @@ class _FlutterSoundRecorderExampleState
           Container(
             margin: EdgeInsets.only(top: 12.0, bottom: 16.0),
             child: Text(
-              this._recorderTxt,
+              this._lengthOfRecording?.toString() ?? '0s',
               style: TextStyle(
                 fontSize: 35.0,
                 color: Colors.black,
