@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/text_message.dart';
@@ -15,6 +16,7 @@ class MessageSendingSection extends StatefulWidget {
 class _MessageSendingSectionState extends State<MessageSendingSection> {
   final TextEditingController _messageTextController = TextEditingController();
   String _messageText = "";
+  bool isInitialized = false;
 
   Stream<RecordingStatus> _recorderStatusStream;
   Stream<Duration> _recorderPositionStream;
@@ -22,14 +24,35 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   @override
   void initState() {
     super.initState();
+    _initializeRecorder();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
     final recorderService =
         Provider.of<RecorderService>(context, listen: false);
+    recorderService.dispose();
+  }
+
+  _initializeRecorder() async {
+    final recorderService =
+        Provider.of<RecorderService>(context, listen: false);
+    await recorderService.initialize();
+    setState(() {
+      isInitialized = true;
+    });
     _recorderStatusStream = recorderService.getRecorderStatusStream();
     _recorderPositionStream = recorderService.getRecorderPositionStream();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!isInitialized) {
+      return Center(
+        child: CupertinoActivityIndicator(),
+      );
+    }
     final recorderService =
         Provider.of<RecorderService>(context, listen: false);
     final authService = Provider.of<AuthService>(context, listen: false);

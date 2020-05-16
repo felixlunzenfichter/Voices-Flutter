@@ -8,48 +8,13 @@ import 'package:path_provider/path_provider.dart';
 class RecorderService {
   Recording recording;
 
-  //private properties
-  FlutterSoundRecorder _recorder;
-  StreamController<RecordingStatus> _streamController =
-      StreamController<RecordingStatus>();
-  String _pathOfRecording;
-  t_CODEC _codec = t_CODEC.CODEC_AAC;
-  //paths depending on which codec is chosen
-  static const List<String> _fileExtensions = [
-    '.aac', // DEFAULT
-    '.aac', // CODEC_AAC
-    '.opus', // CODEC_OPUS
-    '.caf', // CODEC_CAF_OPUS
-    '.mp3', // CODEC_MP3
-    '.ogg', // CODEC_VORBIS
-    '.pcm', // CODEC_PCM
-  ];
-
-  RecorderService() {
-    _initializeRecorder();
-    _initializeFileLocation();
+  initialize() async {
+    await _initializeRecorder();
+    await _initializeFileLocation();
     _streamController.add(RecordingStatus.initialized);
   }
 
-  _initializeRecorder() async {
-    _recorder = await FlutterSoundRecorder().initialize();
-    await _recorder.setDbPeakLevelUpdate(0.8);
-    await _recorder.setDbLevelEnabled(true);
-    await _recorder.setDbLevelEnabled(true);
-  }
-
-  _initializeFileLocation() async {
-    try {
-      Directory tempDir = await getTemporaryDirectory();
-      _pathOfRecording =
-          '${tempDir.path}/${_recorder.slotNo}-voice_message_recording${_fileExtensions[_codec.index]}';
-    } catch (e) {
-      print(
-          'Could not initialize recording file location because of error = $e');
-    }
-  }
-
-  disposeRecorder() async {
+  dispose() async {
     try {
       await _recorder.release();
       await _streamController.close();
@@ -121,6 +86,42 @@ class RecorderService {
       return null;
     }
   }
+
+  _initializeRecorder() async {
+    _recorder = await FlutterSoundRecorder().initialize();
+    await _recorder.setSubscriptionDuration(0.01);
+    await _recorder.setDbPeakLevelUpdate(0.8);
+    await _recorder.setDbLevelEnabled(true);
+    await _recorder.setDbLevelEnabled(true);
+  }
+
+  _initializeFileLocation() async {
+    try {
+      Directory tempDir = await getTemporaryDirectory();
+      _pathOfRecording =
+          '${tempDir.path}/${_recorder.slotNo}-voice_message_recording${_fileExtensions[_codec.index]}';
+    } catch (e) {
+      print(
+          'Could not initialize recording file location because of error = $e');
+    }
+  }
+
+  //private properties
+  FlutterSoundRecorder _recorder;
+  StreamController<RecordingStatus> _streamController =
+      StreamController<RecordingStatus>();
+  String _pathOfRecording;
+  t_CODEC _codec = t_CODEC.CODEC_AAC;
+  //paths depending on which codec is chosen
+  static const List<String> _fileExtensions = [
+    '.aac', // DEFAULT
+    '.aac', // CODEC_AAC
+    '.opus', // CODEC_OPUS
+    '.caf', // CODEC_CAF_OPUS
+    '.mp3', // CODEC_MP3
+    '.ogg', // CODEC_VORBIS
+    '.pcm', // CODEC_PCM
+  ];
 }
 
 enum RecordingStatus { initialized, recording, paused, stopped }
