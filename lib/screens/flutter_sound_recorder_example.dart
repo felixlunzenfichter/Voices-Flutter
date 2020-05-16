@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
@@ -34,62 +35,6 @@ class _FlutterSoundRecorderExampleState
     newRecorderService.dispose();
   }
 
-  void startRecorder() async {
-    try {
-      await newRecorderService.start();
-    } catch (err) {
-      print('startRecorder error: $err');
-    }
-  }
-
-  void stopRecorder() async {
-    try {
-      await newRecorderService.stop();
-    } catch (err) {
-      print('stopRecorder error: $err');
-    }
-    setState(() {
-      _isDoneRecording = true;
-    });
-  }
-
-  void pauseResumeRecorder() {
-    if (newRecorderService.getIsPaused()) {
-      {
-        newRecorderService.resume();
-      }
-    } else {
-      newRecorderService.pause();
-    }
-  }
-
-  void Function() onPauseResumeRecorderPressed() {
-    if (newRecorderService.getIsPaused() ||
-        newRecorderService.getIsRecording()) {
-      return pauseResumeRecorder;
-    }
-    return null;
-  }
-
-  void Function() startStopRecorder() {
-    if (newRecorderService.getIsRecording() || newRecorderService.getIsPaused())
-      stopRecorder();
-    else
-      startRecorder();
-  }
-
-  void Function() onStartRecorderPressed() {
-    return startStopRecorder;
-  }
-
-  AssetImage recorderAssetImage() {
-    if (onStartRecorderPressed() == null)
-      return AssetImage('res/icons/ic_mic_disabled.png');
-    return (newRecorderService.getIsStopped())
-        ? AssetImage('res/icons/ic_mic.png')
-        : AssetImage('res/icons/ic_stop.png');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,42 +60,26 @@ class _FlutterSoundRecorderExampleState
                             margin: EdgeInsets.only(top: 12.0, bottom: 16.0),
                             child: DurationCounter(),
                           ),
-                        if (currentStatus == RecordingStatus.recording)
+                        if (currentStatus != RecordingStatus.initialized)
                           DBLevelDisplay(),
                         Row(
                           children: <Widget>[
-                            Container(
-                              width: 56.0,
-                              height: 50.0,
-                              child: ClipOval(
-                                child: FlatButton(
-                                  onPressed: onStartRecorderPressed(),
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Image(
-                                    image: recorderAssetImage(),
-                                  ),
-                                ),
+                            if (currentStatus == RecordingStatus.initialized ||
+                                currentStatus == RecordingStatus.stopped)
+                              CupertinoButton(
+                                onPressed: newRecorderService.start,
+                                child: Icon(Icons.mic),
                               ),
-                            ),
-                            Container(
-                              width: 56.0,
-                              height: 50.0,
-                              child: ClipOval(
-                                child: FlatButton(
-                                  onPressed: onPauseResumeRecorderPressed(),
-                                  disabledColor: Colors.white,
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Image(
-                                    width: 36.0,
-                                    height: 36.0,
-                                    image: AssetImage(
-                                        onPauseResumeRecorderPressed() != null
-                                            ? 'res/icons/ic_pause.png'
-                                            : 'res/icons/ic_pause_disabled.png'),
-                                  ),
-                                ),
+                            if (currentStatus == RecordingStatus.recording)
+                              CupertinoButton(
+                                onPressed: newRecorderService.pause,
+                                child: Icon(Icons.pause),
                               ),
-                            ),
+                            if (currentStatus == RecordingStatus.paused)
+                              CupertinoButton(
+                                onPressed: newRecorderService.resume,
+                                child: Icon(Icons.play_arrow),
+                              )
                           ],
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
