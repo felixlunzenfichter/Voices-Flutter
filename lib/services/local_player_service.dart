@@ -53,11 +53,13 @@ class LocalPlayerService {
   //get notified of changes
   Stream<PlayerStatus> getPlaybackStateStream() {
     return _player.playbackStateStream.map((audioPlaybackState) {
-      switch(audioPlaybackState){
+      switch (audioPlaybackState) {
         case AudioPlaybackState.none:
           return PlayerStatus.uninitialized;
         case AudioPlaybackState.connecting:
           return PlayerStatus.uninitialized;
+        case AudioPlaybackState.playing:
+          return PlayerStatus.playing;
         case AudioPlaybackState.stopped:
           return PlayerStatus.idle;
         case AudioPlaybackState.paused:
@@ -79,4 +81,4 @@ class LocalPlayerService {
   }
 }
 
-enum PlayerStatus{ uninitialized, idle, playing, paused, completed}
+enum PlayerStatus { uninitialized, idle, playing, paused, completed }

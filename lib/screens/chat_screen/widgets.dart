@@ -308,6 +308,7 @@ class _RecordingAndPlayingInfoState extends State<RecordingAndPlayingInfo> {
       stream: _recorderStatusStream,
       builder: (context, snapshot) {
         RecordingStatus status = snapshot.data;
+        print("RecordingAndPlayingInfo recorderStatus = $status");
         if (status != RecordingStatus.stopped) {
           return RecordingInfo();
         } else {
@@ -344,7 +345,6 @@ class _RecordingInfoState extends State<RecordingInfo> {
       stream: _recorderStatusStream,
       builder: (context, snapshot) {
         RecordingStatus status = snapshot.data;
-
         if (status == RecordingStatus.uninitialized) {
           return Text("Recorder not initialized");
         } else if (status == RecordingStatus.initialized) {
@@ -507,6 +507,7 @@ class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
       initialData: PlayerStatus.uninitialized,
       builder: (context, snapshot) {
         PlayerStatus status = snapshot.data;
+        print("status in local player widget = $status");
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [

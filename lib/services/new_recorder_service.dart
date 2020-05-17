@@ -15,6 +15,10 @@ class NewRecorderService {
   String _pathToRecording;
 
   initialize() async {
+    if (getIsInitialized()) {
+      //the recorder has already been initialized
+      return;
+    }
     _recorder = await FlutterSoundRecorder().initialize();
     await _recorder.setSubscriptionDuration(0.01);
     await _recorder.setDbPeakLevelUpdate(0.8);
@@ -80,6 +84,10 @@ class NewRecorderService {
 
   bool getIsStopped() {
     return _recorder.isStopped;
+  }
+
+  bool getIsInitialized() {
+    return _recorder?.isInited == t_INITIALIZED.FULLY_INITIALIZED;
   }
 }
 
