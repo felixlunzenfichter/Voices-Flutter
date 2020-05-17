@@ -83,7 +83,7 @@ class Voices extends StatelessWidget {
         ),
       ],
 
-      /// Detect gestures.
+      /// Remove the keyboard by taping on the screen.
       child: GestureDetector(
         onTap: () {
           FocusScopeNode currentFocus = FocusScope.of(context);
@@ -91,6 +91,8 @@ class Voices extends StatelessWidget {
             currentFocus.unfocus();
           }
         },
+
+        /// Manage the lifecycle of the app.
         child: LifeCycleManager(
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -106,18 +108,26 @@ class Voices extends StatelessWidget {
   }
 }
 
+/// Navigate the user through permission and login screen before the main app can be used.
 class ScreenToShow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
     final permissionService = Provider.of<PermissionService>(context);
 
+    /// Show a loading screen while we are verifying whether the user is logged in.
     if (authService.isFetching) {
       return LoadingScreen();
+
+      /// A null value for the currently logged in user reflects the fact that no one is logged in on this device. Thus we show the login scream.
     } else if (authService.loggedInUser == null) {
       return LoginScreen();
+
+      /// All required permissions need to be granted before the user can proceed from this scream.
     } else if (!permissionService.areAllPermissionsGranted) {
       return PermissionsScreen();
+
+      /// Let's go!
     } else {
       return TabsScreen();
     }
