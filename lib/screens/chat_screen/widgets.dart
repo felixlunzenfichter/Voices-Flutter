@@ -231,147 +231,78 @@ class PlayButton extends StatelessWidget {
 }
 
 ///to control the recording process
-class RecorderControls extends StatefulWidget {
-  @override
-  _RecorderControlsState createState() => _RecorderControlsState();
-}
-
-class _RecorderControlsState extends State<RecorderControls> {
-  NewRecorderService recorderService;
-  Stream<RecordingStatus> _recorderStatusStream;
-
-  @override
-  void initState() {
-    super.initState();
-    recorderService = Provider.of<NewRecorderService>(context, listen: false);
-    recorderService.initialize();
-    _recorderStatusStream = recorderService.getStatusStream();
-  }
-
+class RecorderControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      initialData: RecordingStatus.uninitialized,
-      stream: _recorderStatusStream,
-      builder: (context, snapshot) {
-        RecordingStatus status = snapshot.data;
-        if (status == RecordingStatus.uninitialized) {
-          return CupertinoActivityIndicator();
-        } else if (status == RecordingStatus.initialized ||
-            status == RecordingStatus.stopped) {
-          return StartRecordingButton(onPress: recorderService.start);
-        } else if (status == RecordingStatus.recording) {
-          return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                PauseRecordingButton(onPress: recorderService.pause),
-                SendRecordingButton(onPress: recorderService.stop),
-              ]);
-        } else if (status == RecordingStatus.paused) {
-          return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                ResumeRecordingButton(onPress: recorderService.resume),
-                SendRecordingButton(onPress: recorderService.stop),
-              ]);
-        } else {
-          print("The recorder controls are in a state it shouldn't be");
-          return Container();
-        }
-      },
-    );
+    final recorderService = Provider.of<NewRecorderService>(context);
+
+    if (recorderService.status == RecordingStatus.uninitialized) {
+      return CupertinoActivityIndicator();
+    } else if (recorderService.status == RecordingStatus.initialized ||
+        recorderService.status == RecordingStatus.stopped) {
+      return StartRecordingButton(onPress: recorderService.start);
+    } else if (recorderService.status == RecordingStatus.recording) {
+      return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            PauseRecordingButton(onPress: recorderService.pause),
+            SendRecordingButton(onPress: recorderService.stop),
+          ]);
+    } else if (recorderService.status == RecordingStatus.paused) {
+      return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            ResumeRecordingButton(onPress: recorderService.resume),
+            SendRecordingButton(onPress: recorderService.stop),
+          ]);
+    } else {
+      print("The recorder controls are in a state it shouldn't be");
+      return Container();
+    }
   }
 }
 
-class RecordingAndPlayingInfo extends StatefulWidget {
-  @override
-  _RecordingAndPlayingInfoState createState() =>
-      _RecordingAndPlayingInfoState();
-}
-
-class _RecordingAndPlayingInfoState extends State<RecordingAndPlayingInfo> {
-  NewRecorderService recorderService;
-  Stream<RecordingStatus> _recorderStatusStream;
-
-  @override
-  void initState() {
-    super.initState();
-    recorderService = Provider.of<NewRecorderService>(context, listen: false);
-    recorderService.initialize();
-    _recorderStatusStream = recorderService.getStatusStream();
-  }
-
+class RecordingAndPlayingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      initialData: RecordingStatus.uninitialized,
-      stream: _recorderStatusStream,
-      builder: (context, snapshot) {
-        RecordingStatus status = snapshot.data;
-        print("RecordingAndPlayingInfo recorderStatus = $status");
-        if (status != RecordingStatus.stopped) {
-          return RecordingInfo();
-        } else {
-          return LocalPlayerButtons(
-            recording: recorderService.recording,
-          );
-        }
-      },
-    );
+    final recorderService = Provider.of<NewRecorderService>(context);
+    if (recorderService.status != RecordingStatus.stopped) {
+      return RecordingInfo();
+    } else {
+      return LocalPlayerButtons(
+        recording: recorderService.recording,
+      );
+    }
   }
 }
 
-class RecordingInfo extends StatefulWidget {
-  @override
-  _RecordingInfoState createState() => _RecordingInfoState();
-}
-
-class _RecordingInfoState extends State<RecordingInfo> {
-  NewRecorderService recorderService;
-  Stream<RecordingStatus> _recorderStatusStream;
-
-  @override
-  void initState() {
-    super.initState();
-    recorderService = Provider.of<NewRecorderService>(context, listen: false);
-    recorderService.initialize();
-    _recorderStatusStream = recorderService.getStatusStream();
-  }
-
+class RecordingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      initialData: RecordingStatus.uninitialized,
-      stream: _recorderStatusStream,
-      builder: (context, snapshot) {
-        RecordingStatus status = snapshot.data;
-        print("recordingStatus in RecordingInfo = $status");
-        if (status == RecordingStatus.uninitialized) {
-          return Text("Recorder not initialized");
-        } else if (status == RecordingStatus.initialized) {
-          return Text("Recorder initialized");
-        } else if (status == RecordingStatus.paused ||
-            status == RecordingStatus.recording) {
-          return Column(
-            children: <Widget>[
-              if (status == RecordingStatus.paused)
-                Text("Recorder paused")
-              else
-                Text("Recorder recording"),
-              Text("Show position Streambuilder here")
-            ],
-          );
-        } else if (status == RecordingStatus.stopped) {
-          return Text("Recorder stopped");
-        } else {
-          return Container(
-            color: Colors.red,
-            child:
-                Text("The recorder controls are in a state they shouldn't be"),
-          );
-        }
-      },
-    );
+    final recorderService = Provider.of<NewRecorderService>(context);
+    if (recorderService.status == RecordingStatus.uninitialized) {
+      return Text("Recorder not initialized");
+    } else if (recorderService.status == RecordingStatus.initialized) {
+      return Text("Recorder initialized");
+    } else if (recorderService.status == RecordingStatus.paused ||
+        recorderService.status == RecordingStatus.recording) {
+      return Column(
+        children: <Widget>[
+          if (recorderService.status == RecordingStatus.paused)
+            Text("Recorder paused")
+          else
+            Text("Recorder recording"),
+          Text("Show position Streambuilder here")
+        ],
+      );
+    } else if (recorderService.status == RecordingStatus.stopped) {
+      return Text("Recorder stopped");
+    } else {
+      return Container(
+        color: Colors.red,
+        child: Text("The recorder controls are in a state they shouldn't be"),
+      );
+    }
   }
 }
 

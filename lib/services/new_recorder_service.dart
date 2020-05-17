@@ -1,38 +1,40 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_sound/flauto.dart';
 import 'package:flutter_sound/flutter_sound_recorder.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:voices/models/recording.dart';
 
-class NewRecorderService {
+class NewRecorderService with ChangeNotifier {
   Recording recording;
+  RecordingStatus status = RecordingStatus.uninitialized;
   bool get isPaused => _recorder.isPaused;
   bool get isRecording => _recorder.isRecording;
   bool get isStopped => _recorder.isStopped;
   bool get isInitialized =>
       _recorder?.isInited == t_INITIALIZED.FULLY_INITIALIZED;
 
-  //for internal use
-  FlutterSoundRecorder _recorder;
-  StreamController<RecordingStatus> _streamController =
-      StreamController<RecordingStatus>.broadcast();
-  String _pathToRecording;
-
-  initialize() async {
-    if (!isInitialized) {
-      //only initialize the recorder if it isn't already
-      _recorder = await FlutterSoundRecorder().initialize();
-      await _recorder.setSubscriptionDuration(0.01);
-      await _recorder.setDbPeakLevelUpdate(0.8);
-      await _recorder.setDbLevelEnabled(true);
-      _streamController.add(RecordingStatus.initialized);
-    }
+  NewRecorderService() {
+    _initialize();
   }
 
+  //for internal use
+  FlutterSoundRecorder _recorder;
+  String _pathToRecording;
+
+  _initialize() async {
+    _recorder = await FlutterSoundRecorder().initialize();
+    await _recorder.setSubscriptionDuration(0.01);
+    await _recorder.setDbPeakLevelUpdate(0.8);
+    await _recorder.setDbLevelEnabled(true);
+    status = RecordingStatus.initialized;
+  }
+
+  @override
   dispose() async {
     await _recorder.release();
-    _streamController.close();
+    super.dispose();
   }
 
   start() async {
@@ -43,7 +45,8 @@ class NewRecorderService {
       uri: _pathToRecording,
       codec: t_CODEC.CODEC_AAC,
     );
-    _streamController.add(RecordingStatus.recording);
+    status = RecordingStatus.recording;
+    notifyListeners();
   }
 
   stop() async {
@@ -51,20 +54,23 @@ class NewRecorderService {
     int durationInMs = await flutterSoundHelper.duration(_pathToRecording);
     recording = Recording(
         path: _pathToRecording, duration: Duration(milliseconds: durationInMs));
-    _streamController.add(RecordingStatus.stopped);
+    status = RecordingStatus.stopped;
+    notifyListeners();
   }
 
   pause() async {
     await _recorder.pauseRecorder();
-    _streamController.add(RecordingStatus.paused);
+    status = RecordingStatus.paused;
+    notifyListeners();
   }
 
   resume() async {
     await _recorder.resumeRecorder();
-    _streamController.add(RecordingStatus.recording);
+    status = RecordingStatus.recording;
+    notifyListeners();
   }
 
-  ///we can only call this after start() is done
+  /// This can only call this after [_recorder.startRecorder()] is done.
   Stream<Duration> getPositionStream() {
     return _recorder.onRecorderStateChanged.map((state) =>
         Duration(milliseconds: state?.currentPosition?.toInt() ?? 0));
@@ -72,10 +78,6 @@ class NewRecorderService {
 
   Stream<double> getDbLevelStream() {
     return _recorder.onRecorderDbPeakChanged;
-  }
-
-  Stream<RecordingStatus> getStatusStream() {
-    return _streamController.stream;
   }
 }
 
