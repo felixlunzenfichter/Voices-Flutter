@@ -11,14 +11,13 @@ class NewRecorderService {
   //for internal use
   FlutterSoundRecorder _recorder;
   StreamController<RecordingStatus> _streamController =
-      StreamController<RecordingStatus>();
+      StreamController<RecordingStatus>.broadcast();
   String _pathToRecording;
 
   initialize() async {
     _recorder = await FlutterSoundRecorder().initialize();
     await _recorder.setSubscriptionDuration(0.01);
     await _recorder.setDbPeakLevelUpdate(0.8);
-    await _recorder.setDbLevelEnabled(true);
     await _recorder.setDbLevelEnabled(true);
     _streamController.add(RecordingStatus.initialized);
   }
@@ -40,21 +39,21 @@ class NewRecorderService {
   }
 
   stop() async {
-    _streamController.add(RecordingStatus.stopped);
     await _recorder.stopRecorder();
     int durationInMs = await flutterSoundHelper.duration(_pathToRecording);
     recording = Recording(
         path: _pathToRecording, duration: Duration(milliseconds: durationInMs));
+    _streamController.add(RecordingStatus.stopped);
   }
 
   pause() async {
-    _streamController.add(RecordingStatus.paused);
     await _recorder.pauseRecorder();
+    _streamController.add(RecordingStatus.paused);
   }
 
   resume() async {
-    _streamController.add(RecordingStatus.recording);
     await _recorder.resumeRecorder();
+    _streamController.add(RecordingStatus.recording);
   }
 
   ///we can only call this after start() is done
@@ -68,7 +67,7 @@ class NewRecorderService {
   }
 
   Stream<RecordingStatus> getStatusStream() {
-    return _streamController.stream.asBroadcastStream();
+    return _streamController.stream;
   }
 
   bool getIsPaused() {

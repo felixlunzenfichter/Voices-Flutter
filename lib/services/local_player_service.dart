@@ -9,11 +9,11 @@ class LocalPlayerService {
   final _player = AudioPlayer();
 
   //pass in audioChunk to be played
-  initializePlayer({@required Recording recording}) async {
+  initialize({@required Recording recording}) async {
     await _player.setFilePath(recording.path);
   }
 
-  disposePlayer() {
+  dispose() {
     _player.dispose();
   }
 
@@ -51,16 +51,32 @@ class LocalPlayerService {
   }
 
   //get notified of changes
-  Stream<FullAudioPlaybackState> getPlaybackStateStream() {
-    return _player.fullPlaybackStateStream;
+  Stream<PlayerStatus> getPlaybackStateStream() {
+    return _player.playbackStateStream.map((audioPlaybackState) {
+      switch(audioPlaybackState){
+        case AudioPlaybackState.none:
+          return PlayerStatus.uninitialized;
+        case AudioPlaybackState.connecting:
+          return PlayerStatus.uninitialized;
+        case AudioPlaybackState.stopped:
+          return PlayerStatus.idle;
+        case AudioPlaybackState.paused:
+          return PlayerStatus.paused;
+        case AudioPlaybackState.completed:
+          return PlayerStatus.idle;
+        default:
+          return PlayerStatus.uninitialized;
+      }
+    });
   }
 
   Stream<Duration> getPositionStream() {
     return _player.getPositionStream();
   }
 
-  //this doesn't seem to work if we upload the file without metadata
   Stream<Duration> getLengthOfAudioStream() {
     return _player.durationStream;
   }
 }
+
+enum PlayerStatus{ uninitialized, idle, playing, paused, completed}

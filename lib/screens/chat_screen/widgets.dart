@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:provider/provider.dart';
 import 'package:voices/models/image_message.dart';
 import 'package:voices/models/message.dart';
+import 'package:voices/models/recording.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/models/voice_message.dart';
+import 'package:voices/services/local_player_service.dart';
+import 'package:voices/services/new_recorder_service.dart';
 import 'package:voices/shared_widgets/time_stamp_text.dart';
-import 'package:voices/services/recorder_service.dart';
 import 'voice_message_widget.dart';
 
 class SendTextField extends StatelessWidget {
@@ -227,49 +230,89 @@ class PlayButton extends StatelessWidget {
   }
 }
 
-class RecorderControls extends StatelessWidget {
-  final Stream<RecordingStatus> recorderStatusStream;
-  final Function start;
-  final Function pause;
-  final Function resume;
-  final Function stopAndSend;
+///to control the recording process
+class RecorderControls extends StatefulWidget {
+  @override
+  _RecorderControlsState createState() => _RecorderControlsState();
+}
 
-  RecorderControls(
-      {@required this.recorderStatusStream,
-      @required this.start,
-      @required this.pause,
-      @required this.resume,
-      @required this.stopAndSend});
+class _RecorderControlsState extends State<RecorderControls> {
+  NewRecorderService recorderService;
+  Stream<RecordingStatus> _recorderStatusStream;
+
+  @override
+  void initState() {
+    super.initState();
+    recorderService = Provider.of<NewRecorderService>(context, listen: false);
+    recorderService.initialize();
+    _recorderStatusStream = recorderService.getStatusStream();
+  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      initialData: RecordingStatus.initialized,
-      stream: recorderStatusStream,
+      initialData: RecordingStatus.uninitialized,
+      stream: _recorderStatusStream,
       builder: (context, snapshot) {
         RecordingStatus status = snapshot.data;
-
-        if (status == RecordingStatus.initialized ||
+        if (status == RecordingStatus.uninitialized) {
+          return CupertinoActivityIndicator();
+        } else if (status == RecordingStatus.initialized ||
             status == RecordingStatus.stopped) {
-          return StartRecordingButton(onPress: start);
+          return StartRecordingButton(onPress: recorderService.start);
         } else if (status == RecordingStatus.recording) {
           return Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                PauseRecordingButton(onPress: pause),
-                SendRecordingButton(onPress: stopAndSend),
+                PauseRecordingButton(onPress: recorderService.pause),
+                SendRecordingButton(onPress: recorderService.stop),
               ]);
         } else if (status == RecordingStatus.paused) {
           return Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                ResumeRecordingButton(onPress: resume),
-                SendRecordingButton(onPress: stopAndSend),
+                ResumeRecordingButton(onPress: recorderService.resume),
+                SendRecordingButton(onPress: recorderService.stop),
               ]);
         } else {
-          return Container(
-            color: Colors.red,
-            child: Text("The recorder controls are in a state it shouldn't be"),
+          print("The recorder controls are in a state it shouldn't be");
+          return Container();
+        }
+      },
+    );
+  }
+}
+
+class RecordingAndPlayingInfo extends StatefulWidget {
+  @override
+  _RecordingAndPlayingInfoState createState() =>
+      _RecordingAndPlayingInfoState();
+}
+
+class _RecordingAndPlayingInfoState extends State<RecordingAndPlayingInfo> {
+  NewRecorderService recorderService;
+  Stream<RecordingStatus> _recorderStatusStream;
+
+  @override
+  void initState() {
+    super.initState();
+    recorderService = Provider.of<NewRecorderService>(context, listen: false);
+    recorderService.initialize();
+    _recorderStatusStream = recorderService.getStatusStream();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      initialData: RecordingStatus.uninitialized,
+      stream: _recorderStatusStream,
+      builder: (context, snapshot) {
+        RecordingStatus status = snapshot.data;
+        if (status != RecordingStatus.stopped) {
+          return RecordingInfo();
+        } else {
+          return LocalPlayerButtons(
+            recording: recorderService.recording,
           );
         }
       },
@@ -277,22 +320,34 @@ class RecorderControls extends StatelessWidget {
   }
 }
 
-class RecordingInfo extends StatelessWidget {
-  final Stream<RecordingStatus> recorderStatusStream;
-  final Stream<Duration> positionStream;
+class RecordingInfo extends StatefulWidget {
+  @override
+  _RecordingInfoState createState() => _RecordingInfoState();
+}
 
-  RecordingInfo(
-      {@required this.recorderStatusStream, @required this.positionStream});
+class _RecordingInfoState extends State<RecordingInfo> {
+  NewRecorderService recorderService;
+  Stream<RecordingStatus> _recorderStatusStream;
+
+  @override
+  void initState() {
+    super.initState();
+    recorderService = Provider.of<NewRecorderService>(context, listen: false);
+    recorderService.initialize();
+    _recorderStatusStream = recorderService.getStatusStream();
+  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      initialData: RecordingStatus.initialized,
-      stream: recorderStatusStream,
+      initialData: RecordingStatus.uninitialized,
+      stream: _recorderStatusStream,
       builder: (context, snapshot) {
         RecordingStatus status = snapshot.data;
 
-        if (status == RecordingStatus.initialized) {
+        if (status == RecordingStatus.uninitialized) {
+          return Text("Recorder not initialized");
+        } else if (status == RecordingStatus.initialized) {
           return Text("Recorder initialized");
         } else if (status == RecordingStatus.paused ||
             status == RecordingStatus.recording) {
@@ -310,7 +365,8 @@ class RecordingInfo extends StatelessWidget {
         } else {
           return Container(
             color: Colors.red,
-            child: Text("The recorder controls are in a state it shouldn't be"),
+            child:
+                Text("The recorder controls are in a state they shouldn't be"),
           );
         }
       },
@@ -318,7 +374,7 @@ class RecordingInfo extends StatelessWidget {
   }
 }
 
-class PlayerControls extends StatefulWidget {
+class CloudPlayerButtons extends StatefulWidget {
   final Function({@required double currentSpeed}) play;
   final Function pause;
   final Function({@required Duration position}) seek;
@@ -327,7 +383,7 @@ class PlayerControls extends StatefulWidget {
   final Stream<Duration> positionStream;
   final Duration lengthOfAudio;
 
-  PlayerControls(
+  CloudPlayerButtons(
       {@required this.play,
       @required this.pause,
       @required this.seek,
@@ -337,10 +393,10 @@ class PlayerControls extends StatefulWidget {
       @required this.lengthOfAudio});
 
   @override
-  _PlayerControlsState createState() => _PlayerControlsState();
+  _CloudPlayerButtonsState createState() => _CloudPlayerButtonsState();
 }
 
-class _PlayerControlsState extends State<PlayerControls> {
+class _CloudPlayerButtonsState extends State<CloudPlayerButtons> {
   double _currentSpeed = 1;
 
   @override
@@ -408,6 +464,111 @@ class _PlayerControlsState extends State<PlayerControls> {
                     _currentSpeed = 1;
                   });
                   widget.setSpeed(speed: 1);
+                }
+              },
+              text: "${_currentSpeed.floor().toString()}x",
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class LocalPlayerButtons extends StatefulWidget {
+  final Recording recording;
+
+  LocalPlayerButtons({@required this.recording});
+
+  @override
+  _LocalPlayerButtonsState createState() => _LocalPlayerButtonsState();
+}
+
+class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
+  double _currentSpeed = 1;
+
+  LocalPlayerService playerService;
+  Stream<PlayerStatus> _statusStream;
+  Stream<Duration> _positionStream;
+
+  @override
+  void initState() {
+    super.initState();
+    playerService = Provider.of<LocalPlayerService>(context, listen: false);
+    playerService.initialize(recording: widget.recording);
+    _statusStream = playerService.getPlaybackStateStream();
+    _positionStream = playerService.getPositionStream();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<PlayerStatus>(
+      stream: _statusStream,
+      initialData: PlayerStatus.uninitialized,
+      builder: (context, snapshot) {
+        PlayerStatus status = snapshot.data;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("${widget.recording.duration.inSeconds}s"),
+            if (status == PlayerStatus.uninitialized)
+              Container(
+                margin: EdgeInsets.all(8.0),
+                width: 64.0,
+                height: 64.0,
+                child: CupertinoActivityIndicator(),
+              )
+            else if (status == PlayerStatus.playing)
+              ButtonFromPicture(
+                onPress: playerService.pause,
+                image: Image.asset('assets/pause_1.png'),
+              )
+            else
+              ButtonFromPicture(
+                onPress: () {
+                  playerService.play(currentSpeed: _currentSpeed);
+                },
+                image: Image.asset('assets/play_1.png'),
+              ),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 2 / 7,
+              ),
+              child: StreamBuilder<Duration>(
+                stream: _positionStream,
+                builder: (context, snapshot) {
+                  var position = snapshot.data ?? Duration.zero;
+                  Duration lengthOfAudio = widget.recording.duration;
+                  if (position > lengthOfAudio) {
+                    position = lengthOfAudio;
+                  }
+                  return SeekBar(
+                    duration: lengthOfAudio,
+                    position: position,
+                    onChangeEnd: (newPosition) {
+                      playerService.seek(position: newPosition);
+                    },
+                  );
+                },
+              ),
+            ),
+            SpeedButton(
+              onPress: () {
+                bool shouldBePlayingAfter = status == PlayerStatus.playing;
+                if (_currentSpeed == 1) {
+                  setState(() {
+                    _currentSpeed = 2;
+                  });
+                  playerService.setSpeed(
+                      speed: 2,
+                      shouldBePlayingAfterSpeedIsSet: shouldBePlayingAfter);
+                } else {
+                  setState(() {
+                    _currentSpeed = 1;
+                  });
+                  playerService.setSpeed(
+                      speed: 1,
+                      shouldBePlayingAfterSpeedIsSet: shouldBePlayingAfter);
                 }
               },
               text: "${_currentSpeed.floor().toString()}x",

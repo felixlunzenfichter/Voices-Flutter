@@ -6,7 +6,6 @@ import 'package:voices/screens/chat_screen/chat_screen.dart';
 import 'package:voices/screens/chat_screen/widgets.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
-import 'package:voices/services/recorder_service.dart';
 
 class MessageSendingSection extends StatefulWidget {
   @override
@@ -16,55 +15,16 @@ class MessageSendingSection extends StatefulWidget {
 class _MessageSendingSectionState extends State<MessageSendingSection> {
   final TextEditingController _messageTextController = TextEditingController();
   String _messageText = "";
-  bool isInitialized = false;
-
-  Stream<RecordingStatus> _recorderStatusStream;
-  Stream<Duration> _recorderPositionStream;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeRecorder();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    final recorderService =
-        Provider.of<RecorderService>(context, listen: false);
-    recorderService.dispose();
-  }
-
-  _initializeRecorder() async {
-    final recorderService =
-        Provider.of<RecorderService>(context, listen: false);
-    await recorderService.initialize();
-    setState(() {
-      isInitialized = true;
-    });
-    _recorderStatusStream = recorderService.getRecorderStatusStream();
-    _recorderPositionStream = recorderService.getRecorderPositionStream();
-  }
 
   @override
   Widget build(BuildContext context) {
-    if (!isInitialized) {
-      return Center(
-        child: CupertinoActivityIndicator(),
-      );
-    }
-    final recorderService =
-        Provider.of<RecorderService>(context, listen: false);
     final authService = Provider.of<AuthService>(context, listen: false);
     final screenInfo =
         Provider.of<GlobalChatScreenInfo>(context, listen: false);
 
     return Column(
       children: <Widget>[
-        RecordingInfo(
-          recorderStatusStream: _recorderStatusStream,
-          positionStream: _recorderPositionStream,
-        ),
+        RecordingAndPlayingInfo(),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
@@ -90,45 +50,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 },
               )
             else
-              RecorderControls(
-                  recorderStatusStream: _recorderStatusStream,
-                  start: () {
-                    recorderService.start();
-                  },
-                  pause: () {
-                    recorderService.pause();
-                  },
-                  resume: (recorderService.resume()),
-                  stopAndSend: () async {
-                    try {
-                      //stop the recording
-                      await recorderService.stop();
-
-                      //send the voice message
-//                      final storageService =
-//                          Provider.of<StorageService>(context, listen: false);
-//                      String pathInFirebaseStorage =
-//                          "voice_messages/${screenInfo.chatId}/${DateTime.now().millisecondsSinceEpoch.toString()}.aac";
-//                      String downloadUrl = await storageService.uploadAudioFile(
-//                          firebasePath: pathInFirebaseStorage,
-//                          audioFile: File(recorderService.recording.path));
-//                      VoiceMessage voiceMessage = VoiceMessage(
-//                          senderUid: authService.loggedInUser.uid,
-//                          downloadUrl: downloadUrl,
-//                          transcript: "This is the transcript",
-//                          length: recorderService.recording.duration);
-//
-//                      final cloudFirestoreService =
-//                          Provider.of<CloudFirestoreService>(context,
-//                              listen: false);
-//                      await cloudFirestoreService.addVoiceMessage(
-//                          chatId: screenInfo.chatId,
-//                          voiceMessage: voiceMessage);
-                    } catch (e) {
-                      print(
-                          "Something went wrong when uploading voice message: $e");
-                    }
-                  }),
+              RecorderControls(),
           ],
         ),
       ],
