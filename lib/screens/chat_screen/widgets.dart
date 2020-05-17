@@ -8,7 +8,7 @@ import 'package:voices/models/recording.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/models/voice_message.dart';
 import 'package:voices/services/local_player_service.dart';
-import 'package:voices/services/new_recorder_service.dart';
+import 'package:voices/services/recorder_service.dart';
 import 'package:voices/shared_widgets/time_stamp_text.dart';
 import 'voice_message_widget.dart';
 
@@ -234,7 +234,7 @@ class PlayButton extends StatelessWidget {
 class RecorderControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final recorderService = Provider.of<NewRecorderService>(context);
+    final recorderService = Provider.of<RecorderService>(context);
 
     if (recorderService.status == RecordingStatus.uninitialized) {
       return CupertinoActivityIndicator();
@@ -265,7 +265,7 @@ class RecorderControls extends StatelessWidget {
 class RecordingAndPlayingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final recorderService = Provider.of<NewRecorderService>(context);
+    final recorderService = Provider.of<RecorderService>(context);
     if (recorderService.status != RecordingStatus.stopped) {
       return RecordingInfo();
     } else {
@@ -279,7 +279,7 @@ class RecordingAndPlayingInfo extends StatelessWidget {
 class RecordingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final recorderService = Provider.of<NewRecorderService>(context);
+    final recorderService = Provider.of<RecorderService>(context);
     if (recorderService.status == RecordingStatus.uninitialized) {
       return Text("Recorder not initialized");
     } else if (recorderService.status == RecordingStatus.initialized) {

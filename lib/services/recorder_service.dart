@@ -6,7 +6,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:voices/models/recording.dart';
 
-class NewRecorderService with ChangeNotifier {
+class RecorderService with ChangeNotifier {
   Recording recording;
   RecordingStatus status = RecordingStatus.uninitialized;
   bool get isPaused => _recorder.isPaused;
@@ -15,7 +15,7 @@ class NewRecorderService with ChangeNotifier {
   bool get isInitialized =>
       _recorder?.isInited == t_INITIALIZED.FULLY_INITIALIZED;
 
-  NewRecorderService() {
+  RecorderService() {
     _initialize();
   }
 
@@ -51,15 +51,14 @@ class NewRecorderService with ChangeNotifier {
 
   stop() async {
     await _recorder.stopRecorder();
-    int durationInMs = await flutterSoundHelper.duration(_pathToRecording);
-    recording = Recording(
-        path: _pathToRecording, duration: Duration(milliseconds: durationInMs));
+    await _setRecording();
     status = RecordingStatus.stopped;
     notifyListeners();
   }
 
   pause() async {
     await _recorder.pauseRecorder();
+    await _setRecording();
     status = RecordingStatus.paused;
     notifyListeners();
   }
@@ -78,6 +77,12 @@ class NewRecorderService with ChangeNotifier {
 
   Stream<double> getDbLevelStream() {
     return _recorder.onRecorderDbPeakChanged;
+  }
+
+  _setRecording() async {
+    int durationInMs = await flutterSoundHelper.duration(_pathToRecording);
+    recording = Recording(
+        path: _pathToRecording, duration: Duration(milliseconds: durationInMs));
   }
 }
 
