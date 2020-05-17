@@ -345,6 +345,7 @@ class _RecordingInfoState extends State<RecordingInfo> {
       stream: _recorderStatusStream,
       builder: (context, snapshot) {
         RecordingStatus status = snapshot.data;
+        print("recordingStatus in RecordingInfo = $status");
         if (status == RecordingStatus.uninitialized) {
           return Text("Recorder not initialized");
         } else if (status == RecordingStatus.initialized) {

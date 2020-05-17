@@ -7,6 +7,11 @@ import 'package:voices/models/recording.dart';
 
 class NewRecorderService {
   Recording recording;
+  bool get isPaused => _recorder.isPaused;
+  bool get isRecording => _recorder.isRecording;
+  bool get isStopped => _recorder.isStopped;
+  bool get isInitialized =>
+      _recorder?.isInited == t_INITIALIZED.FULLY_INITIALIZED;
 
   //for internal use
   FlutterSoundRecorder _recorder;
@@ -15,15 +20,14 @@ class NewRecorderService {
   String _pathToRecording;
 
   initialize() async {
-    if (getIsInitialized()) {
-      //the recorder has already been initialized
-      return;
+    if (!isInitialized) {
+      //only initialize the recorder if it isn't already
+      _recorder = await FlutterSoundRecorder().initialize();
+      await _recorder.setSubscriptionDuration(0.01);
+      await _recorder.setDbPeakLevelUpdate(0.8);
+      await _recorder.setDbLevelEnabled(true);
+      _streamController.add(RecordingStatus.initialized);
     }
-    _recorder = await FlutterSoundRecorder().initialize();
-    await _recorder.setSubscriptionDuration(0.01);
-    await _recorder.setDbPeakLevelUpdate(0.8);
-    await _recorder.setDbLevelEnabled(true);
-    _streamController.add(RecordingStatus.initialized);
   }
 
   dispose() async {
@@ -72,22 +76,6 @@ class NewRecorderService {
 
   Stream<RecordingStatus> getStatusStream() {
     return _streamController.stream;
-  }
-
-  bool getIsPaused() {
-    return _recorder.isPaused;
-  }
-
-  bool getIsRecording() {
-    return _recorder.isRecording;
-  }
-
-  bool getIsStopped() {
-    return _recorder.isStopped;
-  }
-
-  bool getIsInitialized() {
-    return _recorder?.isInited == t_INITIALIZED.FULLY_INITIALIZED;
   }
 }
 
