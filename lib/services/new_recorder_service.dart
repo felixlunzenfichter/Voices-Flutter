@@ -47,18 +47,6 @@ class NewRecorderService {
         path: _pathToRecording, duration: Duration(milliseconds: durationInMs));
   }
 
-  bool getIsPaused() {
-    return _recorder.isPaused;
-  }
-
-  bool getIsRecording() {
-    return _recorder.isRecording;
-  }
-
-  bool getIsStopped() {
-    return _recorder.isStopped;
-  }
-
   pause() async {
     _streamController.add(RecordingStatus.paused);
     await _recorder.pauseRecorder();
@@ -81,6 +69,18 @@ class NewRecorderService {
 
   Stream<RecordingStatus> getStatusStream() {
     return _streamController.stream.asBroadcastStream();
+  }
+
+  bool getIsPaused() {
+    return _recorder.isPaused;
+  }
+
+  bool getIsRecording() {
+    return _recorder.isRecording;
+  }
+
+  bool getIsStopped() {
+    return _recorder.isStopped;
   }
 }
 

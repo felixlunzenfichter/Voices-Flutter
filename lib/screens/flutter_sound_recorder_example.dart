@@ -55,7 +55,7 @@ class _FlutterSoundRecorderExampleState
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        if (currentStatus == RecordingStatus.recording)
+                        if (currentStatus != RecordingStatus.initialized)
                           Container(
                             margin: EdgeInsets.only(top: 12.0, bottom: 16.0),
                             child: DurationCounter(),
@@ -79,7 +79,18 @@ class _FlutterSoundRecorderExampleState
                               CupertinoButton(
                                 onPressed: newRecorderService.resume,
                                 child: Icon(Icons.play_arrow),
-                              )
+                              ),
+                            if (currentStatus == RecordingStatus.recording ||
+                                currentStatus == RecordingStatus.paused)
+                              CupertinoButton(
+                                onPressed: () async {
+                                  await newRecorderService.stop();
+                                  setState(() {
+                                    _isDoneRecording = true;
+                                  });
+                                },
+                                child: Icon(Icons.stop),
+                              ),
                           ],
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -190,7 +201,7 @@ class _PlayerSectionState extends State<PlayerSection> {
   @override
   Widget build(BuildContext context) {
     if (!isInitialized) {
-      return Text("Player is not initialized yet");
+      return CupertinoActivityIndicator();
     } else {
       final playerService =
           Provider.of<LocalPlayerService>(context, listen: false);
