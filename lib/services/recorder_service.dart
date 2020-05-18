@@ -29,20 +29,28 @@ class RecorderService with ChangeNotifier {
   /// This function can only be executed once per session else it crashes on iOS (because there is already an initialized recorder)
   /// So when we hot restart the app this makes it crash
   _initialize() async {
-    _recorder = await FlutterSoundRecorder().initialize();
-    await _recorder.setSubscriptionDuration(0.01);
-    await _recorder.setDbPeakLevelUpdate(0.8);
-    await _recorder.setDbLevelEnabled(true);
-    _tempDir = await getTemporaryDirectory();
-    _pathToSavedRecording = "${_tempDir.path}/saved_recording.aac";
-    status = RecordingStatus.initialized;
-    notifyListeners();
+    try {
+      _recorder = await FlutterSoundRecorder().initialize();
+      await _recorder.setSubscriptionDuration(0.01);
+      await _recorder.setDbPeakLevelUpdate(0.8);
+      await _recorder.setDbLevelEnabled(true);
+      _tempDir = await getTemporaryDirectory();
+      _pathToSavedRecording = "${_tempDir.path}/saved_recording.aac";
+      status = RecordingStatus.initialized;
+      notifyListeners();
+    } catch (e) {
+      print("Recorder service could not be initialized because of error = $e");
+    }
   }
 
   @override
   dispose() async {
-    await _recorder.release();
-    super.dispose();
+    try {
+      await _recorder.release();
+      super.dispose();
+    } catch (e) {
+      print("Recorder service could not be disposed because of error = $e");
+    }
   }
 
   /// The counters in this class ensure that the functions can only be executed once
@@ -59,7 +67,8 @@ class RecorderService with ChangeNotifier {
         _fileConverterService.deleteFileAt(path: _pathToSavedRecording);
         await _startWithoutReset();
       } catch (e) {
-        print("Could not start recording because of error = $e");
+        print(
+            "Recorder service could not start recording because of error = $e");
       }
       _startCounter = 0;
     }
@@ -79,7 +88,8 @@ class RecorderService with ChangeNotifier {
         status = RecordingStatus.stopped;
         notifyListeners();
       } catch (e) {
-        print("Could not stop recording because of error = $e");
+        print(
+            "Recorder service could not stop recording because of error = $e");
       }
       _stopCounter = 0;
     }
@@ -95,7 +105,8 @@ class RecorderService with ChangeNotifier {
         status = RecordingStatus.paused;
         notifyListeners();
       } catch (e) {
-        print("Could not pause recording because of error = $e");
+        print(
+            "Recorder service could not pause recording because of error = $e");
       }
       _pauseCounter = 0;
     }
@@ -108,7 +119,8 @@ class RecorderService with ChangeNotifier {
       try {
         await _startWithoutReset();
       } catch (e) {
-        print("Could not resume recording because of error = $e");
+        print(
+            "Recorder service could not resume recording because of error = $e");
       }
       _resumeCounter = 0;
     }
@@ -125,7 +137,7 @@ class RecorderService with ChangeNotifier {
       });
     } catch (e) {
       print(
-          "Could not get the recorders position stream because of error = $e");
+          "Recorder service could not get the recorders position stream because of error = $e");
       return Stream.value(Duration.zero);
     }
   }
@@ -134,7 +146,8 @@ class RecorderService with ChangeNotifier {
     try {
       return _recorder.onRecorderDbPeakChanged;
     } catch (e) {
-      print("Could not get the recorders dbLevel stream because of error = $e");
+      print(
+          "Recorder service could not get the recorders dbLevel stream because of error = $e");
       return Stream.value(0.0);
     }
   }

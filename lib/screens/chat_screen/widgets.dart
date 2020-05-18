@@ -458,9 +458,7 @@ class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
               )
             else
               ButtonFromPicture(
-                onPress: () {
-                  playerService.play(currentSpeed: _currentSpeed);
-                },
+                onPress: playerService.play,
                 image: Image.asset('assets/play_1.png'),
               ),
             ConstrainedBox(
@@ -472,6 +470,8 @@ class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
                 builder: (context, snapshot) {
                   var position = snapshot.data ?? Duration.zero;
                   Duration lengthOfAudio = widget.recording.duration;
+
+                  /// This is needed in case the actual audio recording is longer than the duration that the recorder service specified
                   if (position > lengthOfAudio) {
                     position = lengthOfAudio;
                   }
@@ -487,21 +487,16 @@ class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
             ),
             SpeedButton(
               onPress: () {
-                bool shouldBePlayingAfter = status == PlayerStatus.playing;
                 if (_currentSpeed == 1) {
                   setState(() {
                     _currentSpeed = 2;
                   });
-                  playerService.setSpeed(
-                      speed: 2,
-                      shouldBePlayingAfterSpeedIsSet: shouldBePlayingAfter);
+                  playerService.setSpeed(speed: 2);
                 } else {
                   setState(() {
                     _currentSpeed = 1;
                   });
-                  playerService.setSpeed(
-                      speed: 1,
-                      shouldBePlayingAfterSpeedIsSet: shouldBePlayingAfter);
+                  playerService.setSpeed(speed: 1);
                 }
               },
               text: "${_currentSpeed.floor().toString()}x",
