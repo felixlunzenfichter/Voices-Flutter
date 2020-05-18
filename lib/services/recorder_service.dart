@@ -5,24 +5,26 @@ import 'package:flutter_sound/flutter_sound_recorder.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:voices/models/recording.dart';
+import 'package:voices/services/file_converter_service.dart';
 
 class RecorderService with ChangeNotifier {
   Recording recording;
   RecordingStatus status = RecordingStatus.uninitialized;
-  bool get isPaused => _recorder.isPaused;
-  bool get isRecording => _recorder.isRecording;
-  bool get isStopped => _recorder.isStopped;
-  bool get isInitialized =>
-      _recorder?.isInited == t_INITIALIZED.FULLY_INITIALIZED;
 
   RecorderService() {
     _initialize();
   }
 
-  //for internal use
+  /// Private properties
   FlutterSoundRecorder _recorder;
-  String _pathToRecording;
   Directory _tempDir;
+  FileConverterService _fileConverterService = FileConverterService();
+
+  /// This is the file path in which the [_recorder] writes its data. From the moment it gets assigned in [_initialize()] it stays fixed
+  String _pathToCurrentRecording;
+
+  /// This is the file path to which the [recording] will be saved to. It changes with every call of [_startWithoutReset()]
+  String _pathToSavedRecording;
 
   /// This function can only be executed once per session else it crashes on iOS (because there is already an initialized recorder)
   /// So when we hot restart the app this makes it crash
@@ -32,6 +34,7 @@ class RecorderService with ChangeNotifier {
     await _recorder.setDbPeakLevelUpdate(0.8);
     await _recorder.setDbLevelEnabled(true);
     _tempDir = await getTemporaryDirectory();
+    _pathToSavedRecording = "${_tempDir.path}/saved_recording.aac";
     status = RecordingStatus.initialized;
     notifyListeners();
   }
@@ -43,14 +46,12 @@ class RecorderService with ChangeNotifier {
   }
 
   start() async {
-    _pathToRecording =
-        '${_tempDir.path}/${_recorder.slotNo}-flutter_sound_example.aac';
-    await _recorder.startRecorder(
-      uri: _pathToRecording,
-      codec: t_CODEC.CODEC_AAC,
-    );
-    status = RecordingStatus.recording;
-    notifyListeners();
+    /// Reset current recording so the position stream doesn't add the time of the last recording to its position
+    recording = null;
+
+    /// Delete the last saved recording so new recordings are not concatenated to it
+    _fileConverterService.deleteFileAt(path: _pathToSavedRecording);
+    await _startWithoutReset();
   }
 
   stop() async {
@@ -61,32 +62,59 @@ class RecorderService with ChangeNotifier {
   }
 
   pause() async {
-    await _recorder.pauseRecorder();
-    //await _setRecording();
+    await _recorder.stopRecorder();
+    await _setRecording();
     status = RecordingStatus.paused;
     notifyListeners();
   }
 
   resume() async {
-    await _recorder.resumeRecorder();
-    status = RecordingStatus.recording;
-    notifyListeners();
+    await _startWithoutReset();
   }
 
-  /// This can only call this after [_recorder.startRecorder()] is done.
+  /// This function can only be called this after [_recorder.startRecorder()] is done.
   Stream<Duration> getPositionStream() {
-    return _recorder.onRecorderStateChanged.map((state) =>
-        Duration(milliseconds: state?.currentPosition?.toInt() ?? 0));
+    return _recorder.onRecorderStateChanged.map((state) {
+      Duration lengthOfCurrentRecording = recording?.duration ?? Duration.zero;
+      return lengthOfCurrentRecording +
+          Duration(milliseconds: state?.currentPosition?.toInt() ?? 0);
+    });
   }
 
   Stream<double> getDbLevelStream() {
     return _recorder.onRecorderDbPeakChanged;
   }
 
+  /// Concatenate the current recording with the new recording and save it as the current recording
   _setRecording() async {
-    int durationInMs = await flutterSoundHelper.duration(_pathToRecording);
+    /// If the recording is null that means it is the first chunk of audio since [start] has been called and there is nothing to concatenate
+    if (recording != null) {
+      File concatenatedFile = await _fileConverterService.concatenate(
+          file1: File(_pathToSavedRecording),
+          file2: File(_pathToCurrentRecording),
+          newFilename: "concatenated");
+      await _fileConverterService.copyFileTo(
+          file: concatenatedFile, toPath: _pathToSavedRecording);
+    } else {
+      ///copy the current recording to the saved recording
+      await _fileConverterService.copyFileTo(
+          file: File(_pathToCurrentRecording), toPath: _pathToSavedRecording);
+    }
+    int durationInMs = await flutterSoundHelper.duration(_pathToSavedRecording);
     recording = Recording(
-        path: _pathToRecording, duration: Duration(milliseconds: durationInMs));
+        path: _pathToSavedRecording,
+        duration: Duration(milliseconds: durationInMs));
+  }
+
+  _startWithoutReset() async {
+    _pathToCurrentRecording =
+        '${_tempDir.path}/${_recorder.slotNo}-current_recording.aac';
+    await _recorder.startRecorder(
+      uri: _pathToCurrentRecording,
+      codec: t_CODEC.CODEC_AAC,
+    );
+    status = RecordingStatus.recording;
+    notifyListeners();
   }
 }
 

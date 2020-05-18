@@ -4,6 +4,7 @@ import 'package:flutter_sound/flutter_ffmpeg.dart';
 
 class FileConverterService {
   final FlutterFFmpeg _flutterFfmpeg = new FlutterFFmpeg();
+  final String _defaultAudioFileExtention = ".aac";
 
   Future<File> concatenate(
       {@required File file1,
@@ -18,11 +19,18 @@ class FileConverterService {
     /// The ffmpeg command needs a text file which specifies all the file paths of the files it needs to concatenate
     String textFilePath = parentDirectoryPath + "/filesToConcatenate.txt";
     File textFile = File(textFilePath);
+
+    /// Todo check if its necessary to delete text file or if it can be overwritten
+    if (await textFile.exists()) {
+      await textFile.delete();
+    }
     String textFileContent = "file '${file1.path}'\nfile '${file2.path}'";
     await textFile.writeAsString(textFileContent, flush: true);
 
-    String newFilePath = parentDirectoryPath + "/$newFilename.aac";
+    String newFilePath =
+        parentDirectoryPath + "/" + newFilename + _defaultAudioFileExtention;
 
+    /// Todo check what -c copy does, it seems like we need to add the option -y to overwrite the output
     if (await _flutterFfmpeg.execute(
             "-f concat -safe 0 -i ${textFile.path} -c copy $newFilePath") ==
         -1) {
@@ -31,6 +39,15 @@ class FileConverterService {
       print("ffmpeg concatenating exited successfully");
     }
     return File(newFilePath);
+  }
+
+  copyFileTo({@required File file, @required String toPath}) async {
+    /// This overwrites the file at toPath if it exists
+    await file.copy(toPath);
+  }
+
+  deleteFileAt({@required String path}) async {
+    await File(path).delete();
   }
 
   Future<File> createAudioFileChunkFromFile(

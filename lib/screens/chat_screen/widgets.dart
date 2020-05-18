@@ -256,7 +256,7 @@ class RecorderControls extends StatelessWidget {
             SendRecordingButton(onPress: recorderService.stop),
           ]);
     } else {
-      print("The recorder controls are in a state it shouldn't be");
+      print("The recorder controls are in a state they shouldn't be");
       return Container();
     }
   }
@@ -266,12 +266,13 @@ class RecordingAndPlayingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
-    if (recorderService.status != RecordingStatus.stopped) {
-      return RecordingInfo();
-    } else {
+    if (recorderService.status == RecordingStatus.stopped ||
+        recorderService.status == RecordingStatus.paused) {
       return LocalPlayerButtons(
         recording: recorderService.recording,
       );
+    } else {
+      return RecordingInfo();
     }
   }
 }
