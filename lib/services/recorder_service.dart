@@ -45,49 +45,98 @@ class RecorderService with ChangeNotifier {
     super.dispose();
   }
 
+  /// The counters in this class ensure that the functions can only be executed once
+  int _startCounter = 0;
   start() async {
-    /// Reset current recording so the position stream doesn't add the time of the last recording to its position
-    recording = null;
+    if (_startCounter == 0) {
+      _startCounter++;
+      try {
+        /// Reset current recording so the position stream doesn't add the time of the last recording to its position
+        recording = null;
 
-    /// Delete the last saved recording so new recordings are not concatenated to it
-    /// Todo check if this is necessary
-    _fileConverterService.deleteFileAt(path: _pathToSavedRecording);
-    await _startWithoutReset();
-  }
-
-  stop() async {
-    await _recorder.stopRecorder();
-
-    /// If the [status] is paused the recording was already set when the last [pause()] was executed and doesn't need to be set again
-    if (status != RecordingStatus.paused) {
-      await _setRecording();
+        /// Delete the last saved recording so new recordings are not concatenated to it
+        /// Todo check if this is necessary
+        _fileConverterService.deleteFileAt(path: _pathToSavedRecording);
+        await _startWithoutReset();
+      } catch (e) {
+        print("Could not start recording because of error = $e");
+      }
+      _startCounter = 0;
     }
-    status = RecordingStatus.stopped;
-    notifyListeners();
   }
 
+  int _stopCounter = 0;
+  stop() async {
+    if (_stopCounter == 0) {
+      _stopCounter++;
+      try {
+        await _recorder.stopRecorder();
+
+        /// If the [status] is paused the recording was already set when the last [pause()] was executed and doesn't need to be set again
+        if (status != RecordingStatus.paused) {
+          await _setRecording();
+        }
+        status = RecordingStatus.stopped;
+        notifyListeners();
+      } catch (e) {
+        print("Could not stop recording because of error = $e");
+      }
+      _stopCounter = 0;
+    }
+  }
+
+  int _pauseCounter = 0;
   pause() async {
-    await _recorder.stopRecorder();
-    await _setRecording();
-    status = RecordingStatus.paused;
-    notifyListeners();
+    if (_pauseCounter == 0) {
+      _pauseCounter++;
+      try {
+        await _recorder.stopRecorder();
+        await _setRecording();
+        status = RecordingStatus.paused;
+        notifyListeners();
+      } catch (e) {
+        print("Could not pause recording because of error = $e");
+      }
+      _pauseCounter = 0;
+    }
   }
 
+  int _resumeCounter = 0;
   resume() async {
-    await _startWithoutReset();
+    if (_resumeCounter == 0) {
+      _resumeCounter++;
+      try {
+        await _startWithoutReset();
+      } catch (e) {
+        print("Could not resume recording because of error = $e");
+      }
+      _resumeCounter = 0;
+    }
   }
 
   /// This function can only be called this after [_recorder.startRecorder()] is done.
   Stream<Duration> getPositionStream() {
-    return _recorder.onRecorderStateChanged.map((state) {
-      Duration lengthOfCurrentRecording = recording?.duration ?? Duration.zero;
-      return lengthOfCurrentRecording +
-          Duration(milliseconds: state?.currentPosition?.toInt() ?? 0);
-    });
+    try {
+      return _recorder.onRecorderStateChanged.map((state) {
+        Duration lengthOfCurrentRecording =
+            recording?.duration ?? Duration.zero;
+        return lengthOfCurrentRecording +
+            Duration(milliseconds: state?.currentPosition?.toInt() ?? 0);
+      });
+    } catch (e) {
+      print(
+          "Could not get the recorders position stream because of error = $e");
+      return Stream.value(Duration.zero);
+    }
   }
 
   Stream<double> getDbLevelStream() {
-    return _recorder.onRecorderDbPeakChanged;
+    try {
+      return _recorder.onRecorderDbPeakChanged;
+    } catch (e) {
+      print("Could not get the recorders dbLevel stream because of error = $e");
+      return Stream.value(0.0);
+    }
   }
 
   /// Concatenate the current recording with the new recording and save it as the current recording
