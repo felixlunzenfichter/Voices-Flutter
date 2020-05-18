@@ -22,13 +22,18 @@ class RecorderService with ChangeNotifier {
   //for internal use
   FlutterSoundRecorder _recorder;
   String _pathToRecording;
+  Directory _tempDir;
 
+  /// This function can only be executed once per session else it crashes on iOS (because there is already an initialized recorder)
+  /// So when we hot restart the app this makes it crash
   _initialize() async {
     _recorder = await FlutterSoundRecorder().initialize();
     await _recorder.setSubscriptionDuration(0.01);
     await _recorder.setDbPeakLevelUpdate(0.8);
     await _recorder.setDbLevelEnabled(true);
+    _tempDir = await getTemporaryDirectory();
     status = RecordingStatus.initialized;
+    notifyListeners();
   }
 
   @override
@@ -38,9 +43,8 @@ class RecorderService with ChangeNotifier {
   }
 
   start() async {
-    Directory tempDir = await getTemporaryDirectory();
     _pathToRecording =
-        '${tempDir.path}/${_recorder.slotNo}-flutter_sound_example.aac';
+        '${_tempDir.path}/${_recorder.slotNo}-flutter_sound_example.aac';
     await _recorder.startRecorder(
       uri: _pathToRecording,
       codec: t_CODEC.CODEC_AAC,
@@ -58,7 +62,7 @@ class RecorderService with ChangeNotifier {
 
   pause() async {
     await _recorder.pauseRecorder();
-    await _setRecording();
+    //await _setRecording();
     status = RecordingStatus.paused;
     notifyListeners();
   }
