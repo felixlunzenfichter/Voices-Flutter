@@ -16,12 +16,12 @@ class FileConverterService {
     String parentDirectoryPath = file1.parent.path;
 
     /// The ffmpeg command needs a text file which specifies all the file paths of the files it needs to concatenate
-    String textFileContent = "file '${file1.path}'\nfile '${file2.path}'";
     String textFilePath = parentDirectoryPath + "/filesToConcatenate.txt";
-    File textFile =
-        await File(textFilePath).writeAsString(textFileContent, flush: true);
+    File textFile = File(textFilePath);
+    String textFileContent = "file '${file1.path}'\nfile '${file2.path}'";
+    await textFile.writeAsString(textFileContent, flush: true);
 
-    String newFilePath = parentDirectoryPath + "/$newFilename.wav";
+    String newFilePath = parentDirectoryPath + "/$newFilename.aac";
 
     if (await _flutterFfmpeg.execute(
             "-f concat -safe 0 -i ${textFile.path} -c copy $newFilePath") ==
