@@ -19,20 +19,18 @@ class FileConverterService {
     /// The ffmpeg command needs a text file which specifies all the file paths of the files it needs to concatenate
     String textFilePath = parentDirectoryPath + "/filesToConcatenate.txt";
     File textFile = File(textFilePath);
-
-    /// Todo check if its necessary to delete text file or if it can be overwritten
-    if (await textFile.exists()) {
-      await textFile.delete();
-    }
     String textFileContent = "file '${file1.path}'\nfile '${file2.path}'";
+
+    /// This overwrites the contents of the file if it already exist
     await textFile.writeAsString(textFileContent, flush: true);
 
     String newFilePath =
         parentDirectoryPath + "/" + newFilename + _defaultAudioFileExtention;
 
-    /// Todo check what -c copy does, it seems like we need to add the option -y to overwrite the output
+    /// Todo understand every part of this command (-safe 0 and -c copy)
+    /// -y is necessary to overwrite the output file
     if (await _flutterFfmpeg.execute(
-            "-f concat -safe 0 -i ${textFile.path} -c copy $newFilePath") ==
+            "-f concat -y -safe 0 -i ${textFile.path} -c copy $newFilePath") ==
         -1) {
       print("An error occured while executing ffmpeg concat command");
     } else {

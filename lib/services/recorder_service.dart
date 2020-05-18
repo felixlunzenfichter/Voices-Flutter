@@ -50,13 +50,18 @@ class RecorderService with ChangeNotifier {
     recording = null;
 
     /// Delete the last saved recording so new recordings are not concatenated to it
+    /// Todo check if this is necessary
     _fileConverterService.deleteFileAt(path: _pathToSavedRecording);
     await _startWithoutReset();
   }
 
   stop() async {
     await _recorder.stopRecorder();
-    await _setRecording();
+
+    /// If the [status] is paused the recording was already set when the last [pause()] was executed and doesn't need to be set again
+    if (status != RecordingStatus.paused) {
+      await _setRecording();
+    }
     status = RecordingStatus.stopped;
     notifyListeners();
   }

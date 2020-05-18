@@ -440,7 +440,6 @@ class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
       initialData: PlayerStatus.uninitialized,
       builder: (context, snapshot) {
         PlayerStatus status = snapshot.data;
-        print("status in local player widget = $status");
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
