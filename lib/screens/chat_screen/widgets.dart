@@ -355,8 +355,9 @@ class RecordingBars extends StatefulWidget {
 class _RecordingBarsState extends State<RecordingBars> {
   StreamSubscription<double> dbLevelStreamSubscription;
   List<double> storedDbLevels = [];
-  static const double BAR_WIDTH = 5;
+  static const double BAR_WIDTH = 3;
   final _listKey = GlobalKey<AnimatedListState>();
+  final ScrollController _controller = ScrollController();
 
   @override
   void initState() {
@@ -366,6 +367,10 @@ class _RecordingBarsState extends State<RecordingBars> {
         recorderService.getDbLevelStream().listen((newDbLevel) {
       if (newDbLevel != null) {
         _insertNewDbLevel(newDbLevel: newDbLevel);
+
+        /// Specifying a very long duration like 1 second for scrolling to the end of the list makes the animation look really smooth
+        _controller.animateTo(_controller.position.maxScrollExtent,
+            duration: Duration(seconds: 1), curve: Curves.linear);
       }
     });
     super.initState();
@@ -382,6 +387,8 @@ class _RecordingBarsState extends State<RecordingBars> {
     return SizedBox(
       height: widget.height,
       child: AnimatedList(
+          padding: const EdgeInsets.symmetric(horizontal: 50),
+          controller: _controller,
           key: _listKey,
           scrollDirection: Axis.horizontal,
           initialItemCount: storedDbLevels.length,

@@ -10,8 +10,10 @@ import 'package:voices/services/file_converter_service.dart';
 class RecorderService with ChangeNotifier {
   Recording recording;
   RecordingStatus status = RecordingStatus.uninitialized;
-  static const String recordingFormat = ".aac";
-  static const String listeningFormat = ".mp3";
+  static const String RECORDING_FORMAT = ".aac";
+  static const String LISTENING_FORMAT = ".mp3";
+  static const Duration UPDATE_FREQUENCY_DURATION = Duration(milliseconds: 100);
+  static const Duration UPDATE_FREQUENCY_DB_LEVEL = Duration(milliseconds: 100);
 
   RecorderService() {
     _initialize();
@@ -33,12 +35,14 @@ class RecorderService with ChangeNotifier {
   _initialize() async {
     try {
       _recorder = await FlutterSoundRecorder().initialize();
-      await _recorder.setSubscriptionDuration(0.1);
-      await _recorder.setDbPeakLevelUpdate(0.5);
+      await _recorder.setSubscriptionDuration(
+          UPDATE_FREQUENCY_DURATION.inMilliseconds.toDouble() / 1000.0);
+      await _recorder.setDbPeakLevelUpdate(
+          UPDATE_FREQUENCY_DB_LEVEL.inMilliseconds.toDouble() / 1000.0);
       await _recorder.setDbLevelEnabled(true);
       _tempDir = await getTemporaryDirectory();
       _pathToSavedRecording =
-          "${_tempDir.path}/saved_recording$listeningFormat";
+          "${_tempDir.path}/saved_recording$LISTENING_FORMAT";
       status = RecordingStatus.initialized;
       notifyListeners();
     } catch (e) {
@@ -157,14 +161,14 @@ class RecorderService with ChangeNotifier {
     if (recording != null) {
       /// Since the concatenate function needs the input files to be in the same format the current recording needs to be converted into the listeningFormat first
       String pathToConvertedFile =
-          "${_tempDir.path}/converted_recording$listeningFormat";
+          "${_tempDir.path}/converted_recording$LISTENING_FORMAT";
       await _fileConverterService
           .convertFileFromRecordingToListeningFormatAndSaveUnter(
               file: File(_pathToCurrentRecording), toPath: pathToConvertedFile);
       File concatenatedFile = await _fileConverterService.concatenate(
           file1: File(_pathToSavedRecording),
           file2: File(pathToConvertedFile),
-          newFilename: "concatenated$listeningFormat");
+          newFilename: "concatenated$LISTENING_FORMAT");
       await _fileConverterService.copyFileTo(
           file: concatenatedFile, toPath: _pathToSavedRecording);
     } else {
@@ -182,7 +186,7 @@ class RecorderService with ChangeNotifier {
 
   _startWithoutReset() async {
     _pathToCurrentRecording =
-        "${_tempDir.path}/${_recorder.slotNo}-current_recording$recordingFormat";
+        "${_tempDir.path}/${_recorder.slotNo}-current_recording$RECORDING_FORMAT";
     await _recorder.startRecorder(
       uri: _pathToCurrentRecording,
       codec: t_CODEC.CODEC_AAC,
