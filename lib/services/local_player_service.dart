@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:voices/models/recording.dart';
+import 'dart:io' show Platform;
 
 class LocalPlayerService {
   /// Private properties
@@ -27,12 +28,18 @@ class LocalPlayerService {
   }
 
   play() async {
+    print("play is executed from local player");
+    print(_currentSpeed);
     try {
-      if (_currentSpeed == 1) {
-        await _player.play();
+      if (Platform.isIOS) {
+        /// On iOS [_player.setSpeed] is the only way to play a stopped audio in the right speed
+        if (_currentSpeed == 1) {
+          await _player.play();
+        } else {
+          await _player.setSpeed(_currentSpeed);
+        }
       } else {
-        //_player.setSpeed is the only way to play a stopped audio in the right speed
-        await _player.setSpeed(_currentSpeed);
+        await _player.play();
       }
     } catch (e) {
       print("Local audio player could not start playing because of error = $e");
@@ -64,11 +71,11 @@ class LocalPlayerService {
     }
   }
 
-  /// [_player.setspeed()] starts playing the audio so it needs to be paused immediately after if it wasn't playing before
+  /// On iOS [_player.setspeed()] starts playing the audio so it needs to be paused immediately after, if it wasn't playing before
   setSpeed({@required double speed}) async {
     try {
       bool shouldPauseAfterSpeedSet =
-          _player.playbackState != AudioPlaybackState.playing;
+          _player.playbackState != AudioPlaybackState.playing && Platform.isIOS;
       await _player.setSpeed(speed);
       _currentSpeed = speed;
       if (shouldPauseAfterSpeedSet) {
