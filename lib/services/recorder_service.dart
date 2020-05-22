@@ -31,19 +31,19 @@ class RecorderService with ChangeNotifier {
   /// This function can only be executed once per session else it crashes on iOS (because there is already an initialized recorder)
   /// So when we hot restart the app this makes it crash
   _initialize() async {
-    try {
-      _recorder = await FlutterSoundRecorder().initialize();
-      await _recorder.setSubscriptionDuration(0.01);
-      await _recorder.setDbPeakLevelUpdate(0.8);
-      await _recorder.setDbLevelEnabled(true);
-      _tempDir = await getTemporaryDirectory();
-      _pathToSavedRecording =
-          "${_tempDir.path}/saved_recording$listeningFormat";
-      status = RecordingStatus.initialized;
-      notifyListeners();
-    } catch (e) {
-      print("Recorder service could not be initialized because of error = $e");
-    }
+//    try {
+//      _recorder = await FlutterSoundRecorder().initialize();
+//      await _recorder.setSubscriptionDuration(0.1);
+//      await _recorder.setDbPeakLevelUpdate(0.5);
+//      await _recorder.setDbLevelEnabled(true);
+//      _tempDir = await getTemporaryDirectory();
+//      _pathToSavedRecording =
+//          "${_tempDir.path}/saved_recording$listeningFormat";
+//      status = RecordingStatus.initialized;
+//      notifyListeners();
+//    } catch (e) {
+//      print("Recorder service could not be initialized because of error = $e");
+//    }
   }
 
   @override

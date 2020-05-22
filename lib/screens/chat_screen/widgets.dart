@@ -293,7 +293,8 @@ class RecordingInfo extends StatelessWidget {
             Text("Recorder paused")
           else
             Text("Recorder recording"),
-          Text("Show position Streambuilder here")
+          DurationCounter(),
+          RecordingBars(),
         ],
       );
     } else if (recorderService.status == RecordingStatus.stopped) {
@@ -304,6 +305,152 @@ class RecordingInfo extends StatelessWidget {
         child: Text("The recorder controls are in a state they shouldn't be"),
       );
     }
+  }
+}
+
+class DurationCounter extends StatefulWidget {
+  @override
+  _DurationCounterState createState() => _DurationCounterState();
+}
+
+class _DurationCounterState extends State<DurationCounter> {
+  Stream<Duration> positionStream;
+
+  @override
+  void initState() {
+    final recorderService =
+        Provider.of<RecorderService>(context, listen: false);
+    positionStream = recorderService.getPositionStream();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: positionStream,
+      builder: (context, snapshot) {
+        Duration position = snapshot.data;
+        return Text(
+          "${position?.inSeconds ?? 0}s",
+          style: TextStyle(
+            fontSize: 35.0,
+            color: Colors.black,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class RecordingBars extends StatefulWidget {
+  @override
+  _RecordingBarsState createState() => _RecordingBarsState();
+}
+
+class _RecordingBarsState extends State<RecordingBars> {
+  Stream<double> dbLevelStream;
+  List<double> storedDbLevels = [];
+
+  @override
+  void initState() {
+    final recorderService =
+        Provider.of<RecorderService>(context, listen: false);
+    dbLevelStream = recorderService.getDbLevelStream();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<double>(
+      stream: dbLevelStream,
+      builder: (context, snapshot) {
+        double dbLevel = snapshot.data;
+        if (dbLevel != null) {
+          storedDbLevels.add(dbLevel);
+        }
+        return ListOfBars(
+            //dbLevels: storedDbLevels,
+            );
+      },
+    );
+  }
+}
+
+class ListOfBars extends StatelessWidget {
+  final List<double> dbLevels = [
+    1.1589591828954398,
+    1.5492386641375544,
+    8.865999336207281,
+    9.794837455883181,
+    10.960308625975582,
+    10.960308625975582,
+    7.7272644418592185,
+    7.7272644418592185,
+    10.032654099520354,
+    37.589329408395116,
+    37.589329408395116,
+    66.05341590035121,
+    69.02807685012152,
+    55.137967510191395,
+    13.88115942401422,
+    87.45614073623923,
+    87.45614073623923,
+    67.70728432185717,
+    81.8095578773076,
+    81.8095578773076,
+    80.81855952035619,
+    80.81855952035619,
+    60.56003162252874,
+    27.0441728330637,
+    27.0441728330637,
+    93.43962705930493,
+    93.43962705930493,
+    64.84641082037601,
+    64.84641082037601,
+    36.39870677144349,
+    74.26231199856842,
+    74.26231199856842,
+    51.390254757057534,
+    60.833158045527455,
+    60.833158045527455,
+    15.312298715144422
+  ];
+  final double height;
+  static const double BAR_WIDTH = 5;
+
+  ListOfBars({this.height = 100});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: height,
+      child: AnimatedList(
+          scrollDirection: Axis.horizontal,
+          initialItemCount: dbLevels.length,
+          itemBuilder: (context, index, animation) {
+            /// This is a value between 0 and 120
+            double dbLevel = dbLevels[index];
+            double heightOfBar = dbLevel / 120 * height;
+            return SizeTransition(
+              axis: Axis.horizontal,
+              sizeFactor: animation,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 1),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: BAR_WIDTH,
+                    height: heightOfBar,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(2),
+                      color: Colors.blueAccent,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+    );
   }
 }
 
@@ -516,44 +663,47 @@ class MessageRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 4),
-      child: Column(
-        // a column with just one child because I haven't figure out how else to size the bubble to fit its contents instead of filling it
-        crossAxisAlignment:
-            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: <Widget>[
-          if (message.messageType == MessageType.text)
-            MessageBubble(
-                shouldAlignRight: isMe,
-                child: Text(
-                  (message as TextMessage).text,
-                  style: TextStyle(
-                    fontSize: 15.0,
-                  ),
-                ),
-                timestamp: message.timestamp),
-          if (message.messageType == MessageType.voice)
-            VoiceMessageWidget(
-              voiceMessage: (message as VoiceMessage),
-              key: ValueKey(message.messageId),
+    Widget messageWidget;
+    switch (message.messageType) {
+      case MessageType.text:
+        messageWidget = MessageBubble(
+            shouldAlignRight: isMe,
+            child: Text(
+              (message as TextMessage).text,
+              style: TextStyle(
+                fontSize: 15.0,
+              ),
             ),
-          if (message.messageType == MessageType.image)
-            MessageBubble(
-                shouldAlignRight: isMe,
-                child: Image.network(
-                  (message as ImageMessage).downloadUrl,
-                  loadingBuilder: (context, child, progress) {
-                    return progress == null
-                        ? child
-                        : CupertinoActivityIndicator();
-                  },
-                  width: MediaQuery.of(context).size.width * 2 / 3,
-                  height: MediaQuery.of(context).size.width * 2 / 3,
-                  fit: BoxFit.cover,
-                ),
-                timestamp: message.timestamp),
-        ],
+            timestamp: message.timestamp);
+        break;
+      case MessageType.voice:
+        messageWidget = VoiceMessageWidget(
+          voiceMessage: (message as VoiceMessage),
+          key: ValueKey(message.messageId),
+        );
+        break;
+      case MessageType.image:
+        messageWidget = MessageBubble(
+            shouldAlignRight: isMe,
+            child: Image.network(
+              (message as ImageMessage).downloadUrl,
+              loadingBuilder: (context, child, progress) {
+                return progress == null ? child : CupertinoActivityIndicator();
+              },
+              width: MediaQuery.of(context).size.width * 2 / 3,
+              height: MediaQuery.of(context).size.width * 2 / 3,
+              fit: BoxFit.cover,
+            ),
+            timestamp: message.timestamp);
+        break;
+      default:
+        messageWidget = Text("The message type is unknown");
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4),
+      child: Align(
+        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: messageWidget,
       ),
     );
   }
