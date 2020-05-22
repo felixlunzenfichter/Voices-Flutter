@@ -1,5 +1,6 @@
 import 'package:speech_recognition/speech_recognition.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 
 
@@ -20,8 +21,14 @@ class SpeechToTextService extends ChangeNotifier {
   //String _currentLocale = 'en_US';
   Language selectedLang = languages.first;
 
+  bool _isIOS = Platform.isIOS;
+
   SpeechToTextService() {
-    activateSpeechRecognizer();
+    if(_isIOS) {
+      activateSpeechRecognizer();
+    } else {
+      fullTranscription = 'Speech to text is not available for Android yet.';
+    }
   }
 
   void activateSpeechRecognizer() async {
@@ -38,7 +45,7 @@ class SpeechToTextService extends ChangeNotifier {
       transcriptionCurrentRecordingSnippet = text;
       notifyListeners();
     });
-    _speech.setRecognitionCompleteHandler(() {
+    _speech.setRecognitionCompleteHandler((String done) {
       _isListening = false;
       saveTranscript();
     });
@@ -57,8 +64,10 @@ class SpeechToTextService extends ChangeNotifier {
 
   // Start new Recording or pick up where we left off.
   void start() {
-    _speechRecognitionAvailable && !_isListening ? _listen() : print(
-        'Available: $_speechRecognitionAvailable. Is listening: $_isListening');
+    if(_isIOS) {
+      _speechRecognitionAvailable && !_isListening ? _listen() : print(
+          'Available: $_speechRecognitionAvailable. Is listening: $_isListening');
+    }
   }
 
   _listen() {
@@ -68,24 +77,36 @@ class SpeechToTextService extends ChangeNotifier {
 
   // Stop recording and return text.
   Future<String> stop() async {
-    await _speech.stop();
-    saveTranscript();
-    String result = fullTranscription;
-    fullTranscription = '';
+    String result;
+    if(_isIOS) {
+      await _speech.stop();
+      saveTranscript();
+      result = fullTranscription;
+      fullTranscription = '';
 
-    // Reset in case of error.
-    activateSpeechRecognizer();
+      // Reset in case of error.
+    } else {
+      result = "Speech to text is not available for Android yet.";
+    }
     return Future.value(result);
   }
 
   // Pause recording.
   void pause() async {
-    _isListening ? await _speech.stop() : print(
-        'Did not pause because is listening: $_isListening');
+    if(_isIOS) {
+      _isListening ? await _speech.stop() : print(
+          'Did not pause because is listening: $_isListening');
+    }
   }
 
-  void setLanguage() {}
+
+  void selectLangHandler(Language lang) {
+    selectedLang = lang;
+  }
+
 }
+
+
 
 class Language {
   final String name;
@@ -95,9 +116,10 @@ class Language {
 }
 
 const languages = const [
+  const Language('Deutsch', 'de_DE'),
   const Language('Francais', 'fr_FR'),
   const Language('Español', 'es_ES'),
   const Language('English', 'en_US'),
-  const Language('Pусский', 'ru_RU'),
+  const Language('Russian', 'ru_RU'),
   const Language('Italiano', 'it_IT'),
 ];
