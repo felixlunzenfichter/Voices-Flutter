@@ -32,46 +32,46 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
-          child: Column(
+          child: ListView(
             children: <Widget>[
-              Expanded(
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      height: 200.0,
-                      width: MediaQuery.of(context).size.width,
-                      color: Colors.white,
-                      child: Image.asset('assets/logo.png'),
-                    ),
-                    SizedBox(
-                      height: 20.0,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        CountryCodePicker(
-                          onChanged: _onCountryChange,
-                          initialSelection: '+41',
-                          alignLeft: false,
-                        ),
-                        SizedBox(
-                          width: 150,
-                          child: CupertinoTextField(
-                            placeholder: 'Enter your phone number',
-                            keyboardType: TextInputType.number,
-                            onChanged: (newNumber) {
-                              _enteredNumber = newNumber.trim();
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              Container(
+                height: 200.0,
+                width: MediaQuery.of(context).size.width,
+                color: Colors.white,
+                child: Image.asset('assets/logo.png'),
               ),
-              NextButton(
-                text: "Verify",
-                onPressed: _verifyPhoneNumber,
+              SizedBox(
+                height: 20.0,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  CountryCodePicker(
+                    onChanged: _onCountryChange,
+                    initialSelection: '+41',
+                    alignLeft: false,
+                  ),
+                  SizedBox(
+                    width: 150,
+                    child: CupertinoTextField(
+                      placeholder: 'Enter your phone number',
+                      keyboardType: TextInputType.number,
+                      onChanged: (newNumber) {
+                        _enteredNumber = newNumber.trim();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 30,
+              ),
+              Align(
+                alignment: Alignment.center,
+                child: NextButton(
+                  text: "Verify",
+                  onPressed: _verifyPhoneNumber,
+                ),
               ),
               SizedBox(
                 height: 30,
@@ -127,9 +127,13 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _showSpinner = false;
       });
+      print(
+          "Could not verify your phone number because of error = $errorMessage");
       showInfoDialog(
           context: context,
-          dialog: InfoDialog(title: "Verification failed", text: errorMessage));
+          dialog: InfoDialog(
+              title: "Verification failed",
+              text: "Please check your internet connection"));
     };
 
     final Function whatTodoWhenSmsSent = () {
