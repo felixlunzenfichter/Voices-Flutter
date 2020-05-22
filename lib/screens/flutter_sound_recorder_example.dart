@@ -11,14 +11,8 @@ class FlutterSoundRecorderExample extends StatelessWidget {
       ),
       body: ListView(
         children: <Widget>[
-          Container(
-            child: ListOfBars(
-              height: 50,
-            ),
-            color: Colors.red,
-          ),
-          //RecordingAndPlayingInfo(),
-          //RecorderControls(),
+          RecordingAndPlayingInfo(),
+          RecorderControls(),
         ],
       ),
     );

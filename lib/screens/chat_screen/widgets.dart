@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
@@ -343,94 +345,50 @@ class _DurationCounterState extends State<DurationCounter> {
 }
 
 class RecordingBars extends StatefulWidget {
+  final double height;
+  RecordingBars({this.height = 100});
+
   @override
   _RecordingBarsState createState() => _RecordingBarsState();
 }
 
 class _RecordingBarsState extends State<RecordingBars> {
-  Stream<double> dbLevelStream;
+  StreamSubscription<double> dbLevelStreamSubscription;
   List<double> storedDbLevels = [];
+  static const double BAR_WIDTH = 5;
+  final _listKey = GlobalKey<AnimatedListState>();
 
   @override
   void initState() {
     final recorderService =
         Provider.of<RecorderService>(context, listen: false);
-    dbLevelStream = recorderService.getDbLevelStream();
+    dbLevelStreamSubscription =
+        recorderService.getDbLevelStream().listen((newDbLevel) {
+      if (newDbLevel != null) {
+        _insertNewDbLevel(newDbLevel: newDbLevel);
+      }
+    });
     super.initState();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<double>(
-      stream: dbLevelStream,
-      builder: (context, snapshot) {
-        double dbLevel = snapshot.data;
-        if (dbLevel != null) {
-          storedDbLevels.add(dbLevel);
-        }
-        return ListOfBars(
-            //dbLevels: storedDbLevels,
-            );
-      },
-    );
+  void dispose() {
+    super.dispose();
+    dbLevelStreamSubscription.cancel();
   }
-}
-
-class ListOfBars extends StatelessWidget {
-  final List<double> dbLevels = [
-    1.1589591828954398,
-    1.5492386641375544,
-    8.865999336207281,
-    9.794837455883181,
-    10.960308625975582,
-    10.960308625975582,
-    7.7272644418592185,
-    7.7272644418592185,
-    10.032654099520354,
-    37.589329408395116,
-    37.589329408395116,
-    66.05341590035121,
-    69.02807685012152,
-    55.137967510191395,
-    13.88115942401422,
-    87.45614073623923,
-    87.45614073623923,
-    67.70728432185717,
-    81.8095578773076,
-    81.8095578773076,
-    80.81855952035619,
-    80.81855952035619,
-    60.56003162252874,
-    27.0441728330637,
-    27.0441728330637,
-    93.43962705930493,
-    93.43962705930493,
-    64.84641082037601,
-    64.84641082037601,
-    36.39870677144349,
-    74.26231199856842,
-    74.26231199856842,
-    51.390254757057534,
-    60.833158045527455,
-    60.833158045527455,
-    15.312298715144422
-  ];
-  final double height;
-  static const double BAR_WIDTH = 5;
-
-  ListOfBars({this.height = 100});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: height,
+      height: widget.height,
       child: AnimatedList(
+          key: _listKey,
           scrollDirection: Axis.horizontal,
-          initialItemCount: dbLevels.length,
+          initialItemCount: storedDbLevels.length,
           itemBuilder: (context, index, animation) {
             /// This is a value between 0 and 120
-            double dbLevel = dbLevels[index];
-            double heightOfBar = dbLevel / 120 * height;
+            double dbLevel = storedDbLevels[index];
+            double heightOfBar = dbLevel / 120 * widget.height;
             return SizeTransition(
               axis: Axis.horizontal,
               sizeFactor: animation,
@@ -451,6 +409,12 @@ class ListOfBars extends StatelessWidget {
             );
           }),
     );
+  }
+
+  _insertNewDbLevel({@required double newDbLevel}) {
+    storedDbLevels.add(newDbLevel);
+    _listKey.currentState.insertItem(storedDbLevels.length - 1,
+        duration: Duration(milliseconds: 500));
   }
 }
 
