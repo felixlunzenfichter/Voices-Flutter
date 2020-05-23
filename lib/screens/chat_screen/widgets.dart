@@ -537,18 +537,14 @@ class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
       initialData: PlayerStatus.uninitialized,
       builder: (context, snapshot) {
         PlayerStatus status = snapshot.data;
+        if (status == PlayerStatus.uninitialized) {
+          return CupertinoActivityIndicator();
+        }
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text("${widget.recording.duration.inSeconds}s"),
-            if (status == PlayerStatus.uninitialized)
-              Container(
-                margin: EdgeInsets.all(8.0),
-                width: 64.0,
-                height: 64.0,
-                child: CupertinoActivityIndicator(),
-              )
-            else if (status == PlayerStatus.playing)
+            if (status == PlayerStatus.playing)
               ButtonFromPicture(
                 onPress: playerService.pause,
                 image: Image.asset('assets/pause_1.png'),
