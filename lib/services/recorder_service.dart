@@ -11,7 +11,7 @@ class RecorderService with ChangeNotifier {
   RecordingStatus status = RecordingStatus.uninitialized;
   static const String RECORDING_FORMAT = ".aac";
   static const String LISTENING_FORMAT = ".mp3";
-  static const Duration UPDATE_DURATION_POSITION = Duration(milliseconds: 100);
+  static const Duration UPDATE_DURATION_OF_STREAM = Duration(milliseconds: 100);
 
   RecorderService() {
     _initialize();
@@ -38,7 +38,7 @@ class RecorderService with ChangeNotifier {
           category: SessionCategory.playAndRecord,
           mode: SessionMode.modeDefault,
           audioFlags: outputToSpeaker);
-      await _recorder.setSubscriptionDuration(UPDATE_DURATION_POSITION);
+      await _recorder.setSubscriptionDuration(UPDATE_DURATION_OF_STREAM);
       _tempDir = await getTemporaryDirectory();
       _pathToSavedRecording =
           "${_tempDir.path}/saved_recording$LISTENING_FORMAT";
@@ -128,7 +128,7 @@ class RecorderService with ChangeNotifier {
     }
   }
 
-  /// This function can only be called this after [_recorder.startRecorder()] is done.
+  /// This function can probably (need to check) only be called this after [_recorder.startRecorder()] is done.
   Stream<RecordingDisposition> getProgressStream() {
     try {
       return _recorder.onProgress;
@@ -162,18 +162,22 @@ class RecorderService with ChangeNotifier {
               file: File(_pathToCurrentRecording),
               toPath: _pathToSavedRecording);
     }
-    int durationInMs = await flutterSoundHelper.duration(_pathToSavedRecording);
-    recording = Recording(
-        path: _pathToSavedRecording,
-        duration: Duration(milliseconds: durationInMs));
+    Duration durationOfRecording =
+        await flutterSoundHelper.duration(_pathToSavedRecording);
+    recording =
+        Recording(path: _pathToSavedRecording, duration: durationOfRecording);
   }
 
   _startWithoutReset() async {
     _pathToCurrentRecording =
         "${_tempDir.path}/${_recorder.slotNo}-current_recording$RECORDING_FORMAT";
     await _recorder.startRecorder(
-      uri: _pathToCurrentRecording,
-      codec: t_CODEC.CODEC_AAC,
+      codec: Codec.defaultCodec,
+      toFile: _pathToCurrentRecording,
+      sampleRate: 16000,
+      numChannels: 1,
+      bitRate: 16000,
+      audioSource: AudioSource.defaultSource,
     );
     status = RecordingStatus.recording;
     notifyListeners();
