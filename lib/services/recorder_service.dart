@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_sound/flauto.dart';
-import 'package:flutter_sound/flutter_sound_recorder.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:voices/models/recording.dart';
@@ -12,8 +11,7 @@ class RecorderService with ChangeNotifier {
   RecordingStatus status = RecordingStatus.uninitialized;
   static const String RECORDING_FORMAT = ".aac";
   static const String LISTENING_FORMAT = ".mp3";
-  static const Duration UPDATE_FREQUENCY_DURATION = Duration(milliseconds: 100);
-  static const Duration UPDATE_FREQUENCY_DB_LEVEL = Duration(milliseconds: 100);
+  static const Duration UPDATE_DURATION_POSITION = Duration(milliseconds: 100);
 
   RecorderService() {
     _initialize();
@@ -34,12 +32,13 @@ class RecorderService with ChangeNotifier {
   /// So when we hot restart the app this makes it crash
   _initialize() async {
     try {
-      _recorder = await FlutterSoundRecorder().initialize();
-      await _recorder.setSubscriptionDuration(
-          UPDATE_FREQUENCY_DURATION.inMilliseconds.toDouble() / 1000.0);
-      await _recorder.setDbPeakLevelUpdate(
-          UPDATE_FREQUENCY_DB_LEVEL.inMilliseconds.toDouble() / 1000.0);
-      await _recorder.setDbLevelEnabled(true);
+      /// The arguments for [openAudioSession] are explained here: https://github.com/dooboolab/flutter_sound/blob/master/doc/player.md#openaudiosession-and-closeaudiosession
+      _recorder = await FlutterSoundRecorder().openAudioSession(
+          focus: AudioFocus.requestFocusAndKeepOthers,
+          category: SessionCategory.playAndRecord,
+          mode: SessionMode.modeDefault,
+          audioFlags: outputToSpeaker);
+      await _recorder.setSubscriptionDuration(UPDATE_DURATION_POSITION);
       _tempDir = await getTemporaryDirectory();
       _pathToSavedRecording =
           "${_tempDir.path}/saved_recording$LISTENING_FORMAT";
@@ -53,7 +52,7 @@ class RecorderService with ChangeNotifier {
   @override
   dispose() async {
     try {
-      await _recorder.release();
+      await _recorder?.closeAudioSession();
       super.dispose();
     } catch (e) {
       print("Recorder service could not be disposed because of error = $e");
@@ -130,28 +129,13 @@ class RecorderService with ChangeNotifier {
   }
 
   /// This function can only be called this after [_recorder.startRecorder()] is done.
-  Stream<Duration> getPositionStream() {
+  Stream<RecordingDisposition> getProgressStream() {
     try {
-      return _recorder.onRecorderStateChanged.map((state) {
-        Duration lengthOfCurrentRecording =
-            recording?.duration ?? Duration.zero;
-        return lengthOfCurrentRecording +
-            Duration(milliseconds: state?.currentPosition?.toInt() ?? 0);
-      });
+      return _recorder.onProgress;
     } catch (e) {
       print(
           "Recorder service could not get the recorders position stream because of error = $e");
-      return Stream.value(Duration.zero);
-    }
-  }
-
-  Stream<double> getDbLevelStream() {
-    try {
-      return _recorder.onRecorderDbPeakChanged;
-    } catch (e) {
-      print(
-          "Recorder service could not get the recorders dbLevel stream because of error = $e");
-      return Stream.value(0.0);
+      return Stream.error("Could not get progress stream of recorder");
     }
   }
 
