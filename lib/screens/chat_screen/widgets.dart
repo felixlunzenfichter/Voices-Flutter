@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_sound/flutter_sound.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/image_message.dart';
@@ -275,12 +274,12 @@ class RecordingAndPlayingInfo extends StatelessWidget {
         recording: recorderService.recording,
       );
     } else {
-      return RecorderInfo();
+      return RecordingInfo();
     }
   }
 }
 
-class RecorderInfo extends StatelessWidget {
+class RecordingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
@@ -296,9 +295,8 @@ class RecorderInfo extends StatelessWidget {
             Text("Recorder paused")
           else
             Text("Recorder recording"),
-
-          /// This widget can only be shown when the recorder is initialized else the progress stream is not ready to be fetched
-          RecorderRecordingInfo(),
+          DurationCounter(),
+          RecordingBars(),
         ],
       );
     } else if (recorderService.status == RecordingStatus.stopped) {
@@ -312,38 +310,67 @@ class RecorderInfo extends StatelessWidget {
   }
 }
 
-class RecorderRecordingInfo extends StatefulWidget {
+class DurationCounter extends StatefulWidget {
   @override
-  _RecorderRecordingInfoState createState() => _RecorderRecordingInfoState();
+  _DurationCounterState createState() => _DurationCounterState();
 }
 
-class _RecorderRecordingInfoState extends State<RecorderRecordingInfo> {
-  final double height = 100;
-  List<double> storedDbLevels = [];
-  static const double BAR_WIDTH = 3;
-  final _listKey = GlobalKey<AnimatedListState>();
-  final ScrollController _controller = ScrollController();
-  int currentSecondCount = 0;
-  StreamSubscription<RecordingDisposition> progressStreamSubscription;
+class _DurationCounterState extends State<DurationCounter> {
+  Stream<Duration> positionStream;
 
   @override
   void initState() {
     final recorderService =
         Provider.of<RecorderService>(context, listen: false);
-    progressStreamSubscription =
-        recorderService.getProgressStream().listen((recordingDisposition) {
-      int second = recordingDisposition.duration.inSeconds;
-      if (currentSecondCount != second) {
-        setState(() {
-          currentSecondCount = second;
-        });
-      }
-      double newDbLevel = recordingDisposition.decibels;
+    positionStream = recorderService.getPositionStream();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: positionStream,
+      builder: (context, snapshot) {
+        Duration position = snapshot.data;
+        return Text(
+          "${position?.inSeconds ?? 0}s",
+          style: TextStyle(
+            fontSize: 35.0,
+            color: Colors.black,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class RecordingBars extends StatefulWidget {
+  final double height;
+  RecordingBars({this.height = 100});
+
+  @override
+  _RecordingBarsState createState() => _RecordingBarsState();
+}
+
+class _RecordingBarsState extends State<RecordingBars> {
+  StreamSubscription<double> dbLevelStreamSubscription;
+  List<double> storedDbLevels = [];
+  static const double BAR_WIDTH = 3;
+  final _listKey = GlobalKey<AnimatedListState>();
+  final ScrollController _controller = ScrollController();
+
+  @override
+  void initState() {
+    final recorderService =
+        Provider.of<RecorderService>(context, listen: false);
+    dbLevelStreamSubscription =
+        recorderService.getDbLevelStream().listen((newDbLevel) {
       if (newDbLevel != null) {
         _insertNewDbLevel(newDbLevel: newDbLevel);
+
+        /// Specifying a very long duration like 1 second for scrolling to the end of the list makes the animation look really smooth
         _controller.animateTo(_controller.position.maxScrollExtent,
-            duration: RecorderService.UPDATE_DURATION_OF_STREAM,
-            curve: Curves.linear);
+            duration: Duration(seconds: 1), curve: Curves.linear);
       }
     });
     super.initState();
@@ -351,49 +378,43 @@ class _RecorderRecordingInfoState extends State<RecorderRecordingInfo> {
 
   @override
   void dispose() {
-    progressStreamSubscription.cancel();
     super.dispose();
+    dbLevelStreamSubscription.cancel();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Text("${currentSecondCount}s"),
-        SizedBox(
-          height: height,
-          child: AnimatedList(
-              padding: const EdgeInsets.symmetric(horizontal: 50),
-              controller: _controller,
-              key: _listKey,
-              scrollDirection: Axis.horizontal,
-              initialItemCount: storedDbLevels.length,
-              itemBuilder: (context, index, animation) {
-                /// This is a value between 0 and 120
-                double dbLevel = storedDbLevels[index];
-                double heightOfBar = dbLevel / 120 * height;
-                return SizeTransition(
-                  axis: Axis.horizontal,
-                  sizeFactor: animation,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 1),
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: Container(
-                        width: BAR_WIDTH,
-                        height: heightOfBar,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(2),
-                          color: Colors.blueAccent,
-                        ),
-                      ),
+    return SizedBox(
+      height: widget.height,
+      child: AnimatedList(
+          padding: const EdgeInsets.symmetric(horizontal: 50),
+          controller: _controller,
+          key: _listKey,
+          scrollDirection: Axis.horizontal,
+          initialItemCount: storedDbLevels.length,
+          itemBuilder: (context, index, animation) {
+            /// This is a value between 0 and 120
+            double dbLevel = storedDbLevels[index];
+            double heightOfBar = dbLevel / 120 * widget.height;
+            return SizeTransition(
+              axis: Axis.horizontal,
+              sizeFactor: animation,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 1),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: BAR_WIDTH,
+                    height: heightOfBar,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(2),
+                      color: Colors.blueAccent,
                     ),
                   ),
-                );
-              }),
-        ),
-      ],
+                ),
+              ),
+            );
+          }),
     );
   }
 
@@ -537,14 +558,18 @@ class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
       initialData: PlayerStatus.uninitialized,
       builder: (context, snapshot) {
         PlayerStatus status = snapshot.data;
-        if (status == PlayerStatus.uninitialized) {
-          return CupertinoActivityIndicator();
-        }
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text("${widget.recording.duration.inSeconds}s"),
-            if (status == PlayerStatus.playing)
+            if (status == PlayerStatus.uninitialized)
+              Container(
+                margin: EdgeInsets.all(8.0),
+                width: 64.0,
+                height: 64.0,
+                child: CupertinoActivityIndicator(),
+              )
+            else if (status == PlayerStatus.playing)
               ButtonFromPicture(
                 onPress: playerService.pause,
                 image: Image.asset('assets/pause_1.png'),

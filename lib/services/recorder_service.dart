@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_sound/flutter_sound.dart';
+import 'package:flutter_sound/flauto.dart';
+import 'package:flutter_sound/flutter_sound_recorder.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:voices/models/recording.dart';
@@ -11,7 +12,10 @@ class RecorderService with ChangeNotifier {
   RecordingStatus status = RecordingStatus.uninitialized;
   static const String RECORDING_FORMAT = ".aac";
   static const String LISTENING_FORMAT = ".mp3";
-  static const Duration UPDATE_DURATION_OF_STREAM = Duration(milliseconds: 100);
+  static const Duration UPDATE_DURATION_OF_POSITION_STREAM =
+      Duration(milliseconds: 100);
+  static const Duration UPDATE_DURATION_OF_DB_LEVEL_STREAM =
+      Duration(milliseconds: 100);
 
   RecorderService() {
     _initialize();
@@ -32,13 +36,14 @@ class RecorderService with ChangeNotifier {
   /// So when we hot restart the app this makes it crash
   _initialize() async {
     try {
-      /// The arguments for [openAudioSession] are explained here: https://github.com/dooboolab/flutter_sound/blob/master/doc/player.md#openaudiosession-and-closeaudiosession
-      _recorder = await FlutterSoundRecorder().openAudioSession(
-          focus: AudioFocus.requestFocusAndKeepOthers,
-          category: SessionCategory.playAndRecord,
-          mode: SessionMode.modeDefault,
-          audioFlags: outputToSpeaker);
-      await _recorder.setSubscriptionDuration(UPDATE_DURATION_OF_STREAM);
+      _recorder = await FlutterSoundRecorder().initialize();
+      await _recorder.setSubscriptionDuration(
+          UPDATE_DURATION_OF_POSITION_STREAM.inMilliseconds.toDouble() /
+              1000.0);
+      await _recorder.setDbPeakLevelUpdate(
+          UPDATE_DURATION_OF_DB_LEVEL_STREAM.inMilliseconds.toDouble() /
+              1000.0);
+      await _recorder.setDbLevelEnabled(true);
       _tempDir = await getTemporaryDirectory();
       _pathToSavedRecording =
           "${_tempDir.path}/saved_recording$LISTENING_FORMAT";
@@ -52,7 +57,7 @@ class RecorderService with ChangeNotifier {
   @override
   dispose() async {
     try {
-      await _recorder?.closeAudioSession();
+      await _recorder.release();
       super.dispose();
     } catch (e) {
       print("Recorder service could not be disposed because of error = $e");
@@ -128,14 +133,29 @@ class RecorderService with ChangeNotifier {
     }
   }
 
-  /// This function can probably (need to check) only be called this after [_recorder.startRecorder()] is done.
-  Stream<RecordingDisposition> getProgressStream() {
+  /// This function can only be called this after [_recorder.startRecorder()] is done.
+  Stream<Duration> getPositionStream() {
     try {
-      return _recorder.onProgress;
+      return _recorder.onRecorderStateChanged.map((state) {
+        Duration lengthOfCurrentRecording =
+            recording?.duration ?? Duration.zero;
+        return lengthOfCurrentRecording +
+            Duration(milliseconds: state?.currentPosition?.toInt() ?? 0);
+      });
     } catch (e) {
       print(
           "Recorder service could not get the recorders position stream because of error = $e");
-      return Stream.error("Could not get progress stream of recorder");
+      return Stream.value(Duration.zero);
+    }
+  }
+
+  Stream<double> getDbLevelStream() {
+    try {
+      return _recorder.onRecorderDbPeakChanged;
+    } catch (e) {
+      print(
+          "Recorder service could not get the recorders dbLevel stream because of error = $e");
+      return Stream.value(0.0);
     }
   }
 
@@ -162,22 +182,18 @@ class RecorderService with ChangeNotifier {
               file: File(_pathToCurrentRecording),
               toPath: _pathToSavedRecording);
     }
-    Duration durationOfRecording =
-        await flutterSoundHelper.duration(_pathToSavedRecording);
-    recording =
-        Recording(path: _pathToSavedRecording, duration: durationOfRecording);
+    int durationInMs = await flutterSoundHelper.duration(_pathToSavedRecording);
+    recording = Recording(
+        path: _pathToSavedRecording,
+        duration: Duration(milliseconds: durationInMs));
   }
 
   _startWithoutReset() async {
     _pathToCurrentRecording =
         "${_tempDir.path}/${_recorder.slotNo}-current_recording$RECORDING_FORMAT";
     await _recorder.startRecorder(
-      codec: Codec.defaultCodec,
-      toFile: _pathToCurrentRecording,
-      sampleRate: 16000,
-      numChannels: 1,
-      bitRate: 16000,
-      audioSource: AudioSource.defaultSource,
+      uri: _pathToCurrentRecording,
+      codec: t_CODEC.CODEC_AAC,
     );
     status = RecordingStatus.recording;
     notifyListeners();

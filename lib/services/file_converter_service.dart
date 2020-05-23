@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_sound/flutter_sound.dart';
+import 'package:flutter_sound/flutter_ffmpeg.dart';
 
 class FileConverterService {
   final FlutterFFmpeg _flutterFfmpeg = new FlutterFFmpeg();
