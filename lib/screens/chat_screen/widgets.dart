@@ -367,10 +367,9 @@ class _RecordingBarsState extends State<RecordingBars> {
         recorderService.getDbLevelStream().listen((newDbLevel) {
       if (newDbLevel != null) {
         _insertNewDbLevel(newDbLevel: newDbLevel);
-
-        /// Specifying a very long duration like 1 second for scrolling to the end of the list makes the animation look really smooth
         _controller.animateTo(_controller.position.maxScrollExtent,
-            duration: Duration(seconds: 1), curve: Curves.linear);
+            duration: RecorderService.UPDATE_DURATION_OF_DB_LEVEL_STREAM,
+            curve: Curves.linear);
       }
     });
     super.initState();
