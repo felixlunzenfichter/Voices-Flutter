@@ -6,9 +6,10 @@ import 'package:voices/models/recording.dart';
 import 'dart:io' show Platform;
 
 class LocalPlayerService {
+  double currentSpeed = 1;
+
   /// Private properties
   final _player = AudioPlayer();
-  double _currentSpeed = 1;
 
   initialize({@required Recording recording}) async {
     try {
@@ -29,14 +30,14 @@ class LocalPlayerService {
 
   play() async {
     print("play is executed from local player");
-    print(_currentSpeed);
+    print(currentSpeed);
     try {
       if (Platform.isIOS) {
         /// On iOS [_player.setSpeed] is the only way to play a stopped audio in the right speed
-        if (_currentSpeed == 1) {
+        if (currentSpeed == 1) {
           await _player.play();
         } else {
-          await _player.setSpeed(_currentSpeed);
+          await _player.setSpeed(currentSpeed);
         }
       } else {
         await _player.play();
@@ -77,7 +78,7 @@ class LocalPlayerService {
       bool shouldPauseAfterSpeedSet =
           _player.playbackState != AudioPlaybackState.playing && Platform.isIOS;
       await _player.setSpeed(speed);
-      _currentSpeed = speed;
+      currentSpeed = speed;
       if (shouldPauseAfterSpeedSet) {
         _player.pause();
       }

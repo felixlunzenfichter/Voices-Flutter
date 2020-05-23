@@ -535,7 +535,7 @@ class LocalPlayerButtons extends StatefulWidget {
 }
 
 class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
-  double _currentSpeed = 1;
+  double _currentSpeed;
 
   LocalPlayerService playerService;
   Stream<PlayerStatus> _statusStream;
@@ -546,6 +546,7 @@ class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
     super.initState();
     playerService = Provider.of<LocalPlayerService>(context, listen: false);
     playerService.initialize(recording: widget.recording);
+    _currentSpeed = playerService.currentSpeed;
     _statusStream = playerService.getPlaybackStateStream();
     _positionStream = playerService.getPositionStream();
   }
