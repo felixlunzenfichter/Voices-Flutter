@@ -47,7 +47,7 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget> {
   Widget build(BuildContext context) {
     final cloudPlayerService =
         Provider.of<CloudPlayerService>(context, listen: false);
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = Provider.of<LoggedInUserService>(context, listen: false);
     final isMe = widget.voiceMessage.senderUid == authService.loggedInUser.uid;
     return MessageBubble(
       shouldAlignRight: isMe,

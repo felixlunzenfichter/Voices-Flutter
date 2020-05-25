@@ -38,8 +38,8 @@ class Voices extends StatelessWidget {
       providers: [
 
         /// User authentication service.
-        ChangeNotifierProvider<AuthService>(
-          create: (_) => AuthService(),
+        ChangeNotifierProvider<LoggedInUserService>(
+          create: (_) => LoggedInUserService(),
         ),
 
         /// Cloud service for real time data.
@@ -112,7 +112,7 @@ class Voices extends StatelessWidget {
 class ScreenToShow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
+    final authService = Provider.of<LoggedInUserService>(context);
     final permissionService = Provider.of<PermissionService>(context);
 
     /// Show a loading screen while we are verifying whether the user is logged in.
@@ -127,7 +127,7 @@ class ScreenToShow extends StatelessWidget {
     } else if (!permissionService.areAllPermissionsGranted) {
       return PermissionsScreen();
 
-      /// Let's go!
+      /// Start the main application.
     } else {
       return TabsScreen();
     }

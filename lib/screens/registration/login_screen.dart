@@ -141,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 phoneNumber: _selectedDialCode + _enteredNumber,
               )));
     };
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = Provider.of<LoggedInUserService>(context, listen: false);
     final phoneNumber = _selectedDialCode + _enteredNumber;
     await authService.verifyPhoneNumberAutomaticallyOrSendCode(
         phoneNumber: phoneNumber,

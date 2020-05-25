@@ -1,23 +1,51 @@
 import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 
-class AuthService with ChangeNotifier {
-  User loggedInUser;
+/// This [ChangeNotifier] Manages the state of the currently logged in user.
+/// 
+/// This class handles user authentication.
+/// The state of the current user is provided to the
+/// rest of the app through the [_loggedInUser] property.
+/// Other parts of the app don't alter the state of the user through this
+/// service, they update the state in the cloud directly.
+/// If state of the currently logged in user changes in the cloud it updates
+/// the state of the [_loggedInUser] accordingly and notifies the listeners.
+class LoggedInUserService with ChangeNotifier {
+
+  /// Global state variables.
+
+  /// The User object is provided to the rest of this app.
+  /// If no user is logged in the value is [null].
+  User _loggedInUser;
+  User get loggedInUser => _loggedInUser;
+
+  /// This Status informs listeners about whether the service
+  /// is currently performing a network request.
   bool isFetching = true;
 
-  //private properties
-  StreamSubscription<User> _fireStoreStreamSubscription;
+
+  /// Private state.
+
+  /// Access to the Firebase Authentication service.
   final _auth = FirebaseAuth.instance;
+
+  /// Access to the real time database.
   final _cloudFirestoreService = CloudFirestoreService();
 
+  /// This stream provides the state of the current user.
+  StreamSubscription<User> _fireStoreUserScreamSubscription;
+
+  // Todo: What is this?
   String _verificationId;
 
-  AuthService() {
+  LoggedInUserService() {
     _updateLoggedInUser();
   }
+    
 
   _updateLoggedInUser() async {
     Stream<FirebaseUser> authenticationStream = _auth.onAuthStateChanged;
@@ -25,21 +53,19 @@ class AuthService with ChangeNotifier {
     await for (var firebaseUser in authenticationStream) {
       //firebaseUser == null means the user signed out and firebaseUser != null means the user just signed in
       if (firebaseUser == null) {
-        //let the rest of the app know that the user logged out
-        loggedInUser = null;
-        if (isFetching) {
-          //we only notify listeners if isFetching is still true so when we log out and the screens have not navigated away yet it will not throw an error
-          isFetching = false;
-          notifyListeners();
-        }
+        // Let the rest of the app know that the user logged out.
+        _loggedInUser = null;
+        //
+        isFetching = false;
+        notifyListeners();
       } else {
         //get the stream for the new user
         Stream<User> fireStoreStream =
             _cloudFirestoreService.getUserStream(uid: firebaseUser.uid);
-        _fireStoreStreamSubscription?.cancel();
+        _fireStoreUserScreamSubscription?.cancel();
         //listen to the new stream and update the loggedInUser
-        _fireStoreStreamSubscription = fireStoreStream.listen((user) {
-          loggedInUser = user;
+        _fireStoreUserScreamSubscription = fireStoreStream.listen((user) {
+          _loggedInUser = user;
           isFetching = false;
           notifyListeners();
         }, onError: (error) {

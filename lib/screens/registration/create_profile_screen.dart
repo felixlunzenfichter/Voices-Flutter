@@ -115,7 +115,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
 
   _setMyContact() async {
     final contactService = Provider.of<ContactService>(context, listen: false);
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = Provider.of<LoggedInUserService>(context, listen: false);
     Contact myContact = await contactService.getFirstContactWithQuery(
         query: authService.loggedInUser.phoneNumber);
     if (myContact != null) {
@@ -197,7 +197,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     }
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = Provider.of<LoggedInUserService>(context, listen: false);
     User newUser = User(
         uid: authService.loggedInUser.uid,
         phoneNumber: authService.loggedInUser.phoneNumber,

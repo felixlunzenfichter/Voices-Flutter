@@ -24,7 +24,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   @override
   Widget build(BuildContext context) {
     final recorderService = Provider.of<RecorderService>(context);
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = Provider.of<LoggedInUserService>(context, listen: false);
     final SpeechToTextService speechToText =
         Provider.of<SpeechToTextService>(context);
     final screenInfo =
