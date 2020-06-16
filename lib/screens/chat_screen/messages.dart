@@ -98,7 +98,7 @@ class _ListOfMessagesState extends State<ListOfMessages>
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = Provider.of<LoggedInUserService>(context, listen: false);
 
     return AnimatedList(
       key: _listKey,

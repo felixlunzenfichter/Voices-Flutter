@@ -23,7 +23,7 @@ class _ChatsTabState extends State<ChatsTab> {
     super.initState();
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = Provider.of<LoggedInUserService>(context, listen: false);
     chatStream = cloudFirestoreService.getChatsStream(
         loggedInUid: authService.loggedInUser.uid);
   }
@@ -104,7 +104,7 @@ class _ChatItemState extends State<ChatItem> {
     super.initState();
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = Provider.of<LoggedInUserService>(context, listen: false);
     String otherUserUid = widget.chat.uidsOfMembers
         .where((uid) => uid != authService.loggedInUser.uid)
         .toList()[0];

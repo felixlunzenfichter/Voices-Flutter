@@ -16,6 +16,8 @@ class _LifeCycleManagerState extends State<LifeCycleManager>
   @override
   void initState() {
     super.initState();
+
+    /// Register this widget as a binding observer. We will now receive state updates through didChangeAppLifecycleState.
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -46,7 +48,10 @@ class _LifeCycleManagerState extends State<LifeCycleManager>
 
   @override
   void dispose() {
+
+    /// Remove this widget from the list of active binding observers.
     WidgetsBinding.instance.removeObserver(this);
+
     super.dispose();
   }
 

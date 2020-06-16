@@ -1,11 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/text_message.dart';
+import 'package:voices/models/voice_message.dart';
 import 'package:voices/screens/chat_screen/chat_screen.dart';
 import 'package:voices/screens/chat_screen/widgets.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
+import 'package:voices/services/recorder_service.dart';
+import 'package:voices/services/speech_to_text_service.dart';
+import 'package:voices/services/storage_service.dart';
 
 class MessageSendingSection extends StatefulWidget {
   @override
@@ -18,7 +23,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = Provider.of<LoggedInUserService>(context, listen: false);
     final screenInfo =
         Provider.of<GlobalChatScreenInfo>(context, listen: false);
 
