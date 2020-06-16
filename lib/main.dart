@@ -119,7 +119,7 @@ class ScreenToShow extends StatelessWidget {
     if (authService.isFetching) {
       return LoadingScreen();
 
-      /// A null value for the currently logged in user reflects the fact that no one is logged in on this device. Thus we show the login scream.
+      /// A null value for the currently logged in user reflects the fact that no one is logged in on this device. Thus we show the login screen.
     } else if (authService.loggedInUser == null) {
       return LoginScreen();
 

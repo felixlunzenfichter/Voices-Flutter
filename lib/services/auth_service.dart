@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -45,25 +46,25 @@ class LoggedInUserService with ChangeNotifier {
   LoggedInUserService() {
     _updateLoggedInUser();
   }
-    
 
   _updateLoggedInUser() async {
     Stream<FirebaseUser> authenticationStream = _auth.onAuthStateChanged;
-    // Wait for new sign in or sign out
+    /// Wait for new sign in or sign out.
     await for (var firebaseUser in authenticationStream) {
-      //firebaseUser == null means the user signed out and firebaseUser != null means the user just signed in
+      /// firebaseUser == null means the user signed out and.
+      /// firebaseUser != null means the user signed in.
       if (firebaseUser == null) {
-        // Let the rest of the app know that the user logged out.
+        /// Let the rest of the app know that the user logged out.
         _loggedInUser = null;
-        //
+        /// Done fetching the user.
         isFetching = false;
         notifyListeners();
       } else {
-        //get the stream for the new user
+        /// Get the stream for the state of the logged in user.
         Stream<User> fireStoreStream =
             _cloudFirestoreService.getUserStream(uid: firebaseUser.uid);
         _fireStoreUserScreamSubscription?.cancel();
-        //listen to the new stream and update the loggedInUser
+        /// Listen to updates to the state of the logged in user.
         _fireStoreUserScreamSubscription = fireStoreStream.listen((user) {
           _loggedInUser = user;
           isFetching = false;
@@ -79,17 +80,16 @@ class LoggedInUserService with ChangeNotifier {
     return _auth.signOut();
   }
 
-  ///whatTodoWhenNewUserVerified is the function to be called with the newly created user as an argument if the phone number got verified
-  ///whatTodoWhenExistingUserVerified is the function to be called with the existing user in the users collection as an argument if the phone number got verified
-  ///whatTodoWhenVerificationFailed is the function to be called without arguments if the verification failed
-  ///whatTodoWhenSmsSent is the function to be called without arguments if the code was sent
+
   Future<void> verifyPhoneNumberAutomaticallyOrSendCode(
       {@required String phoneNumber,
-      @required Function whatTodoWhenNewUserVerified,
-      @required Function whatTodoWhenExistingUserVerified,
-      @required Function whatTodoWhenVerificationFailed,
-      @required Function whatTodoWhenSmsSent}) async {
+        @required Void Function(User) whatTodoWhenNewUserVerified,
+        @required Void Function(User) whatTodoWhenExistingUserVerified,
+        @required Void Function(String) whatTodoWhenVerificationFailed,
+        @required Void Function() whatTodoWhenSmsSent}) async {
     try {
+
+      /// Call after the phone number has been verified.
       final PhoneVerificationCompleted onVerified =
           (AuthCredential credential) async {
         AuthResult result = await _signInWithCredential(credential);
@@ -147,6 +147,7 @@ class LoggedInUserService with ChangeNotifier {
               whatTodoWhenCodeCorrectForExistingUser);
     }
   }
+
 
   Future<AuthResult> _signInWithCredential(AuthCredential credential) async {
     AuthResult result =
