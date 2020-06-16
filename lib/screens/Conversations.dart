@@ -228,4 +228,5 @@ class _ChatItemState extends State<ChatItem> {
       },
     );
   }
+  
 }
