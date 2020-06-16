@@ -1,4 +1,3 @@
-//
 
 class Chat {
   String chatId;

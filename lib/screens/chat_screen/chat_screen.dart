@@ -5,6 +5,7 @@ import 'package:voices/models/user.dart';
 import 'package:voices/screens/chat_screen/message_sending_section.dart';
 import 'package:voices/screens/chat_screen/messages.dart';
 
+
 class ChatScreen extends StatelessWidget {
   final String chatId;
   final User otherUser;
