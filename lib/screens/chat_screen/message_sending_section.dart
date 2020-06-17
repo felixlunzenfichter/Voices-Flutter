@@ -14,7 +14,19 @@ class MessageSendingSection extends StatefulWidget {
 }
 
 class _MessageSendingSectionState extends State<MessageSendingSection> {
+
+  /// Handle text field.
   final TextEditingController _messageTextController = TextEditingController();
+
+  /// This is the interface for the cloud.
+  CloudFirestoreService cloudFirestoreService;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    cloudFirestoreService = Provider.of<CloudFirestoreService>(context, listen: false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,32 +47,30 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
             if (_messageTextController.text != '')
               SendTextButton(
                 onPress: () async {
-                  // prevent to send the previously typed message with an empty text field
-                  //Implement send functionality.
+
+                  /// Create message object.
                   TextMessage message = TextMessage(
                       senderUid: authService.loggedInUser.uid,
                       text: _messageTextController.text);
-                  final cloudFirestoreService =
-                      Provider.of<CloudFirestoreService>(context,
-                          listen: false);
+
+                  /// Send the text message.
                   cloudFirestoreService.addTextMessage(
                       chatId: screenInfo.chatId, textMessage: message);
-                  //clear text field
+
+                  // Clear the text field.
                   _messageTextController.text = '';
                   setState(() {});
                 },
-              )
-            else
-              RecorderControls(),
+              ),
+            RecorderControls(),
           ],
         ),
       ],
     );
   }
 
+  /// Update the text field to be displayed.
   _onTextChanged(String newText) {
-    setState(() {
-//      _messageText = newText;
-    });
+    setState(() {});
   }
 }
