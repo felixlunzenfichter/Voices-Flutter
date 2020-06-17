@@ -46,7 +46,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   cloudFirestoreService.addTextMessage(
                       chatId: screenInfo.chatId, textMessage: message);
                   //clear text field
-                  _messageTextController.text = "";
+                  _messageTextController.text = '';
+                  setState(() {});
                 },
               )
             else
@@ -59,7 +60,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
 
   _onTextChanged(String newText) {
     setState(() {
-      _messageText = newText;
+//      _messageText = newText;
     });
   }
 }
