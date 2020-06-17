@@ -7,6 +7,7 @@ import 'package:voices/screens/chat_screen/widgets.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 
+/// Input section of the chat.
 class MessageSendingSection extends StatefulWidget {
   @override
   _MessageSendingSectionState createState() => _MessageSendingSectionState();
@@ -14,7 +15,6 @@ class MessageSendingSection extends StatefulWidget {
 
 class _MessageSendingSectionState extends State<MessageSendingSection> {
   final TextEditingController _messageTextController = TextEditingController();
-  String _messageText = "";
 
   @override
   Widget build(BuildContext context) {
@@ -32,14 +32,14 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                 child: SendTextField(
                     controller: _messageTextController,
                     onTextChanged: _onTextChanged)),
-            if (_messageText != "")
+            if (_messageTextController.text != '')
               SendTextButton(
                 onPress: () async {
                   // prevent to send the previously typed message with an empty text field
                   //Implement send functionality.
                   TextMessage message = TextMessage(
                       senderUid: authService.loggedInUser.uid,
-                      text: _messageText);
+                      text: _messageTextController.text);
                   final cloudFirestoreService =
                       Provider.of<CloudFirestoreService>(context,
                           listen: false);
