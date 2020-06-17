@@ -55,8 +55,9 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget> {
       child: Container(
         color: Colors.yellow,
         height: 70,
-        child: PlayerControls(
-          play: () {
+        child: CloudPlayerButtons(
+          play: ({@required double currentSpeed}) {
+            //todo refactor playercontrols so it works for local and cloud player service and does what is common to them both
             cloudPlayerService.play(playerId: _playerId);
           },
           pause: () {

@@ -142,6 +142,7 @@ class CloudFirestoreService {
       var messageStream = _fireStore
           .collection('chats/$chatId/messages')
           .orderBy('timestamp', descending: true)
+          .limit(3)
           .snapshots()
           .map((snap) => snap.documents.map((doc) {
                 switch (doc.data['messageType']) {
