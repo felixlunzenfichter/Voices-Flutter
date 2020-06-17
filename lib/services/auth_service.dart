@@ -83,10 +83,10 @@ class LoggedInUserService with ChangeNotifier {
 
   Future<void> verifyPhoneNumberAutomaticallyOrSendCode(
       {@required String phoneNumber,
-        @required Void Function(User) whatTodoWhenNewUserVerified,
-        @required Void Function(User) whatTodoWhenExistingUserVerified,
-        @required Void Function(String) whatTodoWhenVerificationFailed,
-        @required Void Function() whatTodoWhenSmsSent}) async {
+        @required Function whatTodoWhenNewUserVerified,
+        @required Function whatTodoWhenExistingUserVerified,
+        @required Function whatTodoWhenVerificationFailed,
+        @required Function whatTodoWhenSmsSent}) async {
     try {
 
       /// Call after the phone number has been verified.
