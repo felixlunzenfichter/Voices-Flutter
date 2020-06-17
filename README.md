@@ -1,6 +1,6 @@
 # voices
 
-Voice messaging app
+Talk.
 
 ## Getting Started
 
