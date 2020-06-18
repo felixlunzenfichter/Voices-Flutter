@@ -3,9 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/voice_message.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:voices/screens/chat_screen/widgets.dart';
+import 'package:voices/screens/chat_screen/ui_chat.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_player_service.dart';
+import 'recording_tool.dart';
+
 
 class VoiceMessageWidget extends StatefulWidget {
   final VoiceMessage voiceMessage;

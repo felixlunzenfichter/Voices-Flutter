@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/message.dart';
-import 'package:voices/screens/chat_screen/widgets.dart';
+import 'package:voices/screens/chat_screen/ui_chat.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 

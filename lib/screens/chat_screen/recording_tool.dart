@@ -1,236 +1,14 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/models/image_message.dart';
-import 'package:voices/models/message.dart';
 import 'package:voices/models/recording.dart';
-import 'package:voices/models/text_message.dart';
-import 'package:voices/models/voice_message.dart';
 import 'package:voices/services/local_player_service.dart';
 import 'package:voices/services/recorder_service.dart';
-import 'package:voices/shared_widgets/time_stamp_text.dart';
 import 'voice_message_widget.dart';
+import 'ui_chat.dart';
 
-class SendTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final Function onTextChanged;
-
-  SendTextField({@required this.controller, @required this.onTextChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 10.0),
-      child: CupertinoTextField(
-        textCapitalization: TextCapitalization.sentences,
-        autocorrect: false,
-        maxLength: 200,
-        expands: true,
-        maxLines: null,
-        minLines: null,
-        placeholder: "Enter message",
-        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-        decoration: BoxDecoration(
-          color: Colors.orangeAccent,
-          borderRadius: BorderRadius.all(
-            Radius.circular(25),
-          ),
-        ),
-        onChanged: onTextChanged,
-        controller: controller,
-      ),
-    );
-  }
-}
-
-// Button in message sending section that uses self made icons.
-class ButtonFromPicture extends StatelessWidget {
-  final Function onPress;
-  final Image image;
-
-  ButtonFromPicture({@required this.onPress, @required this.image});
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoButton(
-      padding: EdgeInsets.all(0),
-      onPressed: onPress,
-      child: Container(
-        padding: EdgeInsets.all(0),
-        decoration: ShapeDecoration(color: Colors.white, shape: CircleBorder()),
-        child: image,
-        height: 50.0,
-        width: 50.0,
-      ),
-    );
-  }
-}
-
-class SendTextButton extends StatelessWidget {
-  final Function onPress;
-
-  SendTextButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.send,
-    );
-  }
-}
-
-class StartRecordingButton extends StatelessWidget {
-  final Function onPress;
-
-  StartRecordingButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.mic,
-    );
-  }
-}
-
-class PauseRecordingButton extends StatelessWidget {
-  final Function onPress;
-
-  PauseRecordingButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.pause,
-    );
-  }
-}
-
-class ResumeRecordingButton extends StatelessWidget {
-  final Function onPress;
-
-  ResumeRecordingButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.play_arrow,
-    );
-  }
-}
-
-class StopRecordingButton extends StatelessWidget {
-  final Function onPress;
-
-  StopRecordingButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.stop,
-    );
-  }
-}
-
-class SendRecordingButton extends StatelessWidget {
-  final Function onPress;
-
-  SendRecordingButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.send,
-    );
-  }
-}
-
-class SpeedButton extends StatelessWidget {
-  final Function onPress;
-  final String text;
-
-  SpeedButton({@required this.onPress, @required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoButton(
-      padding: EdgeInsets.all(0),
-      onPressed: onPress,
-      child: Container(
-        padding: EdgeInsets.all(9),
-        decoration:
-            ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
-        child: Text(
-          text,
-        ),
-      ),
-    );
-  }
-}
-
-class PauseButton extends StatelessWidget {
-  final Function onPress;
-
-  PauseButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.pause,
-    );
-  }
-}
-
-class StopButton extends StatelessWidget {
-  final Function onPress;
-
-  StopButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.stop,
-    );
-  }
-}
-
-class ActivateDirectSendButton extends StatelessWidget {
-  final Function onPress;
-
-  ActivateDirectSendButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.all_out,
-    );
-  }
-}
-
-class PlayButton extends StatelessWidget {
-  final Function onPress;
-
-  PlayButton({@required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return RoundButton(
-      onPress: onPress,
-      iconData: Icons.play_arrow,
-    );
-  }
-}
 
 /// Control the recording process.
 class RecorderControls extends StatelessWidget {
@@ -250,7 +28,7 @@ class RecorderControls extends StatelessWidget {
         recorderService.status == RecordingStatus.stopped) {
       return StartRecordingButton(onPress: recorderService.start);
 
-     /// Controls shown while recording.
+      /// Controls shown while recording.
     } else if (recorderService.status == RecordingStatus.recording) {
       return Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -344,15 +122,16 @@ class RecordingInfo extends StatelessWidget {
 
       /// In case we reach a state that has not been anticipated throw an error.
     } else {
-      throw("The recorder controls are in a state they shouldn't be");
-//      return Container(
-//        color: Colors.red,
-//        child: Text("The recorder controls are in a state they shouldn't be"),
-//      );
+      return Container(
+        color: Colors.red,
+        child: Text("The recorder controls are in a state they shouldn't be"),
+      );
     }
+
   }
 }
 
+/// Show the duration  of the current voice message.
 class DurationCounter extends StatefulWidget {
   @override
   _DurationCounterState createState() => _DurationCounterState();
@@ -364,7 +143,7 @@ class _DurationCounterState extends State<DurationCounter> {
   @override
   void initState() {
     final recorderService =
-        Provider.of<RecorderService>(context, listen: false);
+    Provider.of<RecorderService>(context, listen: false);
     positionStream = recorderService.getPositionStream();
     super.initState();
   }
@@ -405,16 +184,16 @@ class _RecordingBarsState extends State<RecordingBars> {
   @override
   void initState() {
     final recorderService =
-        Provider.of<RecorderService>(context, listen: false);
+    Provider.of<RecorderService>(context, listen: false);
     dbLevelStreamSubscription =
         recorderService.getDbLevelStream().listen((newDbLevel) {
-      if (newDbLevel != null) {
-        _insertNewDbLevel(newDbLevel: newDbLevel);
-        _controller.animateTo(_controller.position.maxScrollExtent,
-            duration: RecorderService.UPDATE_DURATION_OF_DB_LEVEL_STREAM,
-            curve: Curves.linear);
-      }
-    });
+          if (newDbLevel != null) {
+            _insertNewDbLevel(newDbLevel: newDbLevel);
+            _controller.animateTo(_controller.position.maxScrollExtent,
+                duration: RecorderService.UPDATE_DURATION_OF_DB_LEVEL_STREAM,
+                curve: Curves.linear);
+          }
+        });
     super.initState();
   }
 
@@ -469,15 +248,15 @@ class _RecordingBarsState extends State<RecordingBars> {
 
 class CloudPlayerButtons extends StatefulWidget {
   final Function({@required double currentSpeed}) play;
-  final Function pause;
-  final Function({@required Duration position}) seek;
-  final Function({@required double speed}) setSpeed;
-  final Stream<FullAudioPlaybackState> playBackStateStream;
-  final Stream<Duration> positionStream;
-  final Duration lengthOfAudio;
+final Function pause;
+final Function({@required Duration position}) seek;
+final Function({@required double speed}) setSpeed;
+final Stream<FullAudioPlaybackState> playBackStateStream;
+final Stream<Duration> positionStream;
+final Duration lengthOfAudio;
 
-  CloudPlayerButtons(
-      {@required this.play,
+CloudPlayerButtons(
+    {@required this.play,
       @required this.pause,
       @required this.seek,
       @required this.setSpeed,
@@ -485,8 +264,8 @@ class CloudPlayerButtons extends StatefulWidget {
       @required this.positionStream,
       @required this.lengthOfAudio});
 
-  @override
-  _CloudPlayerButtonsState createState() => _CloudPlayerButtonsState();
+@override
+_CloudPlayerButtonsState createState() => _CloudPlayerButtonsState();
 }
 
 class _CloudPlayerButtonsState extends State<CloudPlayerButtons> {
@@ -664,135 +443,6 @@ class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
           ],
         );
       },
-    );
-  }
-}
-
-class MessageRow extends StatelessWidget {
-  MessageRow({this.message, this.isMe});
-
-  final Message message;
-  final bool isMe;
-
-  @override
-  Widget build(BuildContext context) {
-    Widget messageWidget;
-    switch (message.messageType) {
-      case MessageType.text:
-        messageWidget = MessageBubble(
-            shouldAlignRight: isMe,
-            child: Text(
-              (message as TextMessage).text,
-              style: TextStyle(
-                fontSize: 15.0,
-              ),
-            ),
-            timestamp: message.timestamp);
-        break;
-      case MessageType.voice:
-        messageWidget = VoiceMessageWidget(
-          voiceMessage: (message as VoiceMessage),
-          key: ValueKey(message.messageId),
-        );
-        break;
-      case MessageType.image:
-        messageWidget = MessageBubble(
-            shouldAlignRight: isMe,
-            child: Image.network(
-              (message as ImageMessage).downloadUrl,
-              loadingBuilder: (context, child, progress) {
-                return progress == null ? child : CupertinoActivityIndicator();
-              },
-              width: MediaQuery.of(context).size.width * 2 / 3,
-              height: MediaQuery.of(context).size.width * 2 / 3,
-              fit: BoxFit.cover,
-            ),
-            timestamp: message.timestamp);
-        break;
-      default:
-        messageWidget = Text("The message type is unknown");
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4),
-      child: Align(
-        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-        child: messageWidget,
-      ),
-    );
-  }
-}
-
-class RoundButton extends StatelessWidget {
-  final Function onPress;
-  final IconData iconData;
-
-  RoundButton({@required this.iconData, @required this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoButton(
-      padding: EdgeInsets.all(0),
-      onPressed: onPress,
-      child: Container(
-        padding: EdgeInsets.all(9),
-        decoration:
-            ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
-        child: Icon(
-          iconData,
-          color: Colors.brown,
-          size: 22,
-        ),
-      ),
-    );
-  }
-}
-
-class MessageBubble extends StatelessWidget {
-  const MessageBubble({
-    Key key,
-    @required this.shouldAlignRight,
-    @required this.child,
-    @required this.timestamp,
-  }) : super(key: key);
-
-  final bool shouldAlignRight;
-  final Widget child;
-  final DateTime timestamp;
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 6 / 7,
-      ),
-      child: Material(
-        borderRadius: shouldAlignRight
-            ? BorderRadius.only(
-                topLeft: Radius.circular(15),
-                bottomLeft: Radius.circular(15),
-                bottomRight: Radius.circular(15))
-            : BorderRadius.only(
-                topRight: Radius.circular(15),
-                bottomLeft: Radius.circular(15),
-                bottomRight: Radius.circular(15)),
-        elevation: 0.0,
-        color: shouldAlignRight ? Colors.yellow : Colors.teal,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-          child: Wrap(
-            direction: Axis.horizontal,
-            alignment: WrapAlignment.end,
-            crossAxisAlignment: WrapCrossAlignment.end,
-            children: <Widget>[
-              child,
-              SizedBox(
-                width: 10,
-              ),
-              TimeStampText(timestamp: timestamp)
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

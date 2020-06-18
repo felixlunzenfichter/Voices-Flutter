@@ -16,6 +16,7 @@ import 'services/cloud_firestore_service.dart';
 import 'services/storage_service.dart';
 import 'services/speech_to_text_service.dart';
 import 'services/file_converter_service.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() async {
 
@@ -25,6 +26,7 @@ void main() async {
 
   /// Make sure the glue between the flutter engine and the widget layer is initialized.
   WidgetsFlutterBinding.ensureInitialized();
+//  TestWidgetsFlutterBinding.ensureInitialized();
 
   return runApp(Voices());
 }
