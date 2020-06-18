@@ -232,17 +232,25 @@ class PlayButton extends StatelessWidget {
   }
 }
 
-///to control the recording process
+/// Control the recording process.
 class RecorderControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+
+    /// Access the recorder.
     final recorderService = Provider.of<RecorderService>(context);
 
+    /// Make sure recorder is initialized.
     if (recorderService.status == RecordingStatus.uninitialized) {
       return CupertinoActivityIndicator();
+
+
+      /// TODO: Do we need .inilialized here? .uninitialized and .inialized should be complementary.
     } else if (recorderService.status == RecordingStatus.initialized ||
         recorderService.status == RecordingStatus.stopped) {
       return StartRecordingButton(onPress: recorderService.start);
+
+     /// Controls shown while recording.
     } else if (recorderService.status == RecordingStatus.recording) {
       return Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -250,6 +258,8 @@ class RecorderControls extends StatelessWidget {
             PauseRecordingButton(onPress: recorderService.pause),
             SendRecordingButton(onPress: recorderService.stop),
           ]);
+
+      /// Controls shown while recording is paused.
     } else if (recorderService.status == RecordingStatus.paused) {
       return Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -257,36 +267,57 @@ class RecorderControls extends StatelessWidget {
             ResumeRecordingButton(onPress: recorderService.resume),
             SendRecordingButton(onPress: recorderService.stop),
           ]);
+
+      /// Invalid state. Throw an error.
     } else {
-      print("The recorder controls are in a state they shouldn't be");
-      return Container();
+      print("The recorder controls are in a state they shouldn't be in.");
+      throw("The recorder controls are in a state they shouldn't be in.");
+//      return Container();
     }
   }
 }
 
+/// This shows information while recording.
 class RecordingAndPlayingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+
+    /// Access the recorder.
     final recorderService = Provider.of<RecorderService>(context);
+
+    /// Display the current recording when done recording.
     if (recorderService.status == RecordingStatus.stopped ||
         recorderService.status == RecordingStatus.paused) {
       return LocalPlayerButtons(
         recording: recorderService.recording,
       );
+
+      /// Display information while recording.
     } else {
       return RecordingInfo();
     }
+
   }
 }
 
+/// This displays information about the current recording before sending it.
+/// During recording and after recording ist completed before sending the voice message.
 class RecordingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+
+    /// Get access to the Recorder.
     final recorderService = Provider.of<RecorderService>(context);
+
+    /// Show that the recorder is not ready.
     if (recorderService.status == RecordingStatus.uninitialized) {
       return Text("Recorder not initialized");
+
+      /// Show that the recorder is ready to be used.
     } else if (recorderService.status == RecordingStatus.initialized) {
       return Text("Recorder initialized");
+
+      /// Show information while recording or when done recording before sending.
     } else if (recorderService.status == RecordingStatus.paused ||
         recorderService.status == RecordingStatus.recording) {
       return Column(
@@ -294,18 +325,30 @@ class RecordingInfo extends StatelessWidget {
           if (recorderService.status == RecordingStatus.paused)
             Text("Recorder paused")
           else
+
             Text("Recorder recording"),
+
+          /// Show length of current recording.
           DurationCounter(),
+
+          /// Show volume of current recording.
           RecordingBars(),
+
         ],
       );
+
+      /// Display recorder has stopped.
     } else if (recorderService.status == RecordingStatus.stopped) {
       return Text("Recorder stopped");
+
+
+      /// In case we reach a state that has not been anticipated throw an error.
     } else {
-      return Container(
-        color: Colors.red,
-        child: Text("The recorder controls are in a state they shouldn't be"),
-      );
+      throw("The recorder controls are in a state they shouldn't be");
+//      return Container(
+//        color: Colors.red,
+//        child: Text("The recorder controls are in a state they shouldn't be"),
+//      );
     }
   }
 }

@@ -36,14 +36,22 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
 
     return Column(
       children: <Widget>[
+
+        /// Recording information.
         RecordingAndPlayingInfo(),
+
+        /// Control panel.
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
+
+            /// Text field.
             Expanded(
                 child: SendTextField(
                     controller: _messageTextController,
                     onTextChanged: _onTextChanged)),
+
+            /// Text send button.
             if (_messageTextController.text != '')
               SendTextButton(
                 onPress: () async {
@@ -62,7 +70,10 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
                   setState(() {});
                 },
               ),
+
+            /// Audio recording controls.
             RecorderControls(),
+
           ],
         ),
       ],
@@ -74,3 +85,5 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
     setState(() {});
   }
 }
+
+
