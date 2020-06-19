@@ -55,7 +55,7 @@ class RecorderControls extends StatelessWidget {
   }
 }
 
-/// This shows information while recording.
+/// This shows information while recording or displays the recorded message when recording is done before sending.
 class RecordingAndPlayingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -64,22 +64,21 @@ class RecordingAndPlayingInfo extends StatelessWidget {
     final recorderService = Provider.of<RecorderService>(context);
 
     /// Display the current recording when done recording.
-    if (recorderService.status == RecordingStatus.stopped ||
-        recorderService.status == RecordingStatus.paused) {
+    if (recorderService.status == RecordingStatus.stopped || recorderService.status == RecordingStatus.paused) {
       return LocalPlayerButtons(
         recording: recorderService.recording,
       );
 
       /// Display information while recording.
     } else {
+      
       return RecordingInfo();
     }
 
   }
 }
 
-/// This displays information about the current recording before sending it.
-/// During recording and after recording ist completed before sending the voice message.
+/// Show info during recording process.
 class RecordingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -87,7 +86,7 @@ class RecordingInfo extends StatelessWidget {
     /// Get access to the Recorder.
     final recorderService = Provider.of<RecorderService>(context);
 
-    /// Show that the recorder is not ready.
+    /// Inform that the recorder is not ready.
     if (recorderService.status == RecordingStatus.uninitialized) {
       return Text("Recorder not initialized");
 
@@ -95,11 +94,12 @@ class RecordingInfo extends StatelessWidget {
     } else if (recorderService.status == RecordingStatus.initialized) {
       return Text("Recorder initialized");
 
-      /// Show information while recording or when done recording before sending.
-    } else if (recorderService.status == RecordingStatus.paused ||
-        recorderService.status == RecordingStatus.recording) {
+      /// Show information while recording.
+    } else if (recorderService.status == RecordingStatus.paused || recorderService.status == RecordingStatus.recording) {
       return Column(
         children: <Widget>[
+
+          /// TODO: Due to the if statemetn in Recording or playing info this code is dead.
           if (recorderService.status == RecordingStatus.paused)
             Text("Recorder paused")
           else
