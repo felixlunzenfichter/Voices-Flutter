@@ -9,6 +9,7 @@ import 'package:voices/services/recorder_service.dart';
 import 'voice_message_widget.dart';
 import 'ui_chat.dart';
 
+/// Record and listen to recorded audio.
 
 /// Control the recording process.
 class RecorderControls extends StatelessWidget {
@@ -22,8 +23,7 @@ class RecorderControls extends StatelessWidget {
     if (recorderService.status == RecordingStatus.uninitialized) {
       return CupertinoActivityIndicator();
 
-
-      /// TODO: Do we need .inilialized here? .uninitialized and .inialized should be complementary.
+      /// Ready to start recording.
     } else if (recorderService.status == RecordingStatus.initialized ||
         recorderService.status == RecordingStatus.stopped) {
       return StartRecordingButton(onPress: recorderService.start);
@@ -55,7 +55,7 @@ class RecorderControls extends StatelessWidget {
   }
 }
 
-/// This shows information while recording or displays the recorded message when recording is done before sending.
+/// This shows information while recording or displays the recorded message when recording is paused before sending.
 class RecordingAndPlayingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -63,15 +63,14 @@ class RecordingAndPlayingInfo extends StatelessWidget {
     /// Access the recorder.
     final recorderService = Provider.of<RecorderService>(context);
 
-    /// Display the current recording when done recording.
-    if (recorderService.status == RecordingStatus.stopped || recorderService.status == RecordingStatus.paused) {
+    /// Display the current recording recording when done recording.
+    if (recorderService.status == RecordingStatus.paused) {
       return LocalPlayerButtons(
         recording: recorderService.recording,
       );
 
       /// Display information while recording.
     } else {
-      
       return RecordingInfo();
     }
 
@@ -99,11 +98,12 @@ class RecordingInfo extends StatelessWidget {
       return Column(
         children: <Widget>[
 
-          /// TODO: Due to the if statemetn in Recording or playing info this code is dead.
+          /// Paused recording but not sent yet.
           if (recorderService.status == RecordingStatus.paused)
             Text("Recorder paused")
-          else
 
+            ///
+          else
             Text("Recorder recording"),
 
           /// Show length of current recording.
