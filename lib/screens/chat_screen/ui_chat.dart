@@ -8,7 +8,91 @@ import 'package:voices/models/voice_message.dart';
 import 'package:voices/shared_widgets/time_stamp_text.dart';
 import 'voice_message_widget.dart';
 
+
 /// This file contains the UI components of the conversation window.
+
+
+/// Display an integral number of seconds from a stream.
+ class DurationWidget extends StatelessWidget {
+  const DurationWidget({
+    Key key,
+    @required this.positionStream,
+  }) : super(key: key);
+
+  final Stream<Duration> positionStream;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+    stream: positionStream,
+    builder: (context, snapshot) {
+      Duration position = snapshot.data;
+      return Text(
+        "${position?.inSeconds ?? 0}s",
+        style: TextStyle(
+          fontSize: 35.0,
+          color: Colors.black,
+        ),
+      );
+    },
+    );
+  }
+}
+
+
+class RecordingBarsWidget extends StatelessWidget {
+  const RecordingBarsWidget({
+//    @required this.widget,
+    @required this.height,
+    @required this.controller,
+    @required this.listKey,
+    @required this.storedDbLevels,
+    @required this.barWidth,
+  });
+
+//  final RecordingBars widget;
+  final double height;
+  final ScrollController controller;
+  final GlobalKey<AnimatedListState> listKey;
+  final List<double> storedDbLevels;
+  final double barWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: height,
+      child: AnimatedList(
+          padding: const EdgeInsets.symmetric(horizontal: 50),
+          controller: controller,
+          key: listKey,
+          scrollDirection: Axis.horizontal,
+          initialItemCount: storedDbLevels.length,
+          itemBuilder: (context, index, animation) {
+            /// This is a value between 0 and 120
+            double dbLevel = storedDbLevels[index];
+            double heightOfBar = dbLevel / 120 * height;
+            return SizeTransition(
+              axis: Axis.horizontal,
+              sizeFactor: animation,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 1),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: barWidth,
+                    height: heightOfBar,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(2),
+                      color: Colors.blueAccent,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+    );
+  }
+}
 
 /// Display a message in the chat.
 class MessageRow extends StatelessWidget {

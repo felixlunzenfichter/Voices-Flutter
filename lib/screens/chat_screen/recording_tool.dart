@@ -65,7 +65,7 @@ class RecordingAndPlayingInfo extends StatelessWidget {
 
     /// Display the current recording recording when done recording.
     if (recorderService.status == RecordingStatus.paused) {
-      return LocalPlayerButtons(
+      return LocalPlayer(
         recording: recorderService.recording,
       );
 
@@ -131,7 +131,7 @@ class RecordingInfo extends StatelessWidget {
   }
 }
 
-/// Show the duration  of the current voice message.
+/// Show how long we have been recording for.
 class DurationCounter extends StatefulWidget {
   @override
   _DurationCounterState createState() => _DurationCounterState();
@@ -150,25 +150,16 @@ class _DurationCounterState extends State<DurationCounter> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: positionStream,
-      builder: (context, snapshot) {
-        Duration position = snapshot.data;
-        return Text(
-          "${position?.inSeconds ?? 0}s",
-          style: TextStyle(
-            fontSize: 35.0,
-            color: Colors.black,
-          ),
-        );
-      },
-    );
+
+    /// Display the position in seconds.
+    return DurationWidget(positionStream: positionStream);
   }
 }
 
+
+
 class RecordingBars extends StatefulWidget {
-  final double height;
-  RecordingBars({this.height = 100});
+  final double height = 100;
 
   @override
   _RecordingBarsState createState() => _RecordingBarsState();
@@ -205,38 +196,7 @@ class _RecordingBarsState extends State<RecordingBars> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: widget.height,
-      child: AnimatedList(
-          padding: const EdgeInsets.symmetric(horizontal: 50),
-          controller: _controller,
-          key: _listKey,
-          scrollDirection: Axis.horizontal,
-          initialItemCount: storedDbLevels.length,
-          itemBuilder: (context, index, animation) {
-            /// This is a value between 0 and 120
-            double dbLevel = storedDbLevels[index];
-            double heightOfBar = dbLevel / 120 * widget.height;
-            return SizeTransition(
-              axis: Axis.horizontal,
-              sizeFactor: animation,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 1),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Container(
-                    width: BAR_WIDTH,
-                    height: heightOfBar,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(2),
-                      color: Colors.blueAccent,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }),
-    );
+    return RecordingBarsWidget(height: widget.height, controller: _controller, listKey: _listKey, storedDbLevels: storedDbLevels, barWidth: BAR_WIDTH);
   }
 
   _insertNewDbLevel({@required double newDbLevel}) {
@@ -245,6 +205,7 @@ class _RecordingBarsState extends State<RecordingBars> {
         duration: Duration(milliseconds: 500));
   }
 }
+
 
 class CloudPlayerButtons extends StatefulWidget {
   final Function({@required double currentSpeed}) play;
@@ -347,20 +308,29 @@ class _CloudPlayerButtonsState extends State<CloudPlayerButtons> {
   }
 }
 
-class LocalPlayerButtons extends StatefulWidget {
+/// Play a local audio file.
+class LocalPlayer extends StatefulWidget {
+
+  /// Audio file to be played.
   final Recording recording;
 
-  LocalPlayerButtons({@required this.recording});
+  LocalPlayer({@required this.recording});
 
   @override
-  _LocalPlayerButtonsState createState() => _LocalPlayerButtonsState();
+  _LocalPlayerState createState() => _LocalPlayerState();
 }
 
-class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
+class _LocalPlayerState extends State<LocalPlayer> {
+
+  /// Playback speed.
   double _currentSpeed = 1;
 
+  /// Player for local files.
   LocalPlayerService playerService;
+
   Stream<PlayerStatus> _statusStream;
+
+  /// Current position of playback.
   Stream<Duration> _positionStream;
 
   @override
@@ -383,6 +353,8 @@ class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text("${widget.recording.duration.inSeconds}s"),
+
+            /// Show loading indicator while player is not ready.
             if (status == PlayerStatus.uninitialized)
               Container(
                 margin: EdgeInsets.all(8.0),
@@ -390,6 +362,8 @@ class _LocalPlayerButtonsState extends State<LocalPlayerButtons> {
                 height: 64.0,
                 child: CupertinoActivityIndicator(),
               )
+
+              ///
             else if (status == PlayerStatus.playing)
               ButtonFromPicture(
                 onPress: playerService.pause,
