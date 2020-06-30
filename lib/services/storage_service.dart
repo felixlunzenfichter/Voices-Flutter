@@ -21,7 +21,7 @@ class StorageService {
     }
   }
 
-  //returns the downloadUrl of the uploaded file
+  /// Upload [audioFile] to the permanent cloud storage to position [firebasePath].
   Future<String> uploadAudioFile(
       {@required String firebasePath, @required File audioFile}) async {
     try {
@@ -36,4 +36,12 @@ class StorageService {
       return null;
     }
   }
+
+  /// Todo: implement
+  Future<File> downloadAudioFile({@required String firebasePath}) async {
+
+//    StorageFileDownloadTask audioDownloadTask = StorageFileDownloadTask()
+    return null;
+  }
+
 }

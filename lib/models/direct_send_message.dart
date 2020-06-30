@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:voices/models/message.dart';
 
+/// Isaaks attempt to implement direct send. just play the chunks one after the other. 
 class DirectSendMessage extends Message {
+
+  /// List of all parts of the voice message.
   List<String> downloadUrlsOfChunks;
   Duration totalLength;
 

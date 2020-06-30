@@ -4,12 +4,44 @@ import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/recording.dart';
+import 'package:voices/models/voice_message.dart';
+import 'package:voices/screens/chat_screen/chat_screen.dart';
+import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/services/local_player_service.dart';
 import 'package:voices/services/recorder_service.dart';
+import 'package:voices/services/storage_service.dart';
 import 'voice_message_widget.dart';
 import 'ui_chat.dart';
+import 'package:voices/constants.dart';
+import 'package:voices/services/auth_service.dart';
+import 'dart:io';
 
-/// Record and listen to recorded audio.
+/// This file contains the logic to record and to listen to recorded audio.
+
+/// Send a voice message. Todo: Upload audio to storage.
+dynamic sendvm({BuildContext context}) async {
+
+  /// Access Services.
+  RecorderService recorderService = Provider.of<RecorderService>(context, listen: false);
+  CloudFirestoreService cloudFirestoreServiced = Provider.of<CloudFirestoreService>(context, listen: false);
+  GlobalChatScreenInfo screenInfo = Provider.of<GlobalChatScreenInfo>(context, listen: false);
+  LoggedInUserService authService = Provider.of<LoggedInUserService>(context, listen: false);
+  StorageService storageService = Provider.of<StorageService>(context, listen: false);
+
+  /// Stop recording.
+//  recorderService.stop();
+
+  /// Store Audio file in the cloud.
+
+  String firebasePath = 'voice_message/test_folder';
+  print(recorderService.recording.path);
+  print(context);
+
+//  String downloadURL = await storageService.uploadAudioFile(firebasePath: firebasePath, audioFile: File(/*recorderService.recording.path */ ));
+
+//  VoiceMessage voiceMessage = VoiceMessage(senderUid: authService.loggedInUser.uid, );
+//  cloudFirestoreServiced.addVoiceMessage(chatId: screenInfo.chatId, voiceMessage: );
+}
 
 /// Control the recording process.
 class RecorderControls extends StatelessWidget {
@@ -34,9 +66,9 @@ class RecorderControls extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             PauseRecordingButton(onPress: recorderService.pause),
-            SendRecordingButton(onPress: recorderService.stop),
+            SendRecordingButton(onPress: () {return sendvm(context: context);}),
           ]);
-
+                                                                               
       /// Controls shown while recording is paused.
     } else if (recorderService.status == RecordingStatus.paused) {
       return Row(
@@ -102,7 +134,7 @@ class RecordingInfo extends StatelessWidget {
           if (recorderService.status == RecordingStatus.paused)
             Text("Recorder paused")
 
-            ///
+          /// Show while recording.
           else
             Text("Recorder recording"),
 
@@ -138,12 +170,17 @@ class DurationCounter extends StatefulWidget {
 }
 
 class _DurationCounterState extends State<DurationCounter> {
+
+  /// The latest value from [positionStream] will be displayed in seconds.
   Stream<Duration> positionStream;
 
   @override
   void initState() {
-    final recorderService =
-    Provider.of<RecorderService>(context, listen: false);
+
+    /// Access the recorder.
+    final recorderService = Provider.of<RecorderService>(context, listen: false);
+
+    /// Access current duration.
     positionStream = recorderService.getPositionStream();
     super.initState();
   }
@@ -157,9 +194,10 @@ class _DurationCounterState extends State<DurationCounter> {
 }
 
 
-
+/// Visual representation of the audio file.
+/// TODO: make visual representation dependent on pitch and make it colorful. 
 class RecordingBars extends StatefulWidget {
-  final double height = 100;
+  final double height = kRecordingVisualheight;
 
   @override
   _RecordingBarsState createState() => _RecordingBarsState();
@@ -168,7 +206,7 @@ class RecordingBars extends StatefulWidget {
 class _RecordingBarsState extends State<RecordingBars> {
   StreamSubscription<double> dbLevelStreamSubscription;
   List<double> storedDbLevels = [];
-  static const double BAR_WIDTH = 3;
+  static const double BAR_WIDTH = 5;
   final _listKey = GlobalKey<AnimatedListState>();
   final ScrollController _controller = ScrollController();
 
