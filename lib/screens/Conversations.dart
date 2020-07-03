@@ -59,7 +59,6 @@ class _ChatsTabState extends State<ChatsTab> {
               );
             },
           ),
-
         ],
       ),
 

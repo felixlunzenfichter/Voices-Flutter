@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:voices/models/message.dart';
 
+/// This class encapsulates the meta data of a voice message stored in the cloud.
+/// NB: This class does not contain the audio file itself.
 class VoiceMessage extends Message {
   String downloadUrl;
   String transcript;
