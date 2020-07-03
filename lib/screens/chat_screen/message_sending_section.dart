@@ -7,7 +7,9 @@ import 'package:voices/screens/chat_screen/ui_chat.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'recording_tool.dart';
+import 'package:voices/models/recording.dart';
 
+/// This enumeration defines the types of control interfaces available in the chat.
 enum Interface { Recoring, Listening, Texting }
 
 /// Input section of the chat.
@@ -48,7 +50,6 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
           children: <Widget>[
             ControlPanelButton(
                 onTap: () {
-                  print('text');
                   setState(() {
                     showInterface = Interface.Texting;
                   });
@@ -76,46 +77,73 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
         ),
 
         if (showInterface == Interface.Texting)
-          TextInput(
+          TextInputSection(
               messageTextController: _messageTextController,
               cloudFirestoreService: cloudFirestoreService,
               screenInfo: screenInfo,
               authService: authService),
 
-        /// Recording information.
         if (showInterface == Interface.Recoring)
-          RecordingAndPlayingInfo(),
-        // Audio recording controls.
-        if (showInterface == Interface.Recoring)
-          RecorderControls(),
+          RecordingSection(),
+
+        if (showInterface == Interface.Listening)
+          ListeningSection()
       ],
     );
   }
+}
 
-  /// Update the text field to be displayed.
-  _onTextChanged(String newText) {
-    setState(() {});
+/// Record
+class RecordingSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        /// Recording information.
+        RecordingAndPlayingInfo(),
+
+        // Audio recording controls.
+        RecorderControls()
+      ],
+    );
   }
 }
 
-/// Text input section.
-class TextInput extends StatefulWidget {
+class ListeningSection extends StatelessWidget {
+  final Recording recording;
+
+  ListeningSection({this.recording});
+
+  @override
+  Widget build(BuildContext context) {
+    if (recording == null) {
+      return Text('Select a recording to play it.');
+    } else {
+      return LocalPlayer(
+        recording: recording,
+      );
+    }
+  }
+}
+
+/// Write and send written text.
+class TextInputSection extends StatefulWidget {
   final TextEditingController messageTextController;
   final CloudFirestoreService cloudFirestoreService;
   final GlobalChatScreenInfo screenInfo;
   final LoggedInUserService authService;
 
-  TextInput(
+  TextInputSection(
       {this.messageTextController,
       this.cloudFirestoreService,
       this.screenInfo,
       this.authService});
 
   @override
-  _State createState() => _State();
+  _TextInputState createState() => _TextInputState();
 }
 
-class _State extends State<TextInput> {
+class _TextInputState extends State<TextInputSection> {
   @override
   Widget build(BuildContext context) {
     return Row(
