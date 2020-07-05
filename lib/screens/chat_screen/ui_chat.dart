@@ -8,12 +8,10 @@ import 'package:voices/models/voice_message.dart';
 import 'package:voices/shared_widgets/time_stamp_text.dart';
 import 'voice_message_widget.dart';
 
-
 /// This file contains the UI components of the conversation window.
 
-
 /// Display an integral number of seconds from a stream.
- class DurationWidget extends StatelessWidget {
+class DurationWidget extends StatelessWidget {
   const DurationWidget({
     Key key,
     @required this.positionStream,
@@ -24,21 +22,20 @@ import 'voice_message_widget.dart';
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-    stream: positionStream,
-    builder: (context, snapshot) {
-      Duration position = snapshot.data;
-      return Text(
-        "${position?.inSeconds ?? 0}s",
-        style: TextStyle(
-          fontSize: 35.0,
-          color: Colors.black,
-        ),
-      );
-    },
+      stream: positionStream,
+      builder: (context, snapshot) {
+        Duration position = snapshot.data;
+        return Text(
+          "${position?.inSeconds ?? 0}s",
+          style: TextStyle(
+            fontSize: 35.0,
+            color: Colors.black,
+          ),
+        );
+      },
     );
   }
 }
-
 
 class RecordingBarsWidget extends StatelessWidget {
   const RecordingBarsWidget({
@@ -117,10 +114,13 @@ class MessageRow extends StatelessWidget {
             timestamp: message.timestamp);
         break;
       case MessageType.voice:
-        messageWidget = VoiceMessageWidget(
+        messageWidget = NewVoiceMessageInChatWidget(
           voiceMessage: (message as VoiceMessage),
-          key: ValueKey(message.messageId),
         );
+//            VoiceMessageWidget(
+//          voiceMessage: (message as VoiceMessage),
+//          key: ValueKey(message.messageId),
+//        );
         break;
       case MessageType.image:
         messageWidget = MessageBubble(
@@ -149,7 +149,7 @@ class MessageRow extends StatelessWidget {
   }
 }
 
-/// Display a message in the chat. 
+/// Display a message in the chat.
 class MessageBubble extends StatelessWidget {
   const MessageBubble({
     Key key,
@@ -171,13 +171,13 @@ class MessageBubble extends StatelessWidget {
       child: Material(
         borderRadius: shouldAlignRight
             ? BorderRadius.only(
-            topLeft: Radius.circular(15),
-            bottomLeft: Radius.circular(15),
-            bottomRight: Radius.circular(15))
+                topLeft: Radius.circular(15),
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15))
             : BorderRadius.only(
-            topRight: Radius.circular(15),
-            bottomLeft: Radius.circular(15),
-            bottomRight: Radius.circular(15)),
+                topRight: Radius.circular(15),
+                bottomLeft: Radius.circular(15),
+                bottomRight: Radius.circular(15)),
         elevation: 0.0,
         color: shouldAlignRight ? Colors.yellow : Colors.teal,
         child: Padding(
@@ -215,7 +215,7 @@ class RoundButton extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(9),
         decoration:
-        ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
+            ShapeDecoration(color: Colors.tealAccent, shape: CircleBorder()),
         child: Icon(
           iconData,
           color: Colors.brown,
@@ -281,7 +281,6 @@ class ButtonFromPicture extends StatelessWidget {
     );
   }
 }
-
 
 /// Now following is the UI of the individual buttons.
 

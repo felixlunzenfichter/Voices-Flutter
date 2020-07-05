@@ -7,6 +7,7 @@ class VoiceMessage extends Message {
   String downloadUrl;
   String transcript;
   Duration length;
+  String firebasePath;
 
   VoiceMessage({
     String senderUid,
@@ -14,6 +15,7 @@ class VoiceMessage extends Message {
     String downloadUrl,
     String transcript,
     Duration length,
+    String firebasePath,
   }) {
     this.senderUid = senderUid;
     this.timestamp = timestamp;
@@ -21,6 +23,7 @@ class VoiceMessage extends Message {
     this.downloadUrl = downloadUrl;
     this.transcript = transcript;
     this.length = length;
+    this.firebasePath = firebasePath;
   }
 
   VoiceMessage.fromFirestore({DocumentSnapshot doc}) {
@@ -32,6 +35,7 @@ class VoiceMessage extends Message {
     this.downloadUrl = map['downloadUrl'];
     this.transcript = map['transcript'];
     this.length = Duration(milliseconds: map['length']);
+    this.firebasePath = map['firebasePath'];
   }
 
   Map<String, dynamic> toMap() {
@@ -41,6 +45,7 @@ class VoiceMessage extends Message {
       'downloadUrl': downloadUrl,
       'transcript': transcript,
       'length': length.inMilliseconds,
+      'firebasePath': firebasePath,
     };
   }
 

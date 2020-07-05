@@ -3,11 +3,53 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/voice_message.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:voices/screens/chat_screen/chat_screen.dart';
 import 'package:voices/screens/chat_screen/ui_chat.dart';
+import 'package:voices/services/CurrentlyListeningInChatsState.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_player_service.dart';
+import 'package:voices/services/recorder_service.dart';
 import 'recording_tool.dart';
+import 'package:voices/services/local_player_service.dart';
+import 'package:voices/services/recorder_service.dart';
+import 'package:voices/models/recording.dart';
+import 'package:voices/services/storage_service.dart';
+import 'dart:io';
 
+class NewVoiceMessageInChatWidget extends StatelessWidget {
+  final VoiceMessage voiceMessage;
+
+  NewVoiceMessageInChatWidget({@required this.voiceMessage});
+
+  @override
+  Widget build(BuildContext context) {
+    final CurrentlyListeningInChatState currentlyListeningInChatState =
+        Provider.of<CurrentlyListeningInChatState>(context);
+    final GlobalChatScreenInfo screenInfo =
+        Provider.of<GlobalChatScreenInfo>(context);
+    final RecorderService recorderService =
+        Provider.of<RecorderService>(context);
+
+    return Row(
+      children: <Widget>[
+        GestureDetector(
+          child: ButtonFromPicture(
+            onPress: () async {
+              File audioFile = await StorageService()
+                  .downloadAudioFile(voiceMessage: voiceMessage);
+              Recording recording = Recording(
+                  duration: voiceMessage.length, path: audioFile.path);
+              currentlyListeningInChatState.playAudioInChat(
+                  screenInfo.chatId, recording);
+            },
+            image: Image.asset('assets/play_1.png'),
+          ),
+        ),
+        Container(child: Text(voiceMessage.length.toString())),
+      ],
+    );
+  }
+}
 
 class VoiceMessageWidget extends StatefulWidget {
   final VoiceMessage voiceMessage;
@@ -49,7 +91,8 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget> {
   Widget build(BuildContext context) {
     final cloudPlayerService =
         Provider.of<CloudPlayerService>(context, listen: false);
-    final authService = Provider.of<LoggedInUserService>(context, listen: false);
+    final authService =
+        Provider.of<LoggedInUserService>(context, listen: false);
     final isMe = widget.voiceMessage.senderUid == authService.loggedInUser.uid;
     return MessageBubble(
       shouldAlignRight: isMe,

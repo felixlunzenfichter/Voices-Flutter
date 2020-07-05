@@ -7,6 +7,7 @@ import 'package:voices/screens/loading_screen.dart';
 import 'package:voices/screens/registration/login_screen.dart';
 import 'package:voices/screens/registration/permissions_screen.dart';
 import 'package:voices/screens/tabs_screen.dart';
+import 'package:voices/services/CurrentlyListeningInChatsState.dart';
 import 'package:voices/services/cloud_player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'services/local_player_service.dart';
@@ -18,7 +19,6 @@ import 'services/speech_to_text_service.dart';
 import 'services/file_converter_service.dart';
 
 void main() async {
-
   /// Make sure the glue between the flutter engine and the widget layer is initialized.
   WidgetsFlutterBinding.ensureInitialized();
 //  TestWidgetsFlutterBinding.ensureInitialized();
@@ -33,10 +33,12 @@ void main() async {
 class Voices extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-
     /// Global state management layer.
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<CurrentlyListeningInChatState>(
+          create: (_) => CurrentlyListeningInChatState(),
+        ),
 
         /// User authentication service.
         ChangeNotifierProvider<LoggedInUserService>(

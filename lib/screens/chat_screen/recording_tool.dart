@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
@@ -15,6 +16,7 @@ import 'ui_chat.dart';
 import 'package:voices/constants.dart';
 import 'package:voices/services/auth_service.dart';
 import 'dart:io';
+import 'package:voices/services/CurrentlyListeningInChatsState.dart';
 
 /// This file contains the logic to record and to listen to recorded audio.
 
@@ -27,20 +29,31 @@ dynamic sendvm({BuildContext context}) async {
   GlobalChatScreenInfo screenInfo = Provider.of<GlobalChatScreenInfo>(context, listen: false);
   LoggedInUserService authService = Provider.of<LoggedInUserService>(context, listen: false);
   StorageService storageService = Provider.of<StorageService>(context, listen: false);
+  CurrentlyListeningInChatState currentlyListeningInChatState = Provider.of<CurrentlyListeningInChatState>(context, listen: false);
 
-  /// Stop recording.
-//  recorderService.stop();
+  /// Stop recording. For offline test purposes I display the voice message in the listening section instead of sending it.
+  /// For this specific purpose if I don't put await in front of [recorderService.stop()] then the audio message that will
+  /// be displayed in the listening section won't be up to date. 
+  await recorderService.stop();
 
   /// Store Audio file in the cloud.
 
-  String firebasePath = 'voice_message/test_folder';
+  DateTime timestamp = DateTime.now();
+
+  String firebasePath = 'voice_messages/${screenInfo.chatId}/${timestamp.toString()}';
+
+
+//  currentlyListeningInChatState.playAudioInChat(screenInfo.chatId, recorderService.recording);
   print(recorderService.recording.path);
-  print(context);
 
-//  String downloadURL = await storageService.uploadAudioFile(firebasePath: firebasePath, audioFile: File(/*recorderService.recording.path */ ));
 
-//  VoiceMessage voiceMessage = VoiceMessage(senderUid: authService.loggedInUser.uid, );
-//  cloudFirestoreServiced.addVoiceMessage(chatId: screenInfo.chatId, voiceMessage: );
+
+  String downloadURL = await storageService.uploadAudioFile(firebasePath: firebasePath, audioFile: File(recorderService.recording.path));
+
+  VoiceMessage voiceMessage = VoiceMessage(senderUid: authService.loggedInUser.uid, timestamp: timestamp, downloadUrl: downloadURL, transcript: 'transcript', length: recorderService.recording.duration, firebasePath: firebasePath);
+
+  print(voiceMessage.firebasePath);
+  cloudFirestoreServiced.addVoiceMessage(chatId: screenInfo.chatId, voiceMessage: voiceMessage);
 }
 
 /// Control the recording process.
@@ -50,6 +63,7 @@ class RecorderControls extends StatelessWidget {
 
     /// Access the recorder.
     final recorderService = Provider.of<RecorderService>(context);
+
 
     /// Make sure recorder is initialized.
     if (recorderService.status == RecordingStatus.uninitialized) {

@@ -8,6 +8,7 @@ import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'recording_tool.dart';
 import 'package:voices/models/recording.dart';
+import 'package:voices/services/CurrentlyListeningInChatsState.dart';
 
 /// This enumeration defines the types of control interfaces available in the chat.
 enum Interface { Recoring, Listening, Texting }
@@ -42,6 +43,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
         Provider.of<LoggedInUserService>(context, listen: false);
     final screenInfo =
         Provider.of<GlobalChatScreenInfo>(context, listen: false);
+    final CurrentlyListeningInChatState currentlyListeningAudioState =
+        Provider.of<CurrentlyListeningInChatState>(context);
 
     return Column(
       children: <Widget>[
@@ -87,7 +90,9 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
           RecordingSection(),
 
         if (showInterface == Interface.Listening)
-          ListeningSection()
+          ListeningSection(
+              recording: currentlyListeningAudioState
+                  .ChatsWithActivePlayer[screenInfo.chatId])
       ],
     );
   }
@@ -112,7 +117,7 @@ class RecordingSection extends StatelessWidget {
 class ListeningSection extends StatelessWidget {
   final Recording recording;
 
-  ListeningSection({this.recording});
+  ListeningSection({@required this.recording});
 
   @override
   Widget build(BuildContext context) {
