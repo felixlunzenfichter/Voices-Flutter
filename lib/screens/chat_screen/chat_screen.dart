@@ -2,8 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
-import 'package:voices/screens/chat_screen/message_sending_section.dart';
+import 'package:voices/screens/chat_screen/control_panel.dart';
 import 'package:voices/screens/chat_screen/messages.dart';
+
+enum Interface { Recording, Listening, Texting }
 
 class ChatScreen extends StatelessWidget {
   final String chatId;
@@ -16,7 +18,7 @@ class ChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Provider<GlobalChatScreenInfo>(
+    return ChangeNotifierProvider<GlobalChatScreenInfo>(
       create: (_) => GlobalChatScreenInfo(
         chatId: chatId,
         otherUser: otherUser,
@@ -33,7 +35,7 @@ class ChatScreen extends StatelessWidget {
               Expanded(
                 child: MessagesStream(),
               ),
-              MessageSendingSection(),
+              ControlPanel(),
             ],
           ),
         ),
@@ -42,9 +44,27 @@ class ChatScreen extends StatelessWidget {
   }
 }
 
-class GlobalChatScreenInfo {
+class GlobalChatScreenInfo extends ChangeNotifier {
   final String chatId;
   final User otherUser;
+
+  /// Decide which controls to show right now.
+  Interface showInterface = Interface.Recording;
+
+  void showListeningSection() {
+    showInterface = Interface.Listening;
+    notifyListeners();
+  }
+
+  void showRecordingSection() {
+    showInterface = Interface.Recording;
+    notifyListeners();
+  }
+
+  void showTextInputSection() {
+    showInterface = Interface.Texting;
+    notifyListeners();
+  }
 
   GlobalChatScreenInfo({
     @required this.chatId,

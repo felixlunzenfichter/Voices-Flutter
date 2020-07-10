@@ -2,16 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/voice_message.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:voices/screens/chat_screen/chat_screen.dart';
 import 'package:voices/screens/chat_screen/ui_chat.dart';
 import 'package:voices/services/CurrentlyListeningInChatsState.dart';
-import 'package:voices/services/auth_service.dart';
-import 'package:voices/services/cloud_player_service.dart';
-import 'package:voices/services/recorder_service.dart';
-import 'recording_tool.dart';
 import 'package:voices/services/local_player_service.dart';
-import 'package:voices/services/recorder_service.dart';
 import 'package:voices/models/recording.dart';
 import 'package:voices/services/storage_service.dart';
 import 'dart:io';
@@ -27,20 +21,22 @@ class NewVoiceMessageInChatWidget extends StatelessWidget {
         Provider.of<CurrentlyListeningInChatState>(context);
     final GlobalChatScreenInfo screenInfo =
         Provider.of<GlobalChatScreenInfo>(context);
-    final RecorderService recorderService =
-        Provider.of<RecorderService>(context);
+    final LocalPlayerService localPlayerService =
+        Provider.of<LocalPlayerService>(context);
 
     return Row(
       children: <Widget>[
         GestureDetector(
           child: ButtonFromPicture(
             onPress: () async {
+              screenInfo.showListeningSection();
               File audioFile = await StorageService()
                   .downloadAudioFile(voiceMessage: voiceMessage);
               Recording recording = Recording(
                   duration: voiceMessage.length, path: audioFile.path);
               currentlyListeningInChatState.playAudioInChat(
                   screenInfo.chatId, recording);
+              await localPlayerService.play();
             },
             image: Image.asset('assets/play_1.png'),
           ),
@@ -51,6 +47,7 @@ class NewVoiceMessageInChatWidget extends StatelessWidget {
   }
 }
 
+/*
 class VoiceMessageWidget extends StatefulWidget {
   final VoiceMessage voiceMessage;
 
@@ -122,6 +119,8 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget> {
     );
   }
 }
+
+ */
 
 class SeekBar extends StatefulWidget {
   final Duration duration;

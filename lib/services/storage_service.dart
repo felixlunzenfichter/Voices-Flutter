@@ -3,8 +3,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:voices/models/message.dart';
 import 'package:voices/models/voice_message.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
@@ -43,13 +41,11 @@ class StorageService {
     }
   }
 
-  /// Todo: implement
   Future<File> downloadAudioFile({@required VoiceMessage voiceMessage}) async {
 //    String downloadURL = voiceMessage.downloadUrl;
 
     /// get storage reference.
     String firebasePath = voiceMessage.firebasePath;
-    print(firebasePath);
     StorageReference ref = FirebaseStorage().ref().child(firebasePath);
 
     /// Download data.
@@ -60,17 +56,19 @@ class StorageService {
     final String uuid = Uuid().v1();
     final Directory systemTempDir = Directory.systemTemp;
 
-    /// Todo: .txt is not what we want here right?
+    /// Todo: mp3 has to be changed if we use a different format.
     final File audioFile = File('${systemTempDir.path}/tmp$uuid.mp3');
+
+    /// Todo: make sure this does not interfer with the local file system.
     if (audioFile.existsSync()) {
       await audioFile.delete();
     }
+
     await audioFile.create();
     assert(await audioFile.readAsString() == "");
 
     final StorageFileDownloadTask task = ref.writeToFile(audioFile);
 
-    final int byteCount = (await task.future).totalByteCount;
     final Uint8List tempFileContents = await audioFile.readAsBytes();
 
     final String fileContents = downloadData.body;

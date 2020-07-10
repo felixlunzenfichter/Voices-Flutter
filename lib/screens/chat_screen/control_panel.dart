@@ -6,28 +6,25 @@ import 'package:voices/screens/chat_screen/chat_screen.dart';
 import 'package:voices/screens/chat_screen/ui_chat.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
-import 'recording_tool.dart';
+import 'recording_section.dart';
 import 'package:voices/models/recording.dart';
 import 'package:voices/services/CurrentlyListeningInChatsState.dart';
+import 'package:voices/screens/chat_screen/player.dart';
 
-/// This enumeration defines the types of control interfaces available in the chat.
-enum Interface { Recoring, Listening, Texting }
-
-/// Input section of the chat.
-class MessageSendingSection extends StatefulWidget {
+/// This is the control panel in the Chat. When I think control panel I think like star wars control panel.
+/// In front of me the world I want to navigate through.
+/// Down here the controls.
+class ControlPanel extends StatefulWidget {
   @override
-  _MessageSendingSectionState createState() => _MessageSendingSectionState();
+  _ControlPanelState createState() => _ControlPanelState();
 }
 
-class _MessageSendingSectionState extends State<MessageSendingSection> {
+class _ControlPanelState extends State<ControlPanel> {
   /// Handle text field.
   final TextEditingController _messageTextController = TextEditingController();
 
   /// This is the interface for the cloud.
   CloudFirestoreService cloudFirestoreService;
-
-  /// Decide which controls to show right now.
-  Interface showInterface = Interface.Recoring;
 
   @override
   void initState() {
@@ -41,10 +38,8 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
   Widget build(BuildContext context) {
     final authService =
         Provider.of<LoggedInUserService>(context, listen: false);
-    final screenInfo =
-        Provider.of<GlobalChatScreenInfo>(context, listen: false);
-    final CurrentlyListeningInChatState currentlyListeningAudioState =
-        Provider.of<CurrentlyListeningInChatState>(context);
+    final screenInfo = Provider.of<GlobalChatScreenInfo>(context);
+    Interface showInterface = screenInfo.showInterface;
 
     return Column(
       children: <Widget>[
@@ -54,7 +49,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
             ControlPanelButton(
                 onTap: () {
                   setState(() {
-                    showInterface = Interface.Texting;
+                    screenInfo.showTextInputSection();
                   });
                 },
                 text: 'write',
@@ -62,7 +57,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
             ControlPanelButton(
                 onTap: () {
                   setState(() {
-                    showInterface = Interface.Listening;
+                    screenInfo.showListeningSection();
                   });
                 },
                 text: 'listen',
@@ -70,7 +65,7 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
             ControlPanelButton(
               onTap: () {
                 setState(() {
-                  showInterface = Interface.Recoring;
+                  screenInfo.showRecordingSection();
                 });
               },
               text: 'record',
@@ -86,13 +81,11 @@ class _MessageSendingSectionState extends State<MessageSendingSection> {
               screenInfo: screenInfo,
               authService: authService),
 
-        if (showInterface == Interface.Recoring)
+        if (showInterface == Interface.Recording)
           RecordingSection(),
 
         if (showInterface == Interface.Listening)
-          ListeningSection(
-              recording: currentlyListeningAudioState
-                  .ChatsWithActivePlayer[screenInfo.chatId])
+          ListeningSection(),
       ],
     );
   }
@@ -115,12 +108,17 @@ class RecordingSection extends StatelessWidget {
 }
 
 class ListeningSection extends StatelessWidget {
-  final Recording recording;
 
-  ListeningSection({@required this.recording});
 
   @override
   Widget build(BuildContext context) {
+    CurrentlyListeningInChatState currentlyListeningInChatState =
+        Provider.of<CurrentlyListeningInChatState>(context);
+    GlobalChatScreenInfo screenInfo =
+        Provider.of<GlobalChatScreenInfo>(context);
+    Recording recording =
+        currentlyListeningInChatState.chatsWithActivePlayer[screenInfo.chatId];
+
     if (recording == null) {
       return Text('Select a recording to play it.');
     } else {

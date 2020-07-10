@@ -7,12 +7,14 @@ import 'dart:io' show Platform;
 
 class LocalPlayerService {
   /// Private properties
-  final _player = AudioPlayer();
+  AudioPlayer _player = AudioPlayer();
+
   double _currentSpeed = 1;
 
   initialize({@required Recording recording}) async {
     try {
       await _player.setFilePath(recording.path);
+      print('player initialized.');
     } catch (e) {
       print(
           "Local audio player could not be initialized because of error = $e");

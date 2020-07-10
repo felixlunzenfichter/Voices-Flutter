@@ -414,7 +414,7 @@ class StopButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return RoundButton(
       onPress: onPress,
-      iconData: Icons.stop,
+      iconData: Icons.delete,
     );
   }
 }
