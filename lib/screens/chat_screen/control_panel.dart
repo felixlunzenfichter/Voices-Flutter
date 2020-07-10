@@ -108,8 +108,6 @@ class RecordingSection extends StatelessWidget {
 }
 
 class ListeningSection extends StatelessWidget {
-
-
   @override
   Widget build(BuildContext context) {
     CurrentlyListeningInChatState currentlyListeningInChatState =
