@@ -3,18 +3,46 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:voices/models/recording.dart';
-import 'dart:io' show Platform;
+import 'dart:io';
 
-class LocalPlayerService {
+class LocalPlayerService with ChangeNotifier {
   /// Private properties
-  AudioPlayer _player = AudioPlayer();
+  final _player = AudioPlayer();
 
   double _currentSpeed = 1;
 
-  initialize({@required Recording recording}) async {
+  PlayerStatus localPlayerStatus;
+
+  Duration duration = Duration(seconds: 69);
+
+  void listenToState() async {
+    Stream playerStatusStream = _getPlaybackStateStream();
+    playerStatusStream.listen((event) {
+      localPlayerStatus = event;
+      print('playerStatus changed to: $localPlayerStatus');
+      notifyListeners();
+    });
+  }
+
+  void listenToLength() async {
+    Stream audioLengthStream = _getLengthOfAudioStream();
+    audioLengthStream.listen((event) {
+      duration = event;
+      print('Length of audio: $event');
+      notifyListeners();
+    });
+  }
+
+  LocalPlayerService() {
+    listenToState();
+    listenToLength();
+  }
+
+  initialize({@required File audioFile}) async {
     try {
-      await _player.setFilePath(recording.path);
-      print('player initialized.');
+      await _player.setFilePath(audioFile.path);
+      print('Player initialized to: ${audioFile.path}');
+      print(localPlayerStatus);
     } catch (e) {
       print(
           "Local audio player could not be initialized because of error = $e");
@@ -29,8 +57,7 @@ class LocalPlayerService {
     }
   }
 
-  play() async {
-    print("play is executed from local player");
+  Future<void> play() async {
     print(_currentSpeed);
     try {
       if (Platform.isIOS) {
@@ -43,6 +70,7 @@ class LocalPlayerService {
       } else {
         await _player.play();
       }
+      print("play is executed from local player");
     } catch (e) {
       print("Local audio player could not start playing because of error = $e");
     }
@@ -58,6 +86,7 @@ class LocalPlayerService {
 
   stop() async {
     try {
+      print('stopped');
       await _player.stop();
     } catch (e) {
       print("Local audio player could not stop because of error = $e");
@@ -89,7 +118,7 @@ class LocalPlayerService {
     }
   }
 
-  Stream<PlayerStatus> getPlaybackStateStream() {
+  Stream<PlayerStatus> _getPlaybackStateStream() {
     try {
       return _player.playbackStateStream.map((audioPlaybackState) {
         switch (audioPlaybackState) {
@@ -127,7 +156,7 @@ class LocalPlayerService {
     }
   }
 
-  Stream<Duration> getLengthOfAudioStream() {
+  Stream<Duration> _getLengthOfAudioStream() {
     try {
       return _player.durationStream;
     } catch (e) {

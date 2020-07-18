@@ -14,7 +14,7 @@ import 'services/local_player_service.dart';
 import 'package:voices/services/permission_service.dart';
 import 'services/auth_service.dart';
 import 'services/cloud_firestore_service.dart';
-import 'services/storage_service.dart';
+import 'services/cloud_storage_service.dart';
 import 'services/speech_to_text_service.dart';
 import 'services/file_converter_service.dart';
 
@@ -36,9 +36,9 @@ class Voices extends StatelessWidget {
     /// Global state management layer.
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<CurrentlyListeningInChatState>(
-          create: (_) => CurrentlyListeningInChatState(),
-        ),
+//        ChangeNotifierProvider<CurrentlyListeningInChatState>(
+//          create: (_) => CurrentlyListeningInChatState(),
+//        ),
 
         /// User authentication service.
         ChangeNotifierProvider<LoggedInUserService>(
@@ -51,17 +51,17 @@ class Voices extends StatelessWidget {
         ),
 
         /// Permanent storage.
-        Provider<StorageService>(
-          create: (_) => StorageService(),
+        Provider<CloudStorageService>(
+          create: (_) => CloudStorageService(),
         ),
 
-        /// Record audio.
+        /// Record audio. Todo: remove.
         ChangeNotifierProvider<RecorderService>(
           create: (_) => RecorderService(),
         ),
 
         /// Play audio from local storage.
-        Provider<LocalPlayerService>(
+        ChangeNotifierProvider<LocalPlayerService>(
           create: (_) => LocalPlayerService(),
         ),
 

@@ -2,10 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import 'package:voices/services/local_player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'ui_chat.dart';
 import 'package:voices/constants.dart';
-import 'package:voices/models/sendVoiceMessage.dart';
+import 'package:voices/services/sendVoiceMessage.dart';
 import 'package:voices/screens/chat_screen/player.dart';
 
 /// This file contains the interface and logic to record and to listen to recorded audio.
@@ -15,7 +16,8 @@ class RecorderControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     /// Access the recorder.
-    final recorderService = Provider.of<RecorderService>(context);
+    final RecorderService recorderService =
+        Provider.of<RecorderService>(context);
 
     /// Make sure recorder is initialized.
     if (recorderService.status == RecordingStatus.uninitialized) {
@@ -71,12 +73,13 @@ class RecordingAndPlayingInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     /// Access the recorder.
     final recorderService = Provider.of<RecorderService>(context);
+    final LocalPlayerService localPlayerService =
+        Provider.of<LocalPlayerService>(context, listen: false);
+//    localPlayerService.initialize(recording: recorderService.recording);
 
     /// Display the current recording recording when done recording.
     if (recorderService.status == RecordingStatus.paused) {
-      return LocalPlayer(
-        recording: recorderService.recording,
-      );
+      return LocalPlayer();
 
       /// Display information while recording.
     } else {

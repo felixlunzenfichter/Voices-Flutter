@@ -4,7 +4,10 @@ class Recording {
   String path;
   Duration duration;
 
-  Recording({@required this.path, @required this.duration});
+  Recording({
+    @required this.path,
+    @required this.duration,
+  });
 
   @override
   String toString() {

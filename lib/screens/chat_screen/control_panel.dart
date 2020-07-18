@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/text_message.dart';
@@ -6,9 +9,8 @@ import 'package:voices/screens/chat_screen/chat_screen.dart';
 import 'package:voices/screens/chat_screen/ui_chat.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
+import 'package:voices/services/local_player_service.dart';
 import 'recording_section.dart';
-import 'package:voices/models/recording.dart';
-import 'package:voices/services/CurrentlyListeningInChatsState.dart';
 import 'package:voices/screens/chat_screen/player.dart';
 
 /// This is the control panel in the Chat. When I think control panel I think like star wars control panel.
@@ -25,25 +27,26 @@ class _ControlPanelState extends State<ControlPanel> {
 
   /// This is the interface for the cloud.
   CloudFirestoreService cloudFirestoreService;
+  LoggedInUserService authService;
+  GlobalChatScreenInfo screenInfo;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
+    authService = Provider.of<LoggedInUserService>(context, listen: false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final authService =
-        Provider.of<LoggedInUserService>(context, listen: false);
-    final screenInfo = Provider.of<GlobalChatScreenInfo>(context);
+    screenInfo = Provider.of<GlobalChatScreenInfo>(context, listen: true);
     Interface showInterface = screenInfo.showInterface;
 
     return Column(
       children: <Widget>[
         /// Panel to switch between text input, listening and recording interfaces.
+        /// Todo: swipe between sections and chats.
         Row(
           children: <Widget>[
             ControlPanelButton(
@@ -91,7 +94,7 @@ class _ControlPanelState extends State<ControlPanel> {
   }
 }
 
-/// Record
+/// Record.
 class RecordingSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -101,7 +104,7 @@ class RecordingSection extends StatelessWidget {
         RecordingAndPlayingInfo(),
 
         // Audio recording controls.
-        RecorderControls()
+        RecorderControls(),
       ],
     );
   }
@@ -110,19 +113,16 @@ class RecordingSection extends StatelessWidget {
 class ListeningSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    CurrentlyListeningInChatState currentlyListeningInChatState =
-        Provider.of<CurrentlyListeningInChatState>(context);
     GlobalChatScreenInfo screenInfo =
-        Provider.of<GlobalChatScreenInfo>(context);
-    Recording recording =
-        currentlyListeningInChatState.chatsWithActivePlayer[screenInfo.chatId];
+        Provider.of<GlobalChatScreenInfo>(context, listen: true);
+
+    /// Always show the recording we are currently listening to.
+    File recording = screenInfo.listeningTo;
 
     if (recording == null) {
       return Text('Select a recording to play it.');
     } else {
-      return LocalPlayer(
-        recording: recording,
-      );
+      return LocalPlayer();
     }
   }
 }
@@ -147,6 +147,7 @@ class TextInputSection extends StatefulWidget {
 class _TextInputState extends State<TextInputSection> {
   @override
   Widget build(BuildContext context) {
+    print('build');
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
@@ -181,6 +182,7 @@ class _TextInputState extends State<TextInputSection> {
   }
 }
 
+/// Button to switch between writing, listening and recording section.
 class ControlPanelButton extends StatelessWidget {
   final Function onTap;
   final String text;

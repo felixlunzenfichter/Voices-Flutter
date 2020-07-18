@@ -28,7 +28,8 @@ class _SearchUsersScreenState extends State<SearchUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<LoggedInUserService>(context, listen: false);
+    final authService =
+        Provider.of<LoggedInUserService>(context, listen: false);
     return ModalProgressHUD(
       inAsyncCall: _showSpinner,
       progressIndicator: CupertinoActivityIndicator(),
@@ -81,7 +82,8 @@ class _SearchUsersScreenState extends State<SearchUsersScreen> {
     setState(() {
       _showSpinner = true;
     });
-    final authService = Provider.of<LoggedInUserService>(context, listen: false);
+    final authService =
+        Provider.of<LoggedInUserService>(context, listen: false);
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
     String chatId = await cloudFirestoreService.getChatWithUsers(

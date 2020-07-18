@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/screens/chat_screen/control_panel.dart';
 import 'package:voices/screens/chat_screen/messages.dart';
+import 'package:voices/services/local_storage.dart';
+import 'package:voices/services/recorder_service.dart';
 
 enum Interface { Recording, Listening, Texting }
 
@@ -18,6 +22,7 @@ class ChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    /// State management for this chat window.
     return ChangeNotifierProvider<GlobalChatScreenInfo>(
       create: (_) => GlobalChatScreenInfo(
         chatId: chatId,
@@ -33,7 +38,9 @@ class ChatScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Expanded(
-                child: MessagesStream(),
+                child: MessagesStream(
+                  chatId: chatId,
+                ),
               ),
               ControlPanel(),
             ],
@@ -44,9 +51,22 @@ class ChatScreen extends StatelessWidget {
   }
 }
 
+/// State management for a chat window.
 class GlobalChatScreenInfo extends ChangeNotifier {
   final String chatId;
   final User otherUser;
+
+  /// Todo: Change type to File.
+  File listeningTo;
+
+  setListeningTo({File audioFile}) {
+    listeningTo = audioFile;
+    notifyListeners();
+  }
+
+  RecorderService recorderService = RecorderService();
+
+  LocalStorageService localStorageService;
 
   /// Decide which controls to show right now.
   Interface showInterface = Interface.Recording;
@@ -66,8 +86,23 @@ class GlobalChatScreenInfo extends ChangeNotifier {
     notifyListeners();
   }
 
-  GlobalChatScreenInfo({
-    @required this.chatId,
-    @required this.otherUser,
-  });
+  GlobalChatScreenInfo({this.chatId, this.otherUser}) {
+    localStorageService = LocalStorageService(chatId: chatId);
+
+    /// Todo: Fetch currently listening and current recording from storage.
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+
+    print('Dispose chat window.');
+
+    /// Todo: Save current recording and current listening in storage.
+//    Recording recording = recorderService.recording;
+//    if (recording != null) {
+//      localStorageService.saveCurrentRecording(recording: recording);
+//    }
+  }
 }

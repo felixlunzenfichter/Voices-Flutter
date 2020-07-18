@@ -17,7 +17,6 @@ class ChatsTab extends StatefulWidget {
 }
 
 class _ChatsTabState extends State<ChatsTab> {
-
   /// This firebase stream provides the active conversations of the current user.
   Stream<List<Chat>> chatStream;
 
@@ -28,8 +27,9 @@ class _ChatsTabState extends State<ChatsTab> {
 
     /// - Services -
     final cloudFirestoreService =
-    Provider.of<CloudFirestoreService>(context, listen: false);
-    final authService = Provider.of<LoggedInUserService>(context, listen: false);
+        Provider.of<CloudFirestoreService>(context, listen: false);
+    final authService =
+        Provider.of<LoggedInUserService>(context, listen: false);
 
     /// Get the stream of active conversations for the current user.
     chatStream = cloudFirestoreService.getChatsStream(
@@ -42,7 +42,6 @@ class _ChatsTabState extends State<ChatsTab> {
       appBar: AppBar(
         title: Text("Chats"),
         actions: <Widget>[
-
           /// Add a new chat to the active ones.
           CupertinoButton(
             child: Icon(
@@ -61,7 +60,6 @@ class _ChatsTabState extends State<ChatsTab> {
           ),
         ],
       ),
-
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -69,8 +67,8 @@ class _ChatsTabState extends State<ChatsTab> {
           children: <Widget>[
             Expanded(
 
-              /// List the available chats.
-              /// TODO: This is a stateless widget. What if I am on this screen and I receive a message from a user not contained in the chatStream?
+                /// List the available chats.
+                /// TODO: This is a stateless widget. What if I am on this screen and I receive a message from a user not contained in the chatStream?
                 child: StreamBuilder<List<Chat>>(
                     stream: chatStream,
                     builder: (context, snapshot) {
@@ -81,8 +79,7 @@ class _ChatsTabState extends State<ChatsTab> {
                       }
 
                       /// Convert this stream to an editable list.
-                      List<Chat> chats = List.from(snapshot.data ??
-                          []);
+                      List<Chat> chats = List.from(snapshot.data ?? []);
 
                       /// Sort chats according to time of last message.
                       chats.sort((chat1, chat2) => (chat2.lastMessageTimestamp)
@@ -97,10 +94,8 @@ class _ChatsTabState extends State<ChatsTab> {
                       return ListView.builder(
                           itemCount: chats.length,
                           itemBuilder: (context, index) {
-                            return
-                              ChatItem(chat: chats[index]);
+                            return ChatItem(chat: chats[index]);
                           });
-
                     }))
           ],
         ),
@@ -128,8 +123,9 @@ class _ChatItemState extends State<ChatItem> {
 
     /// Services
     final cloudFirestoreService =
-    Provider.of<CloudFirestoreService>(context, listen: false);
-    final authService = Provider.of<LoggedInUserService>(context, listen: false);
+        Provider.of<CloudFirestoreService>(context, listen: false);
+    final authService =
+        Provider.of<LoggedInUserService>(context, listen: false);
 
     /// Get the uid of the other user. (todo: can this be cleaner?)
     String otherUserUid = widget.chat.uidsOfMembers
@@ -163,7 +159,6 @@ class _ChatItemState extends State<ChatItem> {
         /// Show a chat tab.
         /// TODO: listen to what the other one has to say and automatically enter chat and be ready to respond. Just play last thing that has not been listened to. Quick start of voice communication. Show new messages. Show time of unlistened material.
         return CustomCard(
-
           /// display profile picture.
           leading: ProfilePicture(imageUrl: otherUser.imageUrl, radius: 30),
 
@@ -173,7 +168,6 @@ class _ChatItemState extends State<ChatItem> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-
                   /// Show Username
                   Text(
                     otherUser.username,

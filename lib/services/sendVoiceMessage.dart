@@ -5,11 +5,11 @@ import 'package:voices/models/voice_message.dart';
 import 'package:voices/screens/chat_screen/chat_screen.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/services/recorder_service.dart';
-import 'package:voices/services/storage_service.dart';
+import 'package:voices/services/cloud_storage_service.dart';
 import 'package:voices/services/auth_service.dart';
 import 'dart:io';
 
-/// Send a voice message. Todo: Put this code where it belongs.
+/// Send a voice message.
 dynamic sendvm({BuildContext context}) async {
   /// Access Services.
   RecorderService recorderService =
@@ -20,8 +20,8 @@ dynamic sendvm({BuildContext context}) async {
       Provider.of<GlobalChatScreenInfo>(context, listen: false);
   LoggedInUserService authService =
       Provider.of<LoggedInUserService>(context, listen: false);
-  StorageService storageService =
-      Provider.of<StorageService>(context, listen: false);
+  CloudStorageService storageService =
+      Provider.of<CloudStorageService>(context, listen: false);
 
   /// Store Audio file in the cloud.
 

@@ -9,9 +9,17 @@ import 'package:voices/services/file_converter_service.dart';
 
 /// This class provides and interface to [FlutterSoundRecorder].
 class RecorderService with ChangeNotifier {
-
   /// Current recording.
-  Recording recording;
+  Recording _recording;
+
+  /// Get Current recording.
+  Recording get recording => _recording;
+
+  /// Set Current recording.
+  set recording(Recording recording) {
+    _recording = recording;
+    notifyListeners();
+  }
 
   RecordingStatus status = RecordingStatus.uninitialized;
 
@@ -23,11 +31,9 @@ class RecorderService with ChangeNotifier {
   static const Duration UPDATE_DURATION_OF_DB_LEVEL_STREAM =
       Duration(milliseconds: 100);
 
-
   RecorderService() {
     _initialize();
   }
-
 
   /// Private properties.
 
@@ -42,17 +48,20 @@ class RecorderService with ChangeNotifier {
   /// This is the file path where the [_recorder] writes its data. From the moment it gets assigned in [_initialize()] it stays fixed.
   String _pathToCurrentRecording;
 
-  /// This is the file path to which the [recording] will be saved to. It changes with every call of [_startWithoutReset()]
+  /// This is the file path to which the [_recording] will be saved to. It changes with every call of [_startWithoutReset()]
   String _pathToSavedRecording;
-
 
   /// This function can only be executed once per session else it crashes on iOS (because there is already an initialized recorder)
   /// So when we hot restart the app this makes it crash
   _initialize() async {
     try {
       _recorder = await FlutterSoundRecorder().initialize();
-    await _recorder.setSubscriptionDuration(UPDATE_DURATION_OF_POSITION_STREAM.inMilliseconds.toDouble() / 1000.0);
-    await _recorder.setDbPeakLevelUpdate(UPDATE_DURATION_OF_DB_LEVEL_STREAM.inMilliseconds.toDouble() / 1000.0);
+      await _recorder.setSubscriptionDuration(
+          UPDATE_DURATION_OF_POSITION_STREAM.inMilliseconds.toDouble() /
+              1000.0);
+      await _recorder.setDbPeakLevelUpdate(
+          UPDATE_DURATION_OF_DB_LEVEL_STREAM.inMilliseconds.toDouble() /
+              1000.0);
       await _recorder.setDbLevelEnabled(true);
       _tempDir = await getTemporaryDirectory();
       _pathToSavedRecording =
@@ -62,7 +71,8 @@ class RecorderService with ChangeNotifier {
       /// Allows controls to be shown.
       notifyListeners();
     } catch (e) {
-      print("Recorder service could not be initialized because of the following error: $e");
+      print(
+          "Recorder service could not be initialized because of the following error: $e");
     }
   }
 
@@ -77,18 +87,18 @@ class RecorderService with ChangeNotifier {
   }
 
   start() async {
-      try {
-        /// Reset current recording so the position stream doesn't add the time of the last recording to its position
-        recording = null;
-        await _startWithoutReset();
-      } catch (e) {
-        print("Recorder service could not start recording because of error = $e");
-      }
+    try {
+      /// Reset current recording so the position stream doesn't add the time of the last recording to its position
+      recording = null;
+      await _startWithoutReset();
+    } catch (e) {
+      print("Recorder service could not start recording because of error = $e");
+    }
   }
 
   _startWithoutReset() async {
     _pathToCurrentRecording =
-    "${_tempDir.path}/${_recorder.slotNo}-current_recording$RECORDING_FORMAT";
+        "${_tempDir.path}/${_recorder.slotNo}-current_recording$RECORDING_FORMAT";
     await _recorder.startRecorder(
       uri: _pathToCurrentRecording,
       codec: t_CODEC.CODEC_AAC,
@@ -97,51 +107,49 @@ class RecorderService with ChangeNotifier {
     notifyListeners();
   }
 
-
   resume() async {
-      try {
-        await _startWithoutReset();
-      } catch (e) {
-        print(
-            "Recorder service could not resume recording because of error = $e");
-      }
+    try {
+      await _startWithoutReset();
+    } catch (e) {
+      print(
+          "Recorder service could not resume recording because of error = $e");
+    }
   }
 
   pause() async {
-      try {
-        await _recorder.stopRecorder();
-        await _setRecording();
-        status = RecordingStatus.paused;
-        notifyListeners();
-      } catch (e) {
-        print(
-            "Recorder service could not pause recording because of error = $e");
-      }
+    try {
+      await _recorder.stopRecorder();
+      await _setRecording();
+      status = RecordingStatus.paused;
+      notifyListeners();
+    } catch (e) {
+      print("Recorder service could not pause recording because of error = $e");
+    }
   }
 
   stop() async {
-      try {
-        await _recorder.stopRecorder();
+    try {
+      await _recorder.stopRecorder();
 
-        /// If the [status] is paused the recording was already set when the last [pause()] was executed and doesn't need to be set again
-        if (status != RecordingStatus.paused) {
-          await _setRecording();
-        }
-        status = RecordingStatus.stopped;
-        notifyListeners();
-      } catch (e) {
-        print(
-            "Recorder service could not stop recording because of error = $e");
+      /// If the [status] is paused the recording was already set when the last [pause()] was executed and doesn't need to be set again
+      if (status != RecordingStatus.paused) {
+        await _setRecording();
       }
+      status = RecordingStatus.stopped;
+      notifyListeners();
+    } catch (e) {
+      print("Recorder service could not stop recording because of error = $e");
+    }
   }
-
 
   /// This function can only be called this after [_recorder.startRecorder()] is done.
   Stream<Duration> getPositionStream() {
     try {
       return _recorder.onRecorderStateChanged.map((state) {
-        Duration lengthOfCurrentRecording = recording?.duration ?? Duration.zero;
-        return lengthOfCurrentRecording + Duration(milliseconds: state?.currentPosition?.toInt() ?? 0);
+        Duration lengthOfCurrentRecording =
+            recording?.duration ?? Duration.zero;
+        return lengthOfCurrentRecording +
+            Duration(milliseconds: state?.currentPosition?.toInt() ?? 0);
       });
     } catch (e) {
       print(
@@ -155,7 +163,8 @@ class RecorderService with ChangeNotifier {
     try {
       return _recorder.onRecorderDbPeakChanged;
     } catch (e) {
-      print("Recorder service could not get the recorders dbLevel stream because of error = $e");
+      print(
+          "Recorder service could not get the recorders dbLevel stream because of error = $e");
       return Stream.value(0.0);
     }
   }
@@ -188,6 +197,13 @@ class RecorderService with ChangeNotifier {
         path: _pathToSavedRecording,
         duration: Duration(milliseconds: durationInMs));
   }
+
+  /// Todo: remove this if not necessary.
+//  /// Save the recording for this chat
+//  saveRecordingOfChat(String chatId) {
+//    localStorageService.saveCurrentRecording(
+//        recording: recording);
+//  }
 }
 
-enum RecordingStatus {uninitialized, initialized, recording, paused, stopped}
+enum RecordingStatus { uninitialized, initialized, recording, paused, stopped }

@@ -9,6 +9,10 @@ import 'package:voices/services/cloud_firestore_service.dart';
 import 'chat_screen.dart';
 
 class MessagesStream extends StatefulWidget {
+  final String chatId;
+
+  MessagesStream({this.chatId});
+
   @override
   _MessagesStreamState createState() => _MessagesStreamState();
 }
@@ -21,10 +25,8 @@ class _MessagesStreamState extends State<MessagesStream> {
     super.initState();
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
-    GlobalChatScreenInfo screenInfo =
-        Provider.of<GlobalChatScreenInfo>(context, listen: false);
     messagesStream =
-        cloudFirestoreService.getMessageStream(chatId: screenInfo.chatId);
+        cloudFirestoreService.getMessageStream(chatId: widget.chatId);
   }
 
   @override
@@ -98,7 +100,8 @@ class _ListOfMessagesState extends State<ListOfMessages>
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<LoggedInUserService>(context, listen: false);
+    final authService =
+        Provider.of<LoggedInUserService>(context, listen: false);
 
     return AnimatedList(
       key: _listKey,

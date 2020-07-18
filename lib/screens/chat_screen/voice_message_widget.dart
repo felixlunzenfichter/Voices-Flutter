@@ -5,11 +5,15 @@ import 'package:voices/models/voice_message.dart';
 import 'package:voices/screens/chat_screen/chat_screen.dart';
 import 'package:voices/screens/chat_screen/ui_chat.dart';
 import 'package:voices/services/CurrentlyListeningInChatsState.dart';
+import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/local_player_service.dart';
 import 'package:voices/models/recording.dart';
-import 'package:voices/services/storage_service.dart';
+import 'package:voices/services/cloud_storage_service.dart';
 import 'dart:io';
 
+import 'package:voices/services/local_storage.dart';
+
+///
 class NewVoiceMessageInChatWidget extends StatelessWidget {
   final VoiceMessage voiceMessage;
 
@@ -17,36 +21,60 @@ class NewVoiceMessageInChatWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final CurrentlyListeningInChatState currentlyListeningInChatState =
-        Provider.of<CurrentlyListeningInChatState>(context);
     final GlobalChatScreenInfo screenInfo =
-        Provider.of<GlobalChatScreenInfo>(context);
+        Provider.of<GlobalChatScreenInfo>(context, listen: false);
     final LocalPlayerService localPlayerService =
-        Provider.of<LocalPlayerService>(context);
+        Provider.of<LocalPlayerService>(context, listen: false);
+    final LoggedInUserService loggedInUserService =
+        Provider.of<LoggedInUserService>(context, listen: false);
+//    LocalStorageService localStorageService = screenInfo.localStorageService;
+    final CloudStorageService cloudStorageService =
+        Provider.of<CloudStorageService>(context, listen: false);
 
-    return Row(
-      children: <Widget>[
-        GestureDetector(
-          child: ButtonFromPicture(
-            onPress: () async {
-              screenInfo.showListeningSection();
-              File audioFile = await StorageService()
-                  .downloadAudioFile(voiceMessage: voiceMessage);
-              Recording recording = Recording(
-                  duration: voiceMessage.length, path: audioFile.path);
-              currentlyListeningInChatState.playAudioInChat(
-                  screenInfo.chatId, recording);
-              await localPlayerService.play();
-            },
-            image: Image.asset('assets/play_1.png'),
+    final isMe = voiceMessage.senderUid == loggedInUserService.loggedInUser.uid;
+
+    return MessageBubble(
+      timestamp: voiceMessage.timestamp,
+      shouldAlignRight: isMe,
+      child: Row(
+        children: <Widget>[
+          GestureDetector(
+            child: ButtonFromPicture(
+              onPress: () async {
+                /// Todo: Make this a file.
+                Recording recording;
+
+                /// Todo: get from local storage.
+//                recording = await localStorageService.getRecording(
+//                    voiceMessage: voiceMessage);
+                screenInfo.showListeningSection();
+
+                /// Todo: Show loading progress in the listening section.
+                File audioFile = await cloudStorageService.downloadAudioFile(
+                    voiceMessage: voiceMessage);
+
+                print('Path of voice message: ${audioFile.path}');
+
+                /// Todo: make audioFile specific to chat.
+                await localPlayerService.initialize(audioFile: audioFile);
+                await screenInfo.setListeningTo(audioFile: audioFile);
+
+                /// Display the listening section in the chat.
+
+                /// Play the voice message.
+//                await localPlayerService.play();
+              },
+              image: Image.asset('assets/play_1.png'),
+            ),
           ),
-        ),
-        Container(child: Text(voiceMessage.length.toString())),
-      ],
+          Container(child: Text(voiceMessage.length.toString())),
+        ],
+      ),
     );
   }
 }
 
+/// Todo: Remove this.
 /*
 class VoiceMessageWidget extends StatefulWidget {
   final VoiceMessage voiceMessage;
@@ -121,47 +149,3 @@ class _VoiceMessageWidgetState extends State<VoiceMessageWidget> {
 }
 
  */
-
-class SeekBar extends StatefulWidget {
-  final Duration duration;
-  final Duration position;
-  final ValueChanged<Duration> onChanged;
-  final ValueChanged<Duration> onChangeEnd;
-
-  SeekBar({
-    @required this.duration,
-    @required this.position,
-    this.onChanged,
-    this.onChangeEnd,
-  });
-
-  @override
-  _SeekBarState createState() => _SeekBarState();
-}
-
-class _SeekBarState extends State<SeekBar> {
-  double _dragValue;
-
-  @override
-  Widget build(BuildContext context) {
-    return Slider(
-      min: 0.0,
-      max: widget.duration.inMilliseconds.toDouble(),
-      value: _dragValue ?? widget.position.inMilliseconds.toDouble(),
-      onChanged: (value) {
-        setState(() {
-          _dragValue = value;
-        });
-        if (widget.onChanged != null) {
-          widget.onChanged(Duration(milliseconds: value.round()));
-        }
-      },
-      onChangeEnd: (value) {
-        _dragValue = null;
-        if (widget.onChangeEnd != null) {
-          widget.onChangeEnd(Duration(milliseconds: value.round()));
-        }
-      },
-    );
-  }
-}

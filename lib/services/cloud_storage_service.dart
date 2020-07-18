@@ -7,7 +7,7 @@ import 'package:voices/models/voice_message.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 
-class StorageService {
+class CloudStorageService {
   final StorageReference _storageReference = FirebaseStorage().ref();
 
   Future<String> uploadProfilePic(
@@ -68,6 +68,9 @@ class StorageService {
     assert(await audioFile.readAsString() == "");
 
     final StorageFileDownloadTask task = ref.writeToFile(audioFile);
+
+    /// This line is needed for [task] to complete!
+    final int byteCount = (await task.future).totalByteCount;
 
     final Uint8List tempFileContents = await audioFile.readAsBytes();
 

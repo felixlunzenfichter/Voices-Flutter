@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:voices/screens/tabs_screen.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
-import 'package:voices/services/storage_service.dart';
+import 'package:voices/services/cloud_storage_service.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -115,7 +115,8 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
 
   _setMyContact() async {
     final contactService = Provider.of<ContactService>(context, listen: false);
-    final authService = Provider.of<LoggedInUserService>(context, listen: false);
+    final authService =
+        Provider.of<LoggedInUserService>(context, listen: false);
     Contact myContact = await contactService.getFirstContactWithQuery(
         query: authService.loggedInUser.phoneNumber);
     if (myContact != null) {
@@ -189,7 +190,8 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     setState(() {
       _showSpinnerOverlay = true;
     });
-    final storageService = Provider.of<StorageService>(context, listen: false);
+    final storageService =
+        Provider.of<CloudStorageService>(context, listen: false);
     String imageUrl = kDefaultProfilePicUrl;
     if (_profilePic != null) {
       imageUrl = await storageService.uploadProfilePic(
@@ -197,7 +199,8 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     }
     final cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
-    final authService = Provider.of<LoggedInUserService>(context, listen: false);
+    final authService =
+        Provider.of<LoggedInUserService>(context, listen: false);
     User newUser = User(
         uid: authService.loggedInUser.uid,
         phoneNumber: authService.loggedInUser.phoneNumber,
