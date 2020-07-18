@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import 'package:voices/screens/chat_screen/ui_chat.dart';
 import 'package:voices/services/local_player_service.dart';
 
 
