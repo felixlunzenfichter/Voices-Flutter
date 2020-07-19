@@ -21,6 +21,11 @@ class RecorderService with ChangeNotifier {
     notifyListeners();
   }
 
+  int getLength() async {
+    int durationInMs = await flutterSoundHelper.duration(_pathToSavedRecording);
+    return durationInMs;
+  }
+
   RecordingStatus status = RecordingStatus.uninitialized;
 
   /// Constants.
@@ -88,7 +93,7 @@ class RecorderService with ChangeNotifier {
 
   start() async {
     try {
-      /// Reset current recording so the position stream doesn't add the time of the last recording to its position
+      /// Reset current recording so the position stream doesn't add the time of the last recording to its position.
       recording = null;
       await _startWithoutReset();
     } catch (e) {
@@ -131,7 +136,7 @@ class RecorderService with ChangeNotifier {
     try {
       await _recorder.stopRecorder();
 
-      /// If the [status] is paused the recording was already set when the last [pause()] was executed and doesn't need to be set again
+      /// If the [status] is paused the recording was already set when the last [pause()] was executed and doesn't need to be set again.
       if (status != RecordingStatus.paused) {
         await _setRecording();
       }
