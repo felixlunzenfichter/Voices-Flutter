@@ -4,18 +4,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
-import 'package:voices/screens/chat_screen/control_panel.dart';
-import 'package:voices/screens/chat_screen/messages.dart';
+import 'package:voices/screens/conversation_screen/control_panel.dart';
+import 'package:voices/screens/conversation_screen/messages.dart';
 import 'package:voices/services/local_storage.dart';
 import 'package:voices/services/recorder_service.dart';
 
 enum Interface { Recording, Listening, Texting }
 
-class ChatScreen extends StatelessWidget {
+class ConversationScreen extends StatelessWidget {
   final String chatId;
   final User otherUser;
 
-  ChatScreen({
+  ConversationScreen({
     @required this.chatId,
     @required this.otherUser,
   });

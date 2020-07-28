@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:voices/models/recording.dart';
 import 'dart:io';
 
 class LocalPlayerService with ChangeNotifier {
@@ -52,6 +51,7 @@ class LocalPlayerService with ChangeNotifier {
   dispose() {
     try {
       _player.dispose();
+      super.dispose();
     } catch (e) {
       print("Local audio player could not be disposed because of error = $e");
     }

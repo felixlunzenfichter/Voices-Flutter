@@ -21,7 +21,7 @@ class RecorderService with ChangeNotifier {
     notifyListeners();
   }
 
-  int getLength() async {
+  Future<int> getLength() async {
     int durationInMs = await flutterSoundHelper.duration(_pathToSavedRecording);
     return durationInMs;
   }

@@ -1,17 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/text_message.dart';
-import 'package:voices/screens/chat_screen/chat_screen.dart';
-import 'package:voices/screens/chat_screen/ui_chat.dart';
+import 'package:voices/screens/conversation_screen/conversation_screen.dart';
+import 'package:voices/screens/conversation_screen/ui_chat.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
-import 'package:voices/services/local_player_service.dart';
 import 'recording_section.dart';
-import 'package:voices/screens/chat_screen/player.dart';
+import 'package:voices/screens/conversation_screen/player.dart';
 
 /// This is the control panel in the Chat. When I think control panel I think like star wars control panel.
 /// In front of me the world I want to navigate through.

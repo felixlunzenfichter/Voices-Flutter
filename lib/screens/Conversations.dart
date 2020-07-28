@@ -6,7 +6,7 @@ import 'package:voices/models/chat.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared_widgets/profile_picture.dart';
-import 'chat_screen/chat_screen.dart';
+import 'conversation_screen/conversation_screen.dart';
 import 'search_users_screen.dart';
 import 'package:voices/shared_widgets/custom_card.dart';
 
@@ -40,7 +40,7 @@ class _ChatsTabState extends State<ChatsTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Chats"),
+        title: Text("Conversations"),
         actions: <Widget>[
           /// Add a new chat to the active ones.
           CupertinoButton(
@@ -209,7 +209,7 @@ class _ChatItemState extends State<ChatItem> {
             Navigator.of(context, rootNavigator: true).push(
               CupertinoPageRoute<void>(
                 builder: (context) {
-                  return ChatScreen(
+                  return ConversationScreen(
                     chatId: widget.chat.chatId,
                     otherUser: otherUser,
                   );

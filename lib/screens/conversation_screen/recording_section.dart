@@ -7,7 +7,7 @@ import 'package:voices/services/recorder_service.dart';
 import 'ui_chat.dart';
 import 'package:voices/constants.dart';
 import 'package:voices/services/sendVoiceMessage.dart';
-import 'package:voices/screens/chat_screen/player.dart';
+import 'package:voices/screens/conversation_screen/player.dart';
 
 /// This file contains the interface and logic to record and to listen to recorded audio.
 

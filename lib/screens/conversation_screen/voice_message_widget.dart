@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/voice_message.dart';
-import 'package:voices/screens/chat_screen/chat_screen.dart';
-import 'package:voices/screens/chat_screen/ui_chat.dart';
-import 'package:voices/services/CurrentlyListeningInChatsState.dart';
+import 'package:voices/screens/conversation_screen/conversation_screen.dart';
+import 'package:voices/screens/conversation_screen/ui_chat.dart';
 import 'package:voices/services/auth_service.dart';
 import 'package:voices/services/local_player_service.dart';
-import 'package:voices/models/recording.dart';
 import 'package:voices/services/cloud_storage_service.dart';
 import 'dart:io';
 
@@ -42,7 +40,6 @@ class NewVoiceMessageInChatWidget extends StatelessWidget {
             child: ButtonFromPicture(
               onPress: () async {
                 /// Todo: Make this a file.
-                Recording recording;
 
                 /// Todo: get from local storage.
 //                recording = await localStorageService.getRecording(
