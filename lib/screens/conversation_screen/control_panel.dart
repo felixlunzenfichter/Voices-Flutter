@@ -20,13 +20,13 @@ class ControlPanel extends StatefulWidget {
 }
 
 class _ControlPanelState extends State<ControlPanel> {
-  /// Handle text field.
+  /// Handle text field state.
   final TextEditingController _messageTextController = TextEditingController();
 
   /// This is the interface for the cloud.
   CloudFirestoreService cloudFirestoreService;
   LoggedInUserService authService;
-  GlobalChatScreenState screenInfo;
+  GlobalChatScreenState screenState;
 
   @override
   void initState() {
@@ -38,8 +38,8 @@ class _ControlPanelState extends State<ControlPanel> {
 
   @override
   Widget build(BuildContext context) {
-    screenInfo = Provider.of<GlobalChatScreenState>(context, listen: true);
-    Interface showInterface = screenInfo.showInterface;
+    screenState = Provider.of<GlobalChatScreenState>(context, listen: true);
+    Interface showInterface = screenState.showInterface;
 
     return Column(
       children: <Widget>[
@@ -50,7 +50,7 @@ class _ControlPanelState extends State<ControlPanel> {
             ControlPanelButton(
                 onTap: () {
                   setState(() {
-                    screenInfo.showTextInputSection();
+                    screenState.showTextInputSection();
                   });
                 },
                 text: 'write',
@@ -58,7 +58,7 @@ class _ControlPanelState extends State<ControlPanel> {
             ControlPanelButton(
                 onTap: () {
                   setState(() {
-                    screenInfo.showListeningSection();
+                    screenState.showListeningSection();
                   });
                 },
                 text: 'listen',
@@ -66,7 +66,7 @@ class _ControlPanelState extends State<ControlPanel> {
             ControlPanelButton(
               onTap: () {
                 setState(() {
-                  screenInfo.showRecordingSection();
+                  screenState.showRecordingSection();
                 });
               },
               text: 'record',
@@ -79,7 +79,7 @@ class _ControlPanelState extends State<ControlPanel> {
           TextInputSection(
               messageTextController: _messageTextController,
               cloudFirestoreService: cloudFirestoreService,
-              screenInfo: screenInfo,
+              screenInfo: screenState,
               authService: authService),
 
         if (showInterface == Interface.Recording)
