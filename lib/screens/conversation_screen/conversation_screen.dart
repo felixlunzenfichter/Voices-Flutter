@@ -58,6 +58,7 @@ class GlobalChatScreenInfo extends ChangeNotifier {
 
   /// Todo: Change type to File.
   File listeningTo;
+  File currentRecording;
 
   setListeningTo({File audioFile}) {
     listeningTo = audioFile;
