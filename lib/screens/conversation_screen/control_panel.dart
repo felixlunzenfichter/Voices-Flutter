@@ -27,7 +27,7 @@ class _ConversationControlPanelState extends State<ConversationControlPanel> {
 
   /// This is the interface for the cloud.
   CloudFirestoreService cloudFirestoreService;
-  LoggedInUserService authService;
+  LoggedInUserService userService;
   ConversationState screenState;
 
   @override
@@ -35,7 +35,7 @@ class _ConversationControlPanelState extends State<ConversationControlPanel> {
     super.initState();
     cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
-    authService = Provider.of<LoggedInUserService>(context, listen: false);
+    userService = Provider.of<LoggedInUserService>(context, listen: false);
   }
 
   @override
@@ -82,7 +82,7 @@ class _ConversationControlPanelState extends State<ConversationControlPanel> {
               messageTextController: _messageTextController,
               cloudFirestoreService: cloudFirestoreService,
               screenInfo: screenState,
-              authService: authService),
+              authService: userService),
 
         if (showInterface == Interface.Recording)
           RecordingSection(),
