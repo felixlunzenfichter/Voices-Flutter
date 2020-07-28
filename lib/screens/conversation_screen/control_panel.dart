@@ -26,7 +26,7 @@ class _ControlPanelState extends State<ControlPanel> {
   /// This is the interface for the cloud.
   CloudFirestoreService cloudFirestoreService;
   LoggedInUserService authService;
-  GlobalChatScreenInfo screenInfo;
+  GlobalChatScreenState screenInfo;
 
   @override
   void initState() {
@@ -38,7 +38,7 @@ class _ControlPanelState extends State<ControlPanel> {
 
   @override
   Widget build(BuildContext context) {
-    screenInfo = Provider.of<GlobalChatScreenInfo>(context, listen: true);
+    screenInfo = Provider.of<GlobalChatScreenState>(context, listen: true);
     Interface showInterface = screenInfo.showInterface;
 
     return Column(
@@ -111,8 +111,8 @@ class RecordingSection extends StatelessWidget {
 class ListeningSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    GlobalChatScreenInfo screenInfo =
-        Provider.of<GlobalChatScreenInfo>(context, listen: true);
+    GlobalChatScreenState screenInfo =
+        Provider.of<GlobalChatScreenState>(context, listen: true);
 
     /// Always show the recording we are currently listening to.
     File recording = screenInfo.listeningTo;
@@ -129,7 +129,7 @@ class ListeningSection extends StatelessWidget {
 class TextInputSection extends StatefulWidget {
   final TextEditingController messageTextController;
   final CloudFirestoreService cloudFirestoreService;
-  final GlobalChatScreenInfo screenInfo;
+  final GlobalChatScreenState screenInfo;
   final LoggedInUserService authService;
 
   TextInputSection(

@@ -19,8 +19,8 @@ class NewVoiceMessageInChatWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final GlobalChatScreenInfo screenInfo =
-        Provider.of<GlobalChatScreenInfo>(context, listen: false);
+    final GlobalChatScreenState screenInfo =
+        Provider.of<GlobalChatScreenState>(context, listen: false);
     final LocalPlayerService localPlayerService =
         Provider.of<LocalPlayerService>(context, listen: false);
     final LoggedInUserService loggedInUserService =
