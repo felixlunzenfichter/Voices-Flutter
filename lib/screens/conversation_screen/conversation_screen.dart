@@ -42,7 +42,7 @@ class ConversationScreen extends StatelessWidget {
                   chatId: chatId,
                 ),
               ),
-              ControlPanel(),
+              ConversationControlPanel(),
             ],
           ),
         ),
@@ -94,6 +94,7 @@ class ConversationState extends ChangeNotifier {
   @override
   void dispose() {
     super.dispose();
+
     /// Todo: Save current recording and current listening in storage.
   }
 }

@@ -14,12 +14,13 @@ import 'package:voices/screens/conversation_screen/player.dart';
 /// This is the control panel in the Chat. When I think control panel I think like star wars control panel.
 /// In front of me the world I want to navigate through.
 /// Down here the controls.
-class ControlPanel extends StatefulWidget {
+class ConversationControlPanel extends StatefulWidget {
   @override
-  _ControlPanelState createState() => _ControlPanelState();
+  _ConversationControlPanelState createState() =>
+      _ConversationControlPanelState();
 }
 
-class _ControlPanelState extends State<ControlPanel> {
+class _ConversationControlPanelState extends State<ConversationControlPanel> {
   /// Handle text field state.
   final TextEditingController _messageTextController = TextEditingController();
 
