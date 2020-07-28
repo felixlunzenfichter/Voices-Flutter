@@ -7,7 +7,6 @@ import 'package:voices/screens/loading_screen.dart';
 import 'package:voices/screens/registration/login_screen.dart';
 import 'package:voices/screens/registration/permissions_screen.dart';
 import 'package:voices/screens/tabs_screen.dart';
-import 'package:voices/services/cloud_player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'services/local_player_service.dart';
 import 'package:voices/services/permission_service.dart';
