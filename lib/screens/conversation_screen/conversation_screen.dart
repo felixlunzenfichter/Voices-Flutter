@@ -93,15 +93,7 @@ class ConversationState extends ChangeNotifier {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
-
-    print('Dispose chat window.');
-
     /// Todo: Save current recording and current listening in storage.
-//    Recording recording = recorderService.recording;
-//    if (recording != null) {
-//      localStorageService.saveCurrentRecording(recording: recording);
-//    }
   }
 }
