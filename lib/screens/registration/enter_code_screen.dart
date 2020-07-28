@@ -202,7 +202,8 @@ class _EnterCodeScreenState extends State<EnterCodeScreen> {
       });
     };
 
-    final authService = Provider.of<LoggedInUserService>(context, listen: false);
+    final authService =
+        Provider.of<LoggedInUserService>(context, listen: false);
     await authService.checkEnteredCode(
         code: _enteredCode,
         whatTodoWhenCodeCorrectForNewUser: whatTodoWhenCodeCorrectForNewUser,

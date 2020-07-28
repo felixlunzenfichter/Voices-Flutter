@@ -14,7 +14,8 @@ class SettingsTab extends StatefulWidget {
 class _SettingsTabState extends State<SettingsTab> {
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<LoggedInUserService>(context, listen: false);
+    final authService =
+        Provider.of<LoggedInUserService>(context, listen: false);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -33,7 +34,8 @@ class _SettingsTabState extends State<SettingsTab> {
         CupertinoButton(
             child: Text("Sign Out"),
             onPressed: () async {
-              await Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+              await Navigator.of(context, rootNavigator: true)
+                  .pushAndRemoveUntil(
                 CupertinoPageRoute(builder: (context) => LoginScreen()),
                 (Route<dynamic> route) => false,
               );

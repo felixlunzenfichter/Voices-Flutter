@@ -20,7 +20,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-
   bool _showSpinner = false;
   String _enteredNumber = '';
   String _selectedDialCode = "+41";
@@ -89,13 +88,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   _verifyPhoneNumber() async {
-
     /// Show loading indicator.
     setState(() {
       _showSpinner = true;
     });
 
-    
     final Function whatTodoWhenNewUserVerified = (User newUser) async {
       final cloudFirestoreService =
           Provider.of<CloudFirestoreService>(context, listen: false);
@@ -149,7 +146,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 phoneNumber: _selectedDialCode + _enteredNumber,
               )));
     };
-    final authService = Provider.of<LoggedInUserService>(context, listen: false);
+    final authService =
+        Provider.of<LoggedInUserService>(context, listen: false);
     final phoneNumber = _selectedDialCode + _enteredNumber;
     await authService.verifyPhoneNumberAutomaticallyOrSendCode(
         phoneNumber: phoneNumber,
