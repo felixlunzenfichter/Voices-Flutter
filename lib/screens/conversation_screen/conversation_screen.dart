@@ -51,12 +51,11 @@ class ConversationScreen extends StatelessWidget {
   }
 }
 
-/// State management for a chat window.
+/// State management for a particular conversation.
 class ConversationState extends ChangeNotifier {
   final String chatId;
   final User otherUser;
 
-  /// Todo: Change type to File.
   File listeningTo;
   File currentRecording;
 
