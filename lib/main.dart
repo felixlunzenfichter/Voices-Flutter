@@ -10,7 +10,7 @@ import 'package:voices/screens/tabs_screen.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'services/local_player_service.dart';
 import 'package:voices/services/permission_service.dart';
-import 'services/auth_service.dart';
+import 'services/logged_in_user_service.dart';
 import 'services/cloud_firestore_service.dart';
 import 'services/cloud_storage_service.dart';
 import 'services/speech_to_text_service.dart';
@@ -61,11 +61,6 @@ class Voices extends StatelessWidget {
         /// Play audio from local storage.
         ChangeNotifierProvider<LocalPlayerService>(
           create: (_) => LocalPlayerService(),
-        ),
-
-        /// Play audio from the cloud.
-        Provider<CloudPlayerService>(
-          create: (_) => CloudPlayerService(),
         ),
 
         /// Handle permission.

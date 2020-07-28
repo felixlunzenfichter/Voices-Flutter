@@ -6,7 +6,7 @@ import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/screens/registration/permissions_screen.dart';
 import 'package:voices/screens/tabs_screen.dart';
-import 'package:voices/services/auth_service.dart';
+import 'package:voices/services/logged_in_user_service.dart';
 import 'package:voices/models/user.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:flare_flutter/flare_actor.dart';

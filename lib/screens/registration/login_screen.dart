@@ -9,7 +9,7 @@ import 'package:voices/services/permission_service.dart';
 import 'package:voices/shared_widgets/next_button.dart';
 
 import 'package:voices/screens/registration/enter_code_screen.dart';
-import 'package:voices/services/auth_service.dart';
+import 'package:voices/services/logged_in_user_service.dart';
 import 'package:voices/shared_widgets/info_dialog.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:voices/services/cloud_firestore_service.dart';

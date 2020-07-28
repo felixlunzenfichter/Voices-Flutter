@@ -6,7 +6,7 @@ import 'package:voices/screens/conversation_screen/conversation_screen.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'package:voices/services/cloud_storage_service.dart';
-import 'package:voices/services/auth_service.dart';
+import 'package:voices/services/logged_in_user_service.dart';
 import 'dart:io';
 
 /// Send a voice message.

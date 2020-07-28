@@ -3,7 +3,7 @@ import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:voices/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:voices/services/auth_service.dart';
+import 'package:voices/services/logged_in_user_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared_widgets/custom_card.dart';
 import 'package:voices/shared_widgets/profile_picture.dart';

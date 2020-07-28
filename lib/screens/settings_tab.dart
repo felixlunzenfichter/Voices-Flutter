@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:voices/screens/registration/login_screen.dart';
 import 'package:voices/shared_widgets/profile_picture.dart';
 
-import 'package:voices/services/auth_service.dart';
+import 'package:voices/services/logged_in_user_service.dart';
 
 class SettingsTab extends StatefulWidget {
   @override

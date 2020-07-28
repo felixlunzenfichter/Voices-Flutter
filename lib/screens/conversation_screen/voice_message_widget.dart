@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:voices/models/voice_message.dart';
 import 'package:voices/screens/conversation_screen/conversation_screen.dart';
 import 'package:voices/screens/conversation_screen/ui_chat.dart';
-import 'package:voices/services/auth_service.dart';
+import 'package:voices/services/logged_in_user_service.dart';
 import 'package:voices/services/local_player_service.dart';
 import 'package:voices/services/cloud_storage_service.dart';
 import 'dart:io';

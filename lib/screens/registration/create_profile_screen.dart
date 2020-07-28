@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/screens/tabs_screen.dart';
-import 'package:voices/services/auth_service.dart';
+import 'package:voices/services/logged_in_user_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/services/cloud_storage_service.dart';
 import 'dart:io';
