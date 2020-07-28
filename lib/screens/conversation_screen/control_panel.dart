@@ -11,7 +11,8 @@ import 'package:voices/services/cloud_firestore_service.dart';
 import 'recording_section.dart';
 import 'package:voices/screens/conversation_screen/player.dart';
 
-/// This is the control panel in the Chat. When I think control panel I think like star wars control panel.
+/// This is the control panel for a conversation.
+/// When I think control panel I think like star wars control panel.
 /// In front of me the world I want to navigate through.
 /// Down here the controls.
 class ConversationControlPanel extends StatefulWidget {
