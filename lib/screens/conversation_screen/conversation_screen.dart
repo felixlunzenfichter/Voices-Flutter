@@ -23,8 +23,8 @@ class ConversationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     /// State management for this chat window.
-    return ChangeNotifierProvider<GlobalChatScreenState>(
-      create: (_) => GlobalChatScreenState(
+    return ChangeNotifierProvider<ConversationState>(
+      create: (_) => ConversationState(
         chatId: chatId,
         otherUser: otherUser,
       ),
@@ -52,7 +52,7 @@ class ConversationScreen extends StatelessWidget {
 }
 
 /// State management for a chat window.
-class GlobalChatScreenState extends ChangeNotifier {
+class ConversationState extends ChangeNotifier {
   final String chatId;
   final User otherUser;
 
@@ -87,7 +87,7 @@ class GlobalChatScreenState extends ChangeNotifier {
     notifyListeners();
   }
 
-  GlobalChatScreenState({this.chatId, this.otherUser}) {
+  ConversationState({this.chatId, this.otherUser}) {
     localStorageService = LocalStorageService(chatId: chatId);
 
     /// Todo: Fetch currently listening and current recording from storage.

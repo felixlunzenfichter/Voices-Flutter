@@ -16,8 +16,8 @@ dynamic sendvm({BuildContext context}) async {
       Provider.of<RecorderService>(context, listen: false);
   CloudFirestoreService cloudFirestoreServiced =
       Provider.of<CloudFirestoreService>(context, listen: false);
-  GlobalChatScreenState screenInfo =
-      Provider.of<GlobalChatScreenState>(context, listen: false);
+  ConversationState screenInfo =
+      Provider.of<ConversationState>(context, listen: false);
   LoggedInUserService authService =
       Provider.of<LoggedInUserService>(context, listen: false);
   CloudStorageService storageService =
