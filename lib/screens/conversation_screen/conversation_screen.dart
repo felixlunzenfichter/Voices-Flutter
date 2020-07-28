@@ -64,8 +64,7 @@ class ConversationState extends ChangeNotifier {
     notifyListeners();
   }
 
-  RecorderService recorderService = RecorderService();
-
+  /// Used to store currentRecording and listeningTo when exiting the conversation.
   LocalStorageService localStorageService;
 
   /// Decide which controls to show right now.
