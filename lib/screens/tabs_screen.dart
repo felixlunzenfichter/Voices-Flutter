@@ -30,7 +30,7 @@ class TabsScreen extends StatelessWidget {
           case 0:
             returnValue = CupertinoTabView(builder: (context) {
               return CupertinoPageScaffold(
-                child: ChatsTab(),
+                child: ConversationsTab(),
               );
             });
             break;

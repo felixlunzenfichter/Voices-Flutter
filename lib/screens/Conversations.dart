@@ -11,12 +11,12 @@ import 'search_users_screen.dart';
 import 'package:voices/shared_widgets/custom_card.dart';
 
 /// See active chats.
-class ChatsTab extends StatefulWidget {
+class ConversationsTab extends StatefulWidget {
   @override
-  _ChatsTabState createState() => _ChatsTabState();
+  _ConversationsTabState createState() => _ConversationsTabState();
 }
 
-class _ChatsTabState extends State<ChatsTab> {
+class _ConversationsTabState extends State<ConversationsTab> {
   /// This firebase stream provides the active conversations of the current user.
   Stream<List<Chat>> chatStream;
 
