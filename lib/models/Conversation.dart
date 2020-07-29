@@ -1,5 +1,6 @@
 //
 
+/// Encapsulate chat meta data.
 class Conversation {
   String chatId;
   List<String> uidsOfMembers;

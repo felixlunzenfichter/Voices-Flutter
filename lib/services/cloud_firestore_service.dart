@@ -6,7 +6,7 @@ import 'package:voices/models/message.dart';
 import 'package:voices/models/user.dart';
 import 'package:voices/models/text_message.dart';
 import 'package:voices/constants.dart';
-import 'package:voices/models/chat.dart';
+import 'package:voices/models/Conversation.dart';
 import 'package:voices/models/voice_message.dart';
 
 class CloudFirestoreService {
@@ -98,13 +98,12 @@ class CloudFirestoreService {
           .documents
           .map((doc) => Conversation.fromMap(map: doc.data))
           .toList();
-      List<Conversation> allChats12 = chats1 + chats2;
 
-      List<Conversation> chat12 = allChats12
-          .where((chat) =>
-              chat.uidsOfMembers.contains(uid1) &&
-              chat.uidsOfMembers.contains(uid2))
-          .toList();
+      List<Conversation> ConversationsOfBothUsers = chats1 + chats2;
+
+      List<Conversation> chat12 = ConversationsOfBothUsers.where((chat) =>
+          chat.uidsOfMembers.contains(uid1) &&
+          chat.uidsOfMembers.contains(uid2)).toList();
 
       if (chat12.isNotEmpty) {
         return chat12[0].chatId;

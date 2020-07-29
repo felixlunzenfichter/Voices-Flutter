@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/user.dart';
-import 'package:voices/models/chat.dart';
+import 'package:voices/models/Conversation.dart';
 import 'package:voices/services/logged_in_user_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'package:voices/shared_widgets/profile_picture.dart';
