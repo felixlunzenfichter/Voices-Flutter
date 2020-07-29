@@ -18,7 +18,7 @@ class ConversationsTab extends StatefulWidget {
 
 class _ConversationsTabState extends State<ConversationsTab> {
   /// This firebase stream provides the active conversations of the current user.
-  Stream<List<Chat>> chatStream;
+  Stream<List<Conversation>> chatStream;
 
   /// Initialize the [chatStream].
   @override
@@ -69,7 +69,7 @@ class _ConversationsTabState extends State<ConversationsTab> {
 
                 /// List the available chats.
                 /// TODO: This is a stateless widget. What if I am on this screen and I receive a message from a user not contained in the chatStream?
-                child: StreamBuilder<List<Chat>>(
+                child: StreamBuilder<List<Conversation>>(
                     stream: chatStream,
                     builder: (context, snapshot) {
                       /// TODO: If connectionState is none then we should tell the user that he is not connected to the internet.
@@ -79,7 +79,7 @@ class _ConversationsTabState extends State<ConversationsTab> {
                       }
 
                       /// Convert this stream to an editable list.
-                      List<Chat> chats = List.from(snapshot.data ?? []);
+                      List<Conversation> chats = List.from(snapshot.data ?? []);
 
                       /// Sort chats according to time of last message.
                       chats.sort((chat1, chat2) => (chat2.lastMessageTimestamp)
@@ -106,7 +106,7 @@ class _ConversationsTabState extends State<ConversationsTab> {
 
 /// This widget displays a chat tab.
 class ChatItem extends StatefulWidget {
-  final Chat chat;
+  final Conversation chat;
 
   ChatItem({@required this.chat});
 

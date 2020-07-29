@@ -84,23 +84,23 @@ class CloudFirestoreService {
   Future<String> getChatWithUsers(
       {@required String uid1, @required String uid2}) async {
     try {
-      List<Chat> chats1 = (await _fireStore
+      List<Conversation> chats1 = (await _fireStore
               .collection('chats')
               .where('uidsOfMembers', arrayContains: uid1)
               .getDocuments())
           .documents
-          .map((doc) => Chat.fromMap(map: doc.data))
+          .map((doc) => Conversation.fromMap(map: doc.data))
           .toList();
-      List<Chat> chats2 = (await _fireStore
+      List<Conversation> chats2 = (await _fireStore
               .collection('chats')
               .where('uidsOfMembers', arrayContains: uid2)
               .getDocuments())
           .documents
-          .map((doc) => Chat.fromMap(map: doc.data))
+          .map((doc) => Conversation.fromMap(map: doc.data))
           .toList();
-      List<Chat> allChats12 = chats1 + chats2;
+      List<Conversation> allChats12 = chats1 + chats2;
 
-      List<Chat> chat12 = allChats12
+      List<Conversation> chat12 = allChats12
           .where((chat) =>
               chat.uidsOfMembers.contains(uid1) &&
               chat.uidsOfMembers.contains(uid2))
@@ -110,7 +110,7 @@ class CloudFirestoreService {
         return chat12[0].chatId;
       } else {
         //create chat and return chatId
-        Chat chat = await _createChat(uidsOfMembers: [uid1, uid2]);
+        Conversation chat = await _createChat(uidsOfMembers: [uid1, uid2]);
         return chat.chatId;
       }
     } catch (e) {
@@ -119,14 +119,14 @@ class CloudFirestoreService {
     }
   }
 
-  Stream<List<Chat>> getChatsStream({@required String loggedInUid}) {
+  Stream<List<Conversation>> getChatsStream({@required String loggedInUid}) {
     try {
-      Stream<List<Chat>> chatStream = _fireStore
+      Stream<List<Conversation>> chatStream = _fireStore
           .collection('chats')
           .where('uidsOfMembers', arrayContains: loggedInUid)
           .snapshots()
           .map((snap) => snap.documents.map((doc) {
-                Chat chat = Chat.fromMap(map: doc.data);
+                Conversation chat = Conversation.fromMap(map: doc.data);
                 chat.chatId = doc.documentID;
                 return chat;
               }).toList());
@@ -227,9 +227,10 @@ class CloudFirestoreService {
     }
   }
 
-  Future<Chat> _createChat({@required List<String> uidsOfMembers}) async {
+  Future<Conversation> _createChat(
+      {@required List<String> uidsOfMembers}) async {
     try {
-      Chat chat = Chat(
+      Conversation chat = Conversation(
         uidsOfMembers: uidsOfMembers,
         lastMessageText: 'No message yet',
       );

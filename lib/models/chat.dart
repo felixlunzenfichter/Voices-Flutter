@@ -1,18 +1,18 @@
 //
 
-class Chat {
+class Conversation {
   String chatId;
   List<String> uidsOfMembers;
   String lastMessageText;
   DateTime lastMessageTimestamp;
 
-  Chat(
+  Conversation(
       {this.chatId,
       this.uidsOfMembers,
       this.lastMessageText,
       this.lastMessageTimestamp});
 
-  Chat.fromMap({Map<String, dynamic> map}) {
+  Conversation.fromMap({Map<String, dynamic> map}) {
     this.chatId = map['chatId'];
     this.uidsOfMembers =
         _convertFirebaseListToDartList(list: map['uidsOfMembers']);
