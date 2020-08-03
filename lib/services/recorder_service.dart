@@ -8,7 +8,7 @@ import 'package:voices/models/recording.dart';
 import 'package:voices/services/file_converter_service.dart';
 
 /// This class provides and interface to [FlutterSoundRecorder].
-class RecorderService with ChangeNotifier {
+class RecorderService {
   /// Current recording.
   Recording _recording;
 
@@ -22,7 +22,7 @@ class RecorderService with ChangeNotifier {
   }
 
   Future<int> getLength() async {
-    int durationInMs = await flutterSoundHelper.duration(_pathToSavedRecording);
+    int durationInMs = await flutterSoundHelper.duration(pathToSavedRecording);
     return durationInMs;
   }
 
@@ -36,7 +36,9 @@ class RecorderService with ChangeNotifier {
   static const Duration UPDATE_DURATION_OF_DB_LEVEL_STREAM =
       Duration(milliseconds: 100);
 
-  RecorderService() {
+  Function notifyListeners;
+
+  RecorderService({this.notifyListeners}) {
     _initialize();
   }
 
@@ -54,7 +56,7 @@ class RecorderService with ChangeNotifier {
   String _pathToCurrentRecording;
 
   /// This is the file path to which the [_recording] will be saved to. It changes with every call of [_startWithoutReset()]
-  String _pathToSavedRecording;
+  String pathToSavedRecording;
 
   /// This function can only be executed once per session else it crashes on iOS (because there is already an initialized recorder)
   /// So when we hot restart the app this makes it crash
@@ -69,7 +71,7 @@ class RecorderService with ChangeNotifier {
               1000.0);
       await _recorder.setDbLevelEnabled(true);
       _tempDir = await getTemporaryDirectory();
-      _pathToSavedRecording =
+      pathToSavedRecording =
           "${_tempDir.path}/current_recording$LISTENING_FORMAT";
       status = RecordingStatus.initialized;
 
@@ -85,7 +87,6 @@ class RecorderService with ChangeNotifier {
   dispose() async {
     try {
       await _recorder.release();
-      super.dispose();
     } catch (e) {
       print("Recorder service could not be disposed because of error = $e");
     }
@@ -123,6 +124,7 @@ class RecorderService with ChangeNotifier {
 
   pause() async {
     try {
+      print('called pause() in RecorderService.');
       await _recorder.stopRecorder();
       await _setRecording();
       status = RecordingStatus.paused;
@@ -185,22 +187,24 @@ class RecorderService with ChangeNotifier {
           .convertFileFromRecordingToListeningFormatAndSaveUnter(
               file: File(_pathToCurrentRecording), toPath: pathToConvertedFile);
       File concatenatedFile = await _fileConverterService.concatenate(
-          file1: File(_pathToSavedRecording),
+          file1: File(pathToSavedRecording),
           file2: File(pathToConvertedFile),
           newFilename: "concatenated$LISTENING_FORMAT");
       await _fileConverterService.copyFileTo(
-          file: concatenatedFile, toPath: _pathToSavedRecording);
+          file: concatenatedFile, toPath: pathToSavedRecording);
     } else {
       /// Copy the current recording to the saved recording and convert the file from the recordingFormat to the listeningFormat
       await _fileConverterService
           .convertFileFromRecordingToListeningFormatAndSaveUnter(
               file: File(_pathToCurrentRecording),
-              toPath: _pathToSavedRecording);
+              toPath: pathToSavedRecording);
     }
-    int durationInMs = await flutterSoundHelper.duration(_pathToSavedRecording);
+    int durationInMs = await flutterSoundHelper.duration(pathToSavedRecording);
     recording = Recording(
-        path: _pathToSavedRecording,
+        path: pathToSavedRecording,
         duration: Duration(milliseconds: durationInMs));
+    print(
+        'Done setting the recording in the recorder. The audio is saved in $pathToSavedRecording.');
   }
 
   /// Todo: remove this if not necessary.

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'dart:io';
 
-class LocalPlayerService with ChangeNotifier {
+class LocalPlayerService {
   /// Private properties
   final _player = AudioPlayer();
 
@@ -28,20 +28,23 @@ class LocalPlayerService with ChangeNotifier {
     audioLengthStream.listen((event) {
       duration = event;
       print('Length of audio: $event');
-      notifyListeners();
     });
   }
 
-  LocalPlayerService() {
+  Function notifyListeners;
+
+  LocalPlayerService({Function notifyListenersCallback}) {
+    notifyListeners = notifyListenersCallback;
     listenToState();
     listenToLength();
   }
 
-  initialize({@required File audioFile}) async {
+  initialize({@required String audioFilePath}) async {
     try {
-      await _player.setFilePath(audioFile.path);
-      print('Player initialized to: ${audioFile.path}');
-      print(localPlayerStatus);
+      await _player.setFilePath(audioFilePath);
+      print('Player initialized to: ${audioFilePath}');
+      print(
+          'After initializing PlayerService the status is :$localPlayerStatus');
     } catch (e) {
       print(
           "Local audio player could not be initialized because of error = $e");
@@ -51,7 +54,6 @@ class LocalPlayerService with ChangeNotifier {
   dispose() {
     try {
       _player.dispose();
-      super.dispose();
     } catch (e) {
       print("Local audio player could not be disposed because of error = $e");
     }

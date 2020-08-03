@@ -3,7 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_sound/flutter_ffmpeg.dart';
 
 class FileConverterService {
-  final FlutterFFmpeg _flutterFfmpeg = new FlutterFFmpeg();
+  final FlutterFFmpeg _flutterFfmpeg = FlutterFFmpeg();
+  final FlutterFFmpegConfig flutterFFmpegConfig = FlutterFFmpegConfig();
+
+  FileConverterService() {
+    flutterFFmpegConfig.disableLogs();
+    flutterFFmpegConfig.disableStatistics();
+    print('no logs');
+  }
 
   /// The files to be concatenated should have the same file extension as the one in newFilename
   Future<File> concatenate(

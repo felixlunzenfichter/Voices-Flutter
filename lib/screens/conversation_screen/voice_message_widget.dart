@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:property_change_notifier/property_change_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/voice_message.dart';
-import 'package:voices/screens/conversation_screen/conversation_screen.dart';
 import 'package:voices/screens/conversation_screen/ui_chat.dart';
 import 'package:voices/services/logged_in_user_service.dart';
-import 'package:voices/services/local_player_service.dart';
 import 'package:voices/services/cloud_storage_service.dart';
 import 'dart:io';
+import 'package:voices/screens/conversation_screen/conversation_state.dart';
 
 import 'package:voices/services/local_storage.dart';
 
@@ -19,13 +19,11 @@ class NewVoiceMessageInChatWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ConversationState screenInfo =
-        Provider.of<ConversationState>(context, listen: false);
-    final LocalPlayerService localPlayerService =
-        Provider.of<LocalPlayerService>(context, listen: false);
+    final ConversationState conversationState =
+        PropertyChangeProvider.of<ConversationState>(context, listen: false)
+            .value;
     final LoggedInUserService loggedInUserService =
         Provider.of<LoggedInUserService>(context, listen: false);
-//    LocalStorageService localStorageService = screenInfo.localStorageService;
     final CloudStorageService cloudStorageService =
         Provider.of<CloudStorageService>(context, listen: false);
 
@@ -44,22 +42,18 @@ class NewVoiceMessageInChatWidget extends StatelessWidget {
                 /// Todo: get from local storage.
 //                recording = await localStorageService.getRecording(
 //                    voiceMessage: voiceMessage);
-                screenInfo.showListeningSection();
+
+                conversationState.showListeningSection();
 
                 /// Todo: Show loading progress in the listening section.
                 File audioFile = await cloudStorageService.downloadAudioFile(
                     voiceMessage: voiceMessage);
 
+                conversationState.setListeningTo(audioFile);
                 print('Path of voice message: ${audioFile.path}');
 
                 /// Todo: make audioFile specific to chat.
-                await localPlayerService.initialize(audioFile: audioFile);
-                await screenInfo.setListeningTo(audioFile: audioFile);
-
-                /// Display the listening section in the chat.
-
-                /// Play the voice message.
-//                await localPlayerService.play();
+                /// play the voice message.
               },
               image: Image.asset('assets/play_1.png'),
             ),

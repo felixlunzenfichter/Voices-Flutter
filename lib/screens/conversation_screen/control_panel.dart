@@ -2,14 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:property_change_notifier/property_change_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/text_message.dart';
-import 'package:voices/screens/conversation_screen/conversation_screen.dart';
 import 'package:voices/screens/conversation_screen/ui_chat.dart';
 import 'package:voices/services/logged_in_user_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'recording_section.dart';
-import 'package:voices/screens/conversation_screen/player.dart';
+import 'package:voices/screens/conversation_screen/conversation_state.dart';
+import 'package:voices/screens/conversation_screen/player_widget.dart';
 
 /// This is the control panel for a conversation.
 /// When I think control panel I think like star wars control panel.
@@ -28,7 +29,7 @@ class _ConversationControlPanelState extends State<ConversationControlPanel> {
   /// This is the interface for the cloud.
   CloudFirestoreService cloudFirestoreService;
   LoggedInUserService userService;
-  ConversationState screenState;
+  ConversationState conversationState;
 
   @override
   void initState() {
@@ -40,8 +41,9 @@ class _ConversationControlPanelState extends State<ConversationControlPanel> {
 
   @override
   Widget build(BuildContext context) {
-    screenState = Provider.of<ConversationState>(context, listen: true);
-    Interface showInterface = screenState.showInterface;
+    conversationState = PropertyChangeProvider.of<ConversationState>(context,
+        properties: {MyNotification.InterfaceNotification}).value;
+    Interface showInterface = conversationState.showInterface;
 
     return Column(
       children: <Widget>[
@@ -52,7 +54,7 @@ class _ConversationControlPanelState extends State<ConversationControlPanel> {
             ControlPanelButton(
                 onTap: () {
                   setState(() {
-                    screenState.showTextInputSection();
+                    conversationState.showTextInputSection();
                   });
                 },
                 text: 'write',
@@ -60,7 +62,7 @@ class _ConversationControlPanelState extends State<ConversationControlPanel> {
             ControlPanelButton(
                 onTap: () {
                   setState(() {
-                    screenState.showListeningSection();
+                    conversationState.showListeningSection();
                   });
                 },
                 text: 'listen',
@@ -68,7 +70,7 @@ class _ConversationControlPanelState extends State<ConversationControlPanel> {
             ControlPanelButton(
               onTap: () {
                 setState(() {
-                  screenState.showRecordingSection();
+                  conversationState.showRecordingSection();
                 });
               },
               text: 'record',
@@ -81,7 +83,6 @@ class _ConversationControlPanelState extends State<ConversationControlPanel> {
           TextInputSection(
               messageTextController: _messageTextController,
               cloudFirestoreService: cloudFirestoreService,
-              screenInfo: screenState,
               authService: userService),
 
         if (showInterface == Interface.Recording)
@@ -113,16 +114,22 @@ class RecordingSection extends StatelessWidget {
 class ListeningSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    ConversationState screenInfo =
-        Provider.of<ConversationState>(context, listen: true);
+    ConversationState conversationState =
+        PropertyChangeProvider.of<ConversationState>(
+      context,
+      properties: {MyNotification.playerListeningSectionInitNotification},
+    ).value;
 
     /// Always show the recording we are currently listening to.
-    File recording = screenInfo.listeningTo;
+    File audioFile = conversationState.listeningTo;
 
-    if (recording == null) {
+    if (audioFile == null) {
       return Text('Select a recording to play it.');
     } else {
-      return LocalPlayer();
+      return PlayerWidget(
+        playerService: conversationState.playerListeningSection,
+        audioFilePath: audioFile.path,
+      );
     }
   }
 }
@@ -131,13 +138,11 @@ class ListeningSection extends StatelessWidget {
 class TextInputSection extends StatefulWidget {
   final TextEditingController messageTextController;
   final CloudFirestoreService cloudFirestoreService;
-  final ConversationState screenInfo;
   final LoggedInUserService authService;
 
   TextInputSection(
       {this.messageTextController,
       this.cloudFirestoreService,
-      this.screenInfo,
       this.authService});
 
   @override
@@ -145,6 +150,16 @@ class TextInputSection extends StatefulWidget {
 }
 
 class _TextInputState extends State<TextInputSection> {
+  ConversationState screenInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    screenInfo =
+        PropertyChangeProvider.of<ConversationState>(context, listen: false)
+            .value;
+  }
+
   @override
   Widget build(BuildContext context) {
     print('build');
@@ -170,7 +185,7 @@ class _TextInputState extends State<TextInputSection> {
 
               /// Send the text message.
               widget.cloudFirestoreService.addTextMessage(
-                  chatId: widget.screenInfo.chatId, textMessage: message);
+                  chatId: screenInfo.chatId, textMessage: message);
 
 // Clear the text field.
               widget.messageTextController.text = '';

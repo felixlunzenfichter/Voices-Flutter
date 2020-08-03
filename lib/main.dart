@@ -53,16 +53,6 @@ class Voices extends StatelessWidget {
           create: (_) => CloudStorageService(),
         ),
 
-        /// Record audio. Todo: remove.
-        ChangeNotifierProvider<RecorderService>(
-          create: (_) => RecorderService(),
-        ),
-
-        /// Play audio from local storage.
-        ChangeNotifierProvider<LocalPlayerService>(
-          create: (_) => LocalPlayerService(),
-        ),
-
         /// Handle permission.
         ChangeNotifierProvider<PermissionService>(
           create: (_) => PermissionService(),
