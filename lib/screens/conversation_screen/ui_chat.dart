@@ -410,6 +410,7 @@ class StopButton extends StatelessWidget {
 
   StopButton({@required this.onPress});
 
+  
   @override
   Widget build(BuildContext context) {
     return RoundButton(
