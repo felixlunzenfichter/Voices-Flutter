@@ -31,12 +31,28 @@ class _ConversationControlPanelState extends State<ConversationControlPanel> {
   LoggedInUserService userService;
   ConversationState conversationState;
 
+  /// The widgets for the 3 sections. Don't want to rebuild them every time we
+  /// switch because it's slow apparently.
+  TextInputSection textInputSection;
+  RecordingSection recordingSection;
+  ListeningSection listeningSection;
+
   @override
   void initState() {
     super.initState();
     cloudFirestoreService =
         Provider.of<CloudFirestoreService>(context, listen: false);
     userService = Provider.of<LoggedInUserService>(context, listen: false);
+
+    /// Initialize the 3 control sections.
+    textInputSection = TextInputSection(
+        messageTextController: _messageTextController,
+        cloudFirestoreService: cloudFirestoreService,
+        authService: userService);
+
+    recordingSection = RecordingSection();
+
+    listeningSection = ListeningSection();
   }
 
   @override
@@ -80,16 +96,13 @@ class _ConversationControlPanelState extends State<ConversationControlPanel> {
         ),
 
         if (showInterface == Interface.Texting)
-          TextInputSection(
-              messageTextController: _messageTextController,
-              cloudFirestoreService: cloudFirestoreService,
-              authService: userService),
+          textInputSection,
 
         if (showInterface == Interface.Recording)
-          RecordingSection(),
+          recordingSection,
 
         if (showInterface == Interface.Listening)
-          ListeningSection(),
+          listeningSection,
       ],
     );
   }
