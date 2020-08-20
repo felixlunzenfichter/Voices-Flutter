@@ -2,10 +2,7 @@ import 'package:speech_recognition/speech_recognition.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 
-
-
 class SpeechToTextService extends ChangeNotifier {
-
   // Speech recognition object provided by the package.
   SpeechRecognition _speech;
 
@@ -18,13 +15,13 @@ class SpeechToTextService extends ChangeNotifier {
   // Transcript of the whole voice message excluding since the last time we pressed start.
   String fullTranscription = '';
 
-  //String _currentLocale = 'en_US';
+  // Currently German.
   Language selectedLang = languages.first;
 
   bool _isIOS = Platform.isIOS;
 
   SpeechToTextService() {
-    if(_isIOS) {
+    if (_isIOS) {
       activateSpeechRecognizer();
     } else {
       fullTranscription = 'Speech to text is not available for Android yet.';
@@ -49,36 +46,37 @@ class SpeechToTextService extends ChangeNotifier {
       _isListening = false;
       saveTranscript();
     });
-    _speech
-        .activate()
-        .then((res) => _speechRecognitionAvailable = res);
+    _speech.activate().then((res) => _speechRecognitionAvailable = res);
   }
 
   // Save transcript.
   saveTranscript() {
     fullTranscription =
-    "$fullTranscription$transcriptionCurrentRecordingSnippet\n";
+        "$fullTranscription$transcriptionCurrentRecordingSnippet\n";
     transcriptionCurrentRecordingSnippet = '';
     notifyListeners();
   }
 
   // Start new Recording or pick up where we left off.
   void start() {
-    if(_isIOS) {
-      _speechRecognitionAvailable && !_isListening ? _listen() : print(
-          'Available: $_speechRecognitionAvailable. Is listening: $_isListening');
+    if (_isIOS) {
+      _speechRecognitionAvailable && !_isListening
+          ? _listen()
+          : print(
+              'Available: $_speechRecognitionAvailable. Is listening: $_isListening');
     }
   }
 
   _listen() {
-    _speech.listen(locale: selectedLang.code).then((result) =>
-        print('_MyAppState.start => result $result'));
+    _speech
+        .listen(locale: selectedLang.code)
+        .then((result) => print('_MyAppState.start => result $result'));
   }
 
   // Stop recording and return text.
   Future<String> stop() async {
     String result;
-    if(_isIOS) {
+    if (_isIOS) {
       await _speech.stop();
       saveTranscript();
       result = fullTranscription;
@@ -93,20 +91,17 @@ class SpeechToTextService extends ChangeNotifier {
 
   // Pause recording.
   void pause() async {
-    if(_isIOS) {
-      _isListening ? await _speech.stop() : print(
-          'Did not pause because is listening: $_isListening');
+    if (_isIOS) {
+      _isListening
+          ? await _speech.stop()
+          : print('Did not pause because is listening: $_isListening');
     }
   }
-
 
   void selectLangHandler(Language lang) {
     selectedLang = lang;
   }
-
 }
-
-
 
 class Language {
   final String name;

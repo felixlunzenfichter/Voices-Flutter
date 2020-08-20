@@ -40,7 +40,7 @@ dynamic sendvm({BuildContext context}) async {
       senderUid: authService.loggedInUser.uid,
       timestamp: timestamp,
       downloadUrl: downloadURL,
-      transcript: 'transcript',
+      transcript: '',
       length: recorderService.recording.duration,
       firebasePath: firebasePath);
 
