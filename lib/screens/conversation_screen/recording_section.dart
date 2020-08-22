@@ -10,7 +10,6 @@ import 'package:voices/constants.dart';
 import 'package:voices/services/sendVoiceMessage.dart';
 import 'package:voices/screens/conversation_screen/player_widget.dart';
 import 'package:voices/screens/conversation_screen/conversation_state.dart';
-import 'package:voices/services/speech_to_text_service.dart';
 
 /// This file contains the interface and logic to record and to listen to recorded audio.
 
@@ -24,7 +23,6 @@ class RecorderControls extends StatelessWidget {
         PropertyChangeProvider.of<ConversationState>(context,
             properties: {MyNotification.RecorderNotification}).value;
     final RecorderService recorderService = conversationState.recorderService;
-    final SpeechToTextService speechToTextService = Provider.of<SpeechToTextService>(context, listen: false);
     print('Rebuild Recordercontrols');
 
     /// Make sure recorder is initialized.
@@ -34,21 +32,25 @@ class RecorderControls extends StatelessWidget {
       /// Ready to start recording.
     } else if (recorderService.status == RecordingStatus.initialized ||
         recorderService.status == RecordingStatus.stopped) {
-      return StartRecordingButton(onPress: recorderService.start);
+      return StartRecordingButton(
+        onPress: () {
+          recorderService.start();
+        },
+      );
 
       /// Controls shown while recording.
     } else if (recorderService.status == RecordingStatus.recording) {
       return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            PauseRecordingButton(onPress: recorderService.pause),
+            PauseRecordingButton(onPress: () {
+              recorderService.pause();
+            }),
             StopButton(onPress: () async {
               await recorderService.stop();
-              await speechToTextService.stop();
             }),
             SendRecordingButton(onPress: () async {
               await recorderService.stop();
-              await speechToTextService.stop();
               sendvm(context: context);
             }),
           ]);
@@ -61,7 +63,6 @@ class RecorderControls extends StatelessWidget {
             ResumeRecordingButton(onPress: recorderService.resume),
             StopButton(onPress: () async {
               await recorderService.stop();
-              await
             }),
             SendRecordingButton(onPress: () async {
               await recorderService.stop();
@@ -114,8 +115,6 @@ class RecordingInfo extends StatelessWidget {
         PropertyChangeProvider.of<ConversationState>(context,
             properties: {MyNotification.RecorderNotification}).value;
     final recorderService = conversationState.recorderService;
-    final SpeechToTextService speechToTextService =
-        Provider.of<SpeechToTextService>(context, listen: true);
 
     /// Inform that the recorder is not ready.
     if (recorderService.status == RecordingStatus.uninitialized) {
@@ -143,7 +142,7 @@ class RecordingInfo extends StatelessWidget {
 
           /// Show volume of current recording.
           RecordingBars(),
-          Text(speechToTextService.fullTranscription),
+          Text('hi'),
         ],
       );
 
