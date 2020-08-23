@@ -1,26 +1,16 @@
 import 'dart:io';
 
-import 'package:property_change_notifier/property_change_notifier.dart';
-
+import 'package:flutter/material.dart';
 import 'package:voices/models/user.dart';
-import 'package:voices/services/local_player_service.dart';
-import 'package:voices/services/local_storage.dart';
-import 'package:voices/services/recorder_service.dart';
 
 enum Interface { Recording, Listening, Texting }
 
 /// These are the Types of Notifications used by
 /// the [PropertyChangeNotifier] [ConversationState].
-enum MyNotification {
-  InterfaceNotification,
-  RecorderNotification,
-  playerListeningSectionNotification,
-  playerListeningSectionInitNotification,
-  playerRecordingSectionNotification
-}
+/// Todo: Remove this.
 
 /// State management for a particular conversation.
-class ConversationState extends PropertyChangeNotifier<MyNotification> {
+class ConversationState extends ChangeNotifier {
   final String chatId;
   final User otherUser;
 
@@ -28,66 +18,28 @@ class ConversationState extends PropertyChangeNotifier<MyNotification> {
 
   void setListeningTo(File audioFile) {
     listeningTo = audioFile;
-    notifyListeners(MyNotification.playerListeningSectionInitNotification);
+    notifyListeners();
   }
-
-  /// --- NotifyListeners ---
-  ///
-  void notifyListenersInterface() {
-    notifyListeners(MyNotification.InterfaceNotification);
-    print('notified Interface.');
-  }
-
-  void notifyListenersRecorder() {
-    notifyListeners(MyNotification.RecorderNotification);
-    print('Recorder Notification.');
-  }
-
-  void notifyListenersPlayerListeningSection() {
-    notifyListeners(MyNotification.playerListeningSectionNotification);
-    print('PlayerListeningSection Notification.');
-  }
-
-  void notifyListenersPlayerRecordingSection() {
-    notifyListeners(MyNotification.playerRecordingSectionNotification);
-    print('PlayerRecordingSection Notification.');
-  }
-
-  /// --- Services ---
-  ///
-  RecorderService recorderService;
-  LocalPlayerService playerListeningSection;
-  LocalPlayerService playerRecordingSection;
-
-  /// Used to access and store data locally.
-  LocalStorageService localStorageService;
 
   /// Decide which controls to show right now.
   Interface showInterface = Interface.Recording;
 
   void showListeningSection() {
     showInterface = Interface.Listening;
-    notifyListenersInterface();
+    notifyListeners();
   }
 
   void showRecordingSection() {
     showInterface = Interface.Recording;
-    notifyListenersInterface();
+    notifyListeners();
   }
 
   void showTextInputSection() {
     showInterface = Interface.Texting;
-    notifyListenersInterface();
+    notifyListeners();
   }
 
   ConversationState({this.chatId, this.otherUser}) {
-    localStorageService = LocalStorageService(chatId: chatId);
-    recorderService = RecorderService(notifyListeners: notifyListenersRecorder);
-    playerRecordingSection = LocalPlayerService(
-        notifyListenersCallback: notifyListenersPlayerRecordingSection);
-    playerListeningSection = LocalPlayerService(
-        notifyListenersCallback: notifyListenersPlayerListeningSection);
-
     /// Todo: Fetch currently listening and current recording from storage.
   }
 

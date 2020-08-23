@@ -33,7 +33,7 @@ class LocalPlayerService {
 
   Function notifyListeners;
 
-  LocalPlayerService({Function notifyListenersCallback}) {
+  LocalPlayerService({@required Function notifyListenersCallback}) {
     notifyListeners = notifyListenersCallback;
     listenToState();
     listenToLength();

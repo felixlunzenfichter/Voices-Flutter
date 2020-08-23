@@ -1,11 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:property_change_notifier/property_change_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/text_message.dart';
+import 'package:voices/screens/conversation_screen/conversation_screen.dart';
 import 'package:voices/screens/conversation_screen/ui_chat.dart';
+import 'package:voices/services/local_player_service.dart';
 import 'package:voices/services/logged_in_user_service.dart';
 import 'package:voices/services/cloud_firestore_service.dart';
 import 'recording_section.dart';
@@ -57,8 +59,7 @@ class _ConversationControlPanelState extends State<ConversationControlPanel> {
 
   @override
   Widget build(BuildContext context) {
-    conversationState = PropertyChangeProvider.of<ConversationState>(context,
-        properties: {MyNotification.InterfaceNotification}).value;
+    conversationState = Provider.of<ConversationState>(context, listen: true);
     Interface showInterface = conversationState.showInterface;
 
     return Column(
@@ -128,10 +129,7 @@ class ListeningSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ConversationState conversationState =
-        PropertyChangeProvider.of<ConversationState>(
-      context,
-      properties: {MyNotification.playerListeningSectionInitNotification},
-    ).value;
+        Provider.of<ConversationState>(context, listen: true);
 
     /// Always show the recording we are currently listening to.
     File audioFile = conversationState.listeningTo;
@@ -139,8 +137,11 @@ class ListeningSection extends StatelessWidget {
     if (audioFile == null) {
       return Text('Select a recording to play it.');
     } else {
+      Provider.of<PlayerListeningSection>(context, listen: false)
+          .localPlayerService
+          .initialize(audioFilePath: audioFile.path);
       return PlayerWidget(
-        playerService: conversationState.playerListeningSection,
+        playerServiceType: PlayerServiceType.listening,
         audioFilePath: audioFile.path,
       );
     }
@@ -168,9 +169,7 @@ class _TextInputState extends State<TextInputSection> {
   @override
   void initState() {
     super.initState();
-    screenInfo =
-        PropertyChangeProvider.of<ConversationState>(context, listen: false)
-            .value;
+    screenInfo = Provider.of<ConversationState>(context, listen: false);
   }
 
   @override

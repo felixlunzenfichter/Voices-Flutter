@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:property_change_notifier/property_change_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:voices/models/voice_message.dart';
 import 'package:voices/screens/conversation_screen/ui_chat.dart';
@@ -20,8 +19,7 @@ class NewVoiceMessageInChatWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ConversationState conversationState =
-        PropertyChangeProvider.of<ConversationState>(context, listen: false)
-            .value;
+        Provider.of<ConversationState>(context, listen: false);
     final LoggedInUserService loggedInUserService =
         Provider.of<LoggedInUserService>(context, listen: false);
     final CloudStorageService cloudStorageService =

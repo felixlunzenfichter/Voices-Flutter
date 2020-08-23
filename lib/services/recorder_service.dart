@@ -8,7 +8,7 @@ import 'package:voices/models/recording.dart';
 import 'package:voices/services/file_converter_service.dart';
 
 /// This class provides and interface to [FlutterSoundRecorder].
-class RecorderService {
+class RecorderService extends ChangeNotifier {
   /// Current recording.
   Recording _recording;
 
@@ -21,6 +21,7 @@ class RecorderService {
     notifyListeners();
   }
 
+  /// Todo: Do we need this? Either we use recording or we use this getter for the length.
   Future<int> getLength() async {
     int durationInMs = await flutterSoundHelper.duration(pathToSavedRecording);
     return durationInMs;
@@ -36,9 +37,7 @@ class RecorderService {
   static const Duration UPDATE_DURATION_OF_DB_LEVEL_STREAM =
       Duration(milliseconds: 100);
 
-  Function notifyListeners;
-
-  RecorderService({this.notifyListeners}) {
+  RecorderService() {
     _initialize();
   }
 
@@ -52,9 +51,11 @@ class RecorderService {
   /// Access service to convert audio formats.
   FileConverterService _fileConverterService = FileConverterService();
 
+  /// Todo: Change wrong description.
   /// This is the file path where the [_recorder] writes its data. From the moment it gets assigned in [_initialize()] it stays fixed.
   String _pathToCurrentRecording;
 
+  /// Todo: Change wrong description.
   /// This is the file path to which the [_recording] will be saved to. It changes with every call of [_startWithoutReset()]
   String pathToSavedRecording;
 

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:voices/constants.dart';
 import 'package:voices/models/recording.dart';
@@ -13,7 +14,7 @@ import 'package:voices/services/cloud_storage_service.dart';
 /// 3. The voice messages in the chat.
 /// Recall that a recording consists of an audio file and a length. We save both in separate files.
 
-class LocalStorageService {
+class LocalStorageService extends ChangeNotifier {
   /// Path of the directory in the local storage this app uses. It's a constant.
   static String kLocalDirectoryPath = kLocalPath;
 
@@ -46,7 +47,7 @@ class LocalStorageService {
       this.currentRecordingOfChatFilePath,
       this.currentRecordingAudioLengthFilePath});
 
-  factory LocalStorageService({String chatId}) {
+  factory LocalStorageService({@required String chatId}) {
     setLocalPath();
     String currentRecordingOfChatFilePath =
         '$kLocalDirectoryPath/$chatId/$currentRecordingDirectoryName/$CurrentRecordingaudioFileName';

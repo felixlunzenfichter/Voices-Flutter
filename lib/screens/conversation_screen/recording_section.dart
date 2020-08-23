@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:property_change_notifier/property_change_notifier.dart';
 import 'package:provider/provider.dart';
+import 'package:voices/screens/conversation_screen/conversation_screen.dart';
 import 'package:voices/services/local_player_service.dart';
 import 'package:voices/services/recorder_service.dart';
 import 'ui_chat.dart';
@@ -19,10 +20,8 @@ class RecorderControls extends StatelessWidget {
   Widget build(BuildContext context) {
     /// Access the recorder.
 
-    final ConversationState conversationState =
-        PropertyChangeProvider.of<ConversationState>(context,
-            properties: {MyNotification.RecorderNotification}).value;
-    final RecorderService recorderService = conversationState.recorderService;
+    final RecorderService recorderService =
+        Provider.of<RecorderService>(context, listen: true);
     print('Rebuild Recordercontrols');
 
     /// Make sure recorder is initialized.
@@ -84,19 +83,22 @@ class RecordingAndPlayingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 //    localPlayerService.initialize(recording: recorderService.recording);
-    ConversationState conversationState =
-        PropertyChangeProvider.of<ConversationState>(context,
-            properties: {MyNotification.RecorderNotification}).value;
+
+    RecorderService recorderService =
+        Provider.of<RecorderService>(context, listen: true);
     print(
-        'State of recorder when rebuilding RecordingAndPlayingInfo ${conversationState.recorderService.status}');
+        'State of recorder when rebuilding RecordingAndPlayingInfo ${recorderService.status}');
 
     /// Display the current recording recording when done recording.
-    if (conversationState.recorderService.status == RecordingStatus.paused) {
+    if (recorderService.status == RecordingStatus.paused) {
+      Provider.of<PlayerRecordingSection>(context, listen: false)
+          .localPlayerService
+          .initialize(audioFilePath: recorderService.recording.path);
       print(
-          'Build Player in Recording section with recording: ${conversationState.recorderService.pathToSavedRecording}');
+          'Build Player in Recording section with recording: ${recorderService.pathToSavedRecording}');
       return PlayerWidget(
-        playerService: conversationState.playerRecordingSection,
-        audioFilePath: conversationState.recorderService.pathToSavedRecording,
+        playerServiceType: PlayerServiceType.recording,
+        audioFilePath: recorderService.recording.path,
       );
 
       /// Display information while recording.
@@ -111,10 +113,8 @@ class RecordingInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     /// Get access to the Recorder.
-    final ConversationState conversationState =
-        PropertyChangeProvider.of<ConversationState>(context,
-            properties: {MyNotification.RecorderNotification}).value;
-    final recorderService = conversationState.recorderService;
+
+    final recorderService = Provider.of<RecorderService>(context, listen: true);
 
     /// Inform that the recorder is not ready.
     if (recorderService.status == RecordingStatus.uninitialized) {
@@ -142,7 +142,6 @@ class RecordingInfo extends StatelessWidget {
 
           /// Show volume of current recording.
           RecordingBars(),
-          Text('hi'),
         ],
       );
 
@@ -172,19 +171,16 @@ class _DurationCounterState extends State<DurationCounter> {
 
   @override
   void initState() {
-    /// Access the recorder.
-    final ConversationState conversationState =
-        PropertyChangeProvider.of<ConversationState>(context, listen: false)
-            .value;
-
     /// Access current duration.
-    positionStream = conversationState.recorderService.getPositionStream();
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     /// Display the position in seconds.
+    Stream<Duration> positionStream =
+        Provider.of<RecorderService>(context, listen: true).getPositionStream();
     return DurationWidget(positionStream: positionStream);
   }
 }
@@ -207,12 +203,10 @@ class _RecordingBarsState extends State<RecordingBars> {
 
   @override
   void initState() {
-    final ConversationState conversationState =
-        PropertyChangeProvider.of<ConversationState>(context, listen: false)
-            .value;
-    final recorderService = conversationState.recorderService;
     dbLevelStreamSubscription =
-        recorderService.getDbLevelStream().listen((newDbLevel) {
+        Provider.of<RecorderService>(context, listen: false)
+            .getDbLevelStream()
+            .listen((newDbLevel) {
       if (newDbLevel != null) {
         _insertNewDbLevel(newDbLevel: newDbLevel);
         _controller.animateTo(_controller.position.maxScrollExtent,
