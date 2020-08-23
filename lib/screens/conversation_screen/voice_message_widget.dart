@@ -7,6 +7,7 @@ import 'package:voices/services/logged_in_user_service.dart';
 import 'package:voices/services/cloud_storage_service.dart';
 import 'dart:io';
 import 'package:voices/screens/conversation_screen/conversation_state.dart';
+import 'conversation_screen.dart';
 
 import 'package:voices/services/local_storage.dart';
 
@@ -43,11 +44,18 @@ class NewVoiceMessageInChatWidget extends StatelessWidget {
 
                 conversationState.showListeningSection();
 
+                PlayerListeningSection playerListeningSection =
+                    Provider.of<PlayerListeningSection>(context, listen: false);
+
                 /// Todo: Show loading progress in the listening section.
                 File audioFile = await cloudStorageService.downloadAudioFile(
                     voiceMessage: voiceMessage);
 
+                playerListeningSection.initialize(
+                    audioFilePath: audioFile.path);
+
                 conversationState.setListeningTo(audioFile);
+
                 print('Path of voice message: ${audioFile.path}');
 
                 /// Todo: make audioFile specific to chat.

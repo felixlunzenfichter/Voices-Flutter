@@ -137,9 +137,6 @@ class ListeningSection extends StatelessWidget {
     if (audioFile == null) {
       return Text('Select a recording to play it.');
     } else {
-      Provider.of<PlayerListeningSection>(context, listen: false)
-          .localPlayerService
-          .initialize(audioFilePath: audioFile.path);
       return PlayerWidget(
         playerServiceType: PlayerServiceType.listening,
         audioFilePath: audioFile.path,

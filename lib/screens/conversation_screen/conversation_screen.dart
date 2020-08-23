@@ -13,25 +13,19 @@ import 'package:voices/services/recorder_service.dart';
 
 import 'conversation_state.dart';
 
-enum PlayerServiceType { listening, recording }
-
 /// 2 Wrappers to be able to provide different types in [MultiProvider].
-class PlayerListeningSection extends ChangeNotifier {
-  LocalPlayerService localPlayerService;
-
-  PlayerListeningSection() {
-    localPlayerService =
-        LocalPlayerService(notifyListenersCallback: notifyListeners);
+class PlayerListeningSection extends LocalPlayerService {
+  @override
+  initialize({String audioFilePath}) async {
+    // TODO: implement initialize
+    await super.initialize(audioFilePath: audioFilePath);
+    play();
   }
 }
 
-class PlayerRecordingSection extends ChangeNotifier {
-  LocalPlayerService localPlayerService;
-  PlayerRecordingSection() {
-    localPlayerService =
-        LocalPlayerService(notifyListenersCallback: notifyListeners);
-  }
-}
+class PlayerRecordingSection extends LocalPlayerService {}
+
+enum PlayerServiceType { listening, recording }
 
 class ConversationScreen extends StatelessWidget {
   final String chatId;
@@ -51,42 +45,45 @@ class ConversationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     /// State management for this chat window.
-    return ChangeNotifierProvider<ConversationState>(
-      create: (_) => ConversationState(chatId: chatId, otherUser: otherUser),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(otherUser.username),
-        ),
-        body: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Expanded(
-                child: MessagesStream(
-                  chatId: chatId,
-                ),
-              ),
-              MultiProvider(
-                providers: [
-                  ChangeNotifierProvider<RecorderService>(
-                      create: (_) => recorderService),
-                  ChangeNotifierProvider<PlayerListeningSection>(
-                    create: (_) => playerListeningSection,
-                  ),
-                  ChangeNotifierProvider<PlayerRecordingSection>(
-                    create: (_) => playerRecordingSection,
-                  ),
-                  ChangeNotifierProvider<LocalStorageService>(
-                    create: (_) => LocalStorageService(chatId: chatId),
-                  )
-                ],
-                child: ConversationControlPanel(),
-              )
-            ],
+    return MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ConversationState>(
+              create: (_) =>
+                  ConversationState(chatId: chatId, otherUser: otherUser)),
+          ChangeNotifierProvider<PlayerListeningSection>(
+            create: (_) => playerListeningSection,
           ),
-        ),
-      ),
-    );
+        ],
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(otherUser.username),
+          ),
+          body: SafeArea(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Expanded(
+                  child: MessagesStream(
+                    chatId: chatId,
+                  ),
+                ),
+                MultiProvider(
+                  providers: [
+                    ChangeNotifierProvider<RecorderService>(
+                        create: (_) => recorderService),
+                    ChangeNotifierProvider<PlayerRecordingSection>(
+                      create: (_) => playerRecordingSection,
+                    ),
+                    ChangeNotifierProvider<LocalStorageService>(
+                      create: (_) => LocalStorageService(chatId: chatId),
+                    )
+                  ],
+                  child: ConversationControlPanel(),
+                )
+              ],
+            ),
+          ),
+        ));
   }
 }

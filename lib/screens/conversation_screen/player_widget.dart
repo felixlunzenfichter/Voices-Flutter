@@ -42,9 +42,9 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     LocalPlayerService playerService;
     
     if (widget.playerServiceType == PlayerServiceType.listening) {
-      playerService = Provider.of<PlayerListeningSection>(context, listen: true).localPlayerService;
+      playerService = Provider.of<PlayerListeningSection>(context, listen: true);
     } else {
-      playerService = Provider.of<PlayerRecordingSection>(context, listen: true).localPlayerService;
+      playerService = Provider.of<PlayerRecordingSection>(context, listen: true);
     }
 
 

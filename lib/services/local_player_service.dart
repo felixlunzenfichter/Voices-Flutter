@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'dart:io';
 
-class LocalPlayerService {
+class LocalPlayerService extends ChangeNotifier {
   /// Private properties
   final _player = AudioPlayer();
 
@@ -31,15 +31,12 @@ class LocalPlayerService {
     });
   }
 
-  Function notifyListeners;
-
-  LocalPlayerService({@required Function notifyListenersCallback}) {
-    notifyListeners = notifyListenersCallback;
+  LocalPlayerService() {
     listenToState();
     listenToLength();
   }
 
-  initialize({@required String audioFilePath}) async {
+  Future<void> initialize({@required String audioFilePath}) async {
     try {
       await _player.setFilePath(audioFilePath);
       print('Player initialized to: ${audioFilePath}');
@@ -49,6 +46,7 @@ class LocalPlayerService {
       print(
           "Local audio player could not be initialized because of error = $e");
     }
+    return;
   }
 
   dispose() {

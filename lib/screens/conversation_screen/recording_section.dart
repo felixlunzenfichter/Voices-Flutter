@@ -92,7 +92,6 @@ class RecordingAndPlayingInfo extends StatelessWidget {
     /// Display the current recording recording when done recording.
     if (recorderService.status == RecordingStatus.paused) {
       Provider.of<PlayerRecordingSection>(context, listen: false)
-          .localPlayerService
           .initialize(audioFilePath: recorderService.recording.path);
       print(
           'Build Player in Recording section with recording: ${recorderService.pathToSavedRecording}');
